@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) 2018 Roku, Inc. All rights reserved. -->
+
+<component name="MarkupListWithRewFF" extends="MarkupList">
+  <interface>
+      <field id="isFFPressed" type="boolean" alwaysNotify="true" />
+      <field id="isRewPressed" type="boolean" alwaysNotify="true" />
+      <field id="drawFocusFeedbackIfViewUnfocused" type="boolean" value="true" />
+  </interface>
+
+  <script type="text/brightscript">
+    <![CDATA[
+    sub init()
+        m.top.ObserveField("focusedChild", "onFocusChange")
+    end sub
+
+    sub onFocusChange()
+        m.top.drawFocusFeedback = m.top.IsInFocusChain() OR m.top.drawFocusFeedbackIfViewUnfocused
+    end sub
+
+    function onKeyEvent(key as String, press as Boolean) as Boolean
+        handled = false
+        if press
+            if key = "rewind"
+                m.top.isRewPressed = true
+                handled = true
+            else if key = "fastforward"
+                m.top.isFFPressed = true
+                handled = true
+            end if
+        end if
+
+        return handled
+    end function
+    ]]>
+  </script>
+</component>

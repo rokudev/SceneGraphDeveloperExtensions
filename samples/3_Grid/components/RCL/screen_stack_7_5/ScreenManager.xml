@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2018 Roku, Inc. All rights reserved. -->
+
+<component name="ScreenManager" extends="Node">
+    <interface>
+        <field id="screenCount" type="integer" />
+
+      <field id="allowCloseChannelWhenNoScreens" type="bool" alwaysNotify="true" value="false" />
+
+        <!-- Assign UI before any procedure to call -->
+        <field id="screenStackUI" type="node" onChange="screenStackUIChange" alwaysNotify="true" />
+        <field id="currentScreen" type="node" />
+        <!-- <field id="procedureObject" type="assocarray" onChange="procedureObjectChange" /> -->
+
+        <!-- 
+            You can use it to call specific function(assocarray format = {fp : ['Array with Parameters']})
+            OR append procedureObjects as children
+        -->
+        <field id="addScreen" type="assocarray" onChange="procedureObjectChange" />
+        <field id="closeScreen" type="assocarray" onChange="procedureObjectChange" />
+        <field id="closeToScreen" type="assocarray" onChange="procedureObjectChange" />
+        <field id="replaceCurrentScreen" type="assocarray" onChange="procedureObjectChange" />
+        <field id="saveState" type="assocarray" onChange="procedureObjectChange" />
+
+        <function name="runProcedure" />
+    </interface>
+
+    <script type="text/brightscript" uri="ScreenManager.brs" />
+</component>

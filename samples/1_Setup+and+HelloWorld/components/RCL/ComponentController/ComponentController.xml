@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2018 Roku, Inc. All rights reserved. -->
+
+<!-- @Public
+    ComponentController (CC) is a node that responsible to make basic screen interaction logic.
+    From user side, CC is used to show screens for different use cases.
+    There are 2 flags to handle close behaviour:
+    allowCloseChannelOnLastView:bool=true and allowCloseLastViewOnBack:bool=true
+
+    @Sample:
+    ' in Scene context in channel
+    m.top.ComponentController.callFunc("show", {
+        view: screen
+    })
+ -->
+<component name="ComponentController" extends="Group" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <interface>
+        <!-- @Public -->
+        <!--  
+            holds the reference to view that is currently shown.
+            Can be used for checking in onkeyEvent
+         -->
+        <field id="currentView" type="node" />
+
+        <!-- @Public -->
+        <!-- If user set this flag channel closes when press back or set close=true on last view -->
+        <field id="allowCloseChannelOnLastView" type="boolean" value="true" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- If user set this flag the last screen will be closed and user can open another in wasClosed callback  -->
+        <field id="allowCloseLastViewOnBack" type="boolean" value="true" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- 
+            Function that has to be called when you want to add view to view stack
+         -->
+        <function name="show" />
+
+        <!-- Screen manager is a reference to node that handles all screen stack functionality -->
+        <field id="screenManager" type="node" />
+    </interface>
+    <script type="text/brightscript" uri="ComponentController.brs" />
+    
+    <children>
+        <ScreenStack id="ScreenStack" />
+    </children>
+</component>
