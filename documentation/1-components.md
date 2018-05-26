@@ -458,7 +458,7 @@ This is the base component for all SGDEX views.
 
 ## CategoryListView
 
-**Extends: SGDEXComponent**
+**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
 
 ### Description
 
@@ -749,7 +749,7 @@ m.top.ComponentController.CallFunc("show", {
 
 ## VideoView
 
-**Extends: SGDEXComponent**
+**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
 
 ### Description
 
@@ -920,7 +920,7 @@ m.top.ComponentController.callFunc("show", {
 
 ## DetailsView
 
-**Extends: SGDEXComponent**
+**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
 
 ### Description
 
@@ -1034,7 +1034,7 @@ If set to false it will take content and display it on the view</p>
 
 ## GridView
 
-**Extends: SGDEXComponent**
+**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
 
 ### Description
 
@@ -1207,7 +1207,7 @@ m.top.ComponentController.callFunc("show", {
 
 ## EntitlementView
 
-**Extends: SGDEXComponent**
+**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
 
 ### Description
 
