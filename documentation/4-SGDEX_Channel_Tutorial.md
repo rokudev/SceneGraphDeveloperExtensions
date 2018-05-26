@@ -590,7 +590,7 @@ observers and call:
     })
 ~~~~
 
-This hides the current view (if any) and displays theÂ non-SGDEX view.
+This hides the current view (if any) and displays the non-SGDEX view.
 
 **Note:** Component controller set's focus on your view, so your view
 should implement proper focus handling.
