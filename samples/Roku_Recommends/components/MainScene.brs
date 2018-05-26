@@ -26,5 +26,5 @@ sub OnGridItemSelected(event as Object)
     grid = event.GetRoSGNode()
     selectedIndex = event.GetData()
     row = grid.content.getChild(selectedIndex[0])
-    detailsScreen = ShowDetailsScreen(row, selectedIndex[1])
+    detailsView = ShowDetailsView(row, selectedIndex[1])
 end sub

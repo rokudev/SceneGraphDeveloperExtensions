@@ -24,8 +24,8 @@ sub OnGridItemSelected(event as Object)
     grid = event.GetRoSGNode()
     selectedIndex = event.getdata()
     rowContent = grid.content.getChild(selectedIndex[0])
-    detailsScreen = ShowDetailsScreen(rowContent, selectedIndex[1])
-    detailsScreen.ObserveField("wasClosed", "OnDetailsWasClosed")
+    detailsView = ShowDetailsView(rowContent, selectedIndex[1])
+    detailsView.ObserveField("wasClosed", "OnDetailsWasClosed")
 end sub
 
 sub OnDetailsWasClosed(event as Object)

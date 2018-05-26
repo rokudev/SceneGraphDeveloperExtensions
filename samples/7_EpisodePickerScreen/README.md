@@ -1,4 +1,4 @@
-# RCL Guide: EpisodePickerView
+# SGDEX Guide: EpisodePickerView
 
 The starting point for this guide is the source code in this folder.
 
@@ -105,6 +105,8 @@ sub OnEpisodeSelected(event as Object)
 end sub
 ```
 
-And after that you should be able to click on "episodes" and be greeted with this screen:
+And after that you should be able to click on "episodes" and be greeted with this View:
 
 ![](docs/1.jpg)
+
+###### Copyright (c) 2018 Roku, Inc. All rights reserved.

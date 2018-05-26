@@ -42,14 +42,14 @@ function OpenVideoPlayerItem(contentItem) as Object
     m.isEndcardShown = true
 
     m.top.ComponentController.callFunc("show", {
-        screen: video
+        View: video
     })
 
     return video
 end function
 
 'this function will be called in both cases when video finishes or when user presses back
-'when user presses back, screen manger will handle it and remove top screen from view
+'when user presses back, View manger will handle it and remove top View from view
 sub OnVideoWasClosed(event as Object)
     video = event.getRoSGNode()
     if video <> invalid then

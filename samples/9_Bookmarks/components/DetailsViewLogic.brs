@@ -9,7 +9,7 @@ function ShowDetailsView(content as Object, index as Integer) as Object
     details.ObserveFieldScoped("currentItem", "OnDetailsContentSet")
     details.ObserveFieldScoped("buttonSelected", "OnButtonSelected")
 
-    'this will trigger job to show this screen
+    'this will trigger job to show this View
     m.top.ComponentController.callFunc("show", {
         view: details
     })
@@ -52,7 +52,7 @@ sub OnVideoWasClosed()
     RefreshButtons(m.details)
 end sub
 
-' function for refreshing buttons on details screen
+' function for refreshing buttons on details View
 ' it will check whether item has bookmark and show correct buttons
 sub RefreshButtons(details as Object)
     item = details.content.getChild(details.itemFocused)

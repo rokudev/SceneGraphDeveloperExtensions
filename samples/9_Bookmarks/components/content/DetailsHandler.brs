@@ -1,7 +1,7 @@
 sub GetContent()
     ' Emulate API call
     sleep(200)
-    ' Create item for details screen
+    ' Create item for details View
     item = Utils_AAToContentNode({
         title: "Supre cinema"
         releaseDate: "25.12.2018"

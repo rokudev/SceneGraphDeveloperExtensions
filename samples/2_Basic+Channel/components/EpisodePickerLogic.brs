@@ -1,4 +1,4 @@
-function ShowEpisodePickerScreen(seasonContent)
+function ShowEpisodePickerView(seasonContent)
     episodePicker = CreateObject("roSGNode", "CategoryListView")
     episodePicker.posterShape = "16x9"
     content = CreateObject("roSGNode", "ContentNode")
@@ -10,7 +10,7 @@ function ShowEpisodePickerScreen(seasonContent)
     })
     episodePicker.content = content
     episodePicker.ObserveField("selectedItem", "OnEpisodeSelected")
-    'this will trigger job to show this screen
+    'this will trigger job to show this View
     m.top.ComponentController.callFunc("show", {
         view: episodePicker
     })
@@ -22,5 +22,5 @@ sub OnEpisodeSelected(event as Object)
     categoryList = event.GetRoSGNode()
     itemSelected = event.GetData()
     category = categoryList.content.GetChild(itemSelected[0])
-    ShowDetailsScreen(category.GetChild(itemSelected[1]), 0, false)
+    ShowDetailsView(category.GetChild(itemSelected[1]), 0, false)
 end sub

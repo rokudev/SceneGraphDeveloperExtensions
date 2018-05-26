@@ -12,7 +12,7 @@ function ShowEpisodePickerView(seasonContent = invalid as Object)
     })
     episodePicker.content = content
     episodePicker.ObserveField("selectedItem", "OnEpisodeSelected")
-    ' This will show the CategoryListView to the screen and call SeasonsHandler
+    ' This will show the CategoryListView to the View and call SeasonsHandler
     m.top.ComponentController.CallFunc("show", {
         view: episodePicker
     })

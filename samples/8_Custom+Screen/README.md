@@ -1,8 +1,8 @@
-# RCL Guide: Custom View
+# SGDEX Guide: Custom View
 
 ## Creating the Custom View
 
-We are going to create a custom view that displays the thumbnail full screen.
+We are going to create a custom view that displays the thumbnail full View.
 
 Create in the components folder another folder called "CustomView". Inside that folder create a "custom.xml" file. In the XML you should extend Group so it will be renderable. We need to create an interface with a field where we can pass in where the picture is stored. Notice that the alias is "thumbnail.uri." What this does is sets the poster.uri that we define below named thumbnail automatically.
 
@@ -43,3 +43,5 @@ end function
 ```
 
 And there you go.
+
+###### Copyright (c) 2018 Roku, Inc. All rights reserved.

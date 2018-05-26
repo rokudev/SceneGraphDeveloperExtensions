@@ -7,23 +7,22 @@ sub GetContent()
     ' url.AddHeader("X-Roku-Reserved-Dev-Id", "")
     ' url.InitClientCertificates()
     ' feed = url.GetToString()
-    'this is for a sample, usually feed is retrieved from url using roUrlTransfer
+    ' this is for a sample, usually feed is retrieved from url using roUrlTransfer
     feed = ReadAsciiFile("pkg:/feed/feed.json")
-    sleep(2000)
+    Sleep(2000)
 
     json = ParseJson(feed)
     rootNodeArray = ParseJsonToNodeArray(json)
     m.top.content.AppendChildren(rootNodeArray)
 end sub
 
-
-Function ParseJsonToNodeArray(jsonAA as Object) as Object
+function ParseJsonToNodeArray(jsonAA as Object) as Object
     if jsonAA = invalid then return []
     resultNodeArray = []
 
     for each fieldInJsonAA in jsonAA
         ' Assigning fields that apply to both movies and series
-        if fieldInJsonAA = "movies" OR fieldInJsonAA = "series"
+        if fieldInJsonAA = "movies" or fieldInJsonAA = "series"
             mediaItemsArray = jsonAA[fieldInJsonAA]
             itemsNodeArray = []
             for each mediaItem in mediaItemsArray
@@ -31,8 +30,8 @@ Function ParseJsonToNodeArray(jsonAA as Object) as Object
                 itemsNodeArray.Push(itemNode)
             end for
             rowNode = Utils_AAToContentNode({
-                    title : fieldInJsonAA
-                })
+                title: fieldInJsonAA
+            })
             rowNode.AppendChildren(itemsNodeArray)
 
             resultNodeArray.Push(rowNode)
@@ -40,16 +39,15 @@ Function ParseJsonToNodeArray(jsonAA as Object) as Object
     end for
 
     return resultNodeArray
-End Function
+end function
 
-
-Function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Object
+function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Object
     itemNode = Utils_AAToContentNode({
-            "id"    : mediaItem.id
-            "hdPosterUrl" : mediaItem.thumbnail
-            "Description" : mediaItem.shortDescription
-            "Categories" : mediaItem.genres[0]
-        })
+        "id": mediaItem.id
+        "hdPosterUrl": mediaItem.thumbnail
+        "Description": mediaItem.shortDescription
+        "Categories": mediaItem.genres[0]
+    })
 
     if mediaItem = invalid then
         return itemNode
@@ -58,8 +56,8 @@ Function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Objec
     ' Assign movie specific fields
     if mediaType = "movies"
         Utils_forceSetFields(itemNode, {
-                "Url" : GetVideoUrl(mediaItem)
-            })
+            "Url": GetVideoUrl(mediaItem)
+        })
     end if
     ' Assign series specific fields
     if mediaType = "series"
@@ -71,22 +69,22 @@ Function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Objec
             for each episode in episodes
                 episodeNode = Utils_AAToContentNode(episode)
                 Utils_forceSetFields(episodeNode, {
-                    "url" : GetVideoUrl(episode)
-                    "hdPosterUrl" : episode.lookup("thumbnail")
-                    "Description" : episode.lookup("shortDescription")
+                    "url": GetVideoUrl(episode)
+                    "hdPosterUrl": episode.lookup("thumbnail")
+                    "Description": episode.lookup("shortDescription")
                 })
                 episodeArray.Push(episodeNode)
             end for
             seasonArray.Push(episodeArray)
         end for
         Utils_forceSetFields(itemNode, {
-                "seasons" : seasonArray
-            })
+            "seasons": seasonArray
+        })
     end if
     return itemNode
-End Function
+end function
 
-Function GetVideoUrl(mediaItem) as String
+function GetVideoUrl(mediaItem) as String
     content = mediaItem.Lookup("content")
     if content = invalid then
         return ""
@@ -108,4 +106,4 @@ Function GetVideoUrl(mediaItem) as String
     end if
 
     return url
-End Function
+end function

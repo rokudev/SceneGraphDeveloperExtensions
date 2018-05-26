@@ -1,8 +1,8 @@
-# RCL Sample: Basic Channel
+# SGDEX Sample: Basic Channel
 
-## RCL Introduction
+## SGDEX Introduction
 
-This sample will be using the Component Framework (RCL) for Roku SceneGraph development to streamline to process and make it quicker to build a good looking, custom app.
+This sample will be using Scene Graph Developer Extensions (SGDEX) to streamline to process and make it quicker to build a good looking, custom app.
 You can build a basic channel using the built-in tools like the one we do in this sample but you also have the power of Roku SceneGraph at your disposal.
 
 Framework is composed of a few different components. They have the few basic views: a
@@ -19,17 +19,17 @@ If you’re new to Roku Development and you don’t have your environment set up
 
 If you are new to Brightcript an or Roku Scenegraph development please read through our documentation on it here [https://sdkdocs.roku.com/display/sdkdoc/BrightScript+Language+Reference](https://sdkdocs.roku.com/display/sdkdoc/BrightScript+Language+Reference) to learn the basics on the language.
 
-## Step 2: Setting up RCL
+## Step 2: Setting up SGDEX
 
 First, you need to set up your file structure. It should look like this:
 
 ```
 components/
-    RCL/
+    SGDEX/
     your RSG components
 source/
     main.brs
-    RCL.brs
+    SGDEX.brs
 manifest
 ```
 
@@ -37,7 +37,7 @@ After you have that all set up you should set up your manifest file. You can fin
 
 Feel free to change the title and images to the fit your channel. You need to make sure you have the line below.
 
-Now it is time to start coding your channel! We begin with the Main.brs file. You should override the function “GetSceneName()” to provide RCLwith the name of your entry scene.It should look like this:
+Now it is time to start coding your channel! We begin with the Main.brs file. You should override the function “GetSceneName()” to provide SGDEX with the name of your entry scene.It should look like this:
 
 ```
 function GetSceneName() as String
@@ -45,9 +45,9 @@ function GetSceneName() as String
  end function
 ```
 
-## Step 3: Setting up your RCL Components
+## Step 3: Setting up your SGDEX Components
 
-Now that the RCL library knows where to go to initialize your RCL components, we can begin setting up the channel. Go to your MainScene and override the “show()” function. In this we first create a grid view object and set a few fields to fit our content.
+Now that the SGDEX library knows where to go to initialize your SGDEX components, we can begin setting up the channel. Go to your MainScene and override the “show()” function. In this we first create a grid view object and set a few fields to fit our content.
 
 ```
 m.grid = CreateObject("roSGNode", "GridView")
@@ -137,9 +137,9 @@ At this point, once you side load your channel you should be greeted to a screen
 
 ![](docs/1.png)
 
-## Step 5: The Details Screen
+## Step 5: The Details View
 
-Now we will implement choosing a piece of content and displaying the detail screen. It is time to implement the function we mentioned when we set up the GridItemSelectedListener. The function header should look like this
+Now we will implement choosing a piece of content and displaying the detail View. It is time to implement the function we mentioned when we set up the GridItemSelectedListener. The function header should look like this
 
 ```
 sub OnGridItemSelected(event as Object)
@@ -151,15 +151,15 @@ In order to get the context of the event, you use the function GetRoSGNode() as 
 grid = event.GetRoSGNode()
 ```
 
-After that you get some other information about the function and then open the details screen using the ShowDetailsScreen() function. We also need to establish an observer for if the user backs out of the Details Screen. The function should look like this in the end
+After that you get some other information about the function and then open the details View using the ShowDetailsView() function. We also need to establish an observer for if the user backs out of the Details View. The function should look like this in the end
 
 ```
 sub OnGridItemSelected(event as Object)
     grid = event.GetRoSGNode()
     selectedIndex = event.getData()
     rowContent = grid.content.getChild(selectedIndex[0])
-    detailsScreen = ShowDetailsScreen(rowContent, selectedIndex[1])
-    detailsScreen.ObserveField("wasClosed", "OnDetailsWasClosed")
+    detailsView = ShowDetailsView(rowContent, selectedIndex[1])
+    detailsView.ObserveField("wasClosed", "OnDetailsWasClosed")
  end sub
 ```
 
@@ -172,10 +172,10 @@ sub OnDetailsWasClosed(event as Object)
 end sub
 ```
 
-Now create the file “DetailsScreenLogic.brs” under the components folder. First thing we do is implement the ShowDetailsScreen function we called in the previous function. The function header looks as such
+Now create the file “DetailsViewLogic.brs” under the components folder. First thing we do is implement the ShowDetailsView function we called in the previous function. The function header looks as such
 
 ```
-function ShowDetailsScreen(content, index, isContentList = true)
+function ShowDetailsView(content, index, isContentList = true)
 ```
 
 We begin by creating an DetailsView and observing the content and buttonSelected Field.
@@ -194,7 +194,7 @@ details.jumpToItem = index
 details.isContentList = isContentList
 ```
 
-Setting the details.content will trigger the observer, so we should implement that now. In this screen we need to contextually provide different information whether the content we selected is a series or a movie, so we check the event.getData.Title to see whether the title is series or not.
+Setting the details.content will trigger the observer, so we should implement that now. In this View we need to contextually provide different information whether the content we selected is a series or a movie, so we check the event.getData.Title to see whether the title is series or not.
 
 Go into details about the SceneGraph tree, seeing where we set the information in the getData call. Display in a UML tree.
 
@@ -221,17 +221,17 @@ sub OnButtonSelected(event as Object)
     selectedButton = details.buttons.GetChild(event.GetData())
 ```
 
-If the button’s id is “play” we open the video player and send the appropriate arguments to find the content data. Otherwise if the selected button is the “episodes” then you need to show the episode picker screen.
+If the button’s id is “play” we open the video player and send the appropriate arguments to find the content data. Otherwise if the selected button is the “episodes” then you need to show the episode picker View.
 
 ```
 if selectedButton.id = "play"
     OpenVideoPlayer(details.content, details.itemFocused, details.isContentList)
 else if selectedButton.id = "episodes"
-    ShowEpisodePickerScreen(details.currentItem.seasons)
+    ShowEpisodePickerView(details.currentItem.seasons)
 end if
 ```
 
-Going back to the ShowDetailsScreen() function, we show the details screen and return the object.
+Going back to the ShowDetailsView() function, we show the details View and return the object.
 
 ```
 m.top.ComponentController.callFunc("show", {
@@ -240,7 +240,7 @@ m.top.ComponentController.callFunc("show", {
 return details
 ```
 
-At this point (Assuming no compiler errors from functions we have not created yet), once you side load and you select an item, you should be greeted with this screen
+At this point (Assuming no compiler errors from functions we have not created yet), once you side load and you select an item, you should be greeted with this View
 
 ![](docs/2.jpg)
 
@@ -285,7 +285,7 @@ sub OnVideoWasClosed(event as Object)
 
 ## Step 7: EpisodePicker Logic
 
-We start by implementing the ShowEpisodePickerScreen(seasonContent) function that we call in the details screen logic. We begin by creating an CategoryListView object and set the posterShape to be square.
+We start by implementing the ShowEpisodePickerView(seasonContent) function that we call in the details View logic. We begin by creating an CategoryListView object and set the posterShape to be square.
 
 ```
 episodePicker = CreateObject("roSGNode", "CategoryListView")
@@ -365,13 +365,13 @@ sub OnEpisodeSelected(event as Object)
     itemSelected = event.GetData()
     category = categoryList.content.GetChild(itemSelected[0])
 
-    ShowDetailsScreen(category.GetChild(itemSelected[1]), 0, false)
+    ShowDetailsView(category.GetChild(itemSelected[1]), 0, false)
  end sub
 ```
 
-This launches the Details screen for the piece of content that you would like to play.
+This launches the Details View for the piece of content that you would like to play.
 
-Finally back in the ShowEpisodePickerScreen(seasonContent) we show the screen and return it'this will trigger job to show this screen
+Finally back in the ShowEpisodePickerView(seasonContent) we show the View and return it'this will trigger job to show this View
 
 ```
 m.top.ComponentController.callFunc("show", {
@@ -380,8 +380,10 @@ m.top.ComponentController.callFunc("show", {
 return episodePicker
 ```
 
-And finally the Episode Picker Screen should look like this
+And finally the Episode Picker View should look like this
 
 ![](docs/3.jpg)
 
 And there we go! We now have a channel that can take a feed in the style of direct publisher and stream the content.
+
+###### Copyright (c) 2018 Roku, Inc. All rights reserved.

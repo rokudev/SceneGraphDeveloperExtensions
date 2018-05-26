@@ -1,4 +1,4 @@
-# RCL Guide: DetailsView
+# SGDEX Guide: DetailsView
 
 ## Part 1: Creating the DetailsView
 
@@ -86,3 +86,5 @@ sub OnDetailsWasClosed(event as Object)
 
 
 ![dev](docs/1.jpg)
+
+###### Copyright (c) 2018 Roku, Inc. All rights reserved.

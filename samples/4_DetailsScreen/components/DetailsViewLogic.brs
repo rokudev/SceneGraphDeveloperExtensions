@@ -8,7 +8,7 @@ function ShowDetailsView(content, index, isContentList = true)
     details.content = content
     details.jumpToItem = index
     details.isContentList = isContentList
-    ' This will cause the View to be shown on the screen
+    ' This will cause the View to be shown on the View
     m.top.ComponentController.callFunc("show", {
         view: details
     })

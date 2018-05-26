@@ -1,10 +1,11 @@
-# RCL Guide: Setup and HelloWorld
+# SGDEX Guide: Setup and HelloWorld
 
-# RCL Introduction
+## SGDEX Introduction
 
-This sample will be using the Component Framework, or RCL for short.  RCL is a framework built for Roku SceneGraph development to streamline the process and make it quicker to build channels that conform to the Roku UX guidelines.  You can build a basic channel using the built-in tools like the one we do in this sample but you also have the power of Roku SceneGraph at your disposal.
+This sample will be using Scene Graph Developer Extensions, or SGDEX for short.
+SGDEX is a framework built for Roku SceneGraph development to streamline the process and make it quicker to build channels that conform to the Roku UX guidelines.  You can build a basic channel using the built-in tools like the one we do in this sample but you also have the power of Roku SceneGraph at your disposal.
 
-RCL is composed of a few different components.
+SGDEX is composed of a few different components.
 They have the few basic views: a grid view, a details view, a category list view, and a video view.
 These handle all the logistics for displaying your content, and they each use a ContentHandler.  A ContentHandler is used to get and parse out the data you get from your own content feed.  To use these Components you extend them and then override the functions in them to fit your channel.
 
@@ -13,17 +14,17 @@ These handle all the logistics for displaying your content, and they each use a 
 
 If you’re new to Roku Development and you don’t have your environment set up, use the guide here https://www.youtube.com/watch?v=-gq_5NRuHQ8 to set up your Roku and you can use Eclipse with the Brightscript plugin using this guide here https://sdkdocs.roku.com/display/sdkdoc/Roku+Plugin+for+Eclipse+IDE .  If you are new to Brightscript an or Roku Scenegraph development please read through our documentation on it here https://sdkdocs.roku.com/display/sdkdoc/BrightScript+Language+Reference to learn the basics on the language.
 
-## Step 2: Setting up RCL
+## Step 2: Setting up SGDEX
 
 First, you need to set up your file structure.  It should look like this:
 
 ```
 components/
-    RCL/
+    SGDEX/
     your RSG components
 source/
     main.brs
-    RCL.brs
+    SGDEX.brs
 manifest
 ```
 
@@ -40,7 +41,7 @@ The first line is there because all of the views are developed for HD and autosc
 
 Now it is time to start coding your channel!
 We begin with the Main.brs file.
-You should add the line override the function “GetSceneName()” to provide RCL the name of your entry scene.  It should look like this:
+You should add the line override the function “GetSceneName()” to provide SGDEX the name of your entry scene.  It should look like this:
 
 ```
 function GetSceneName() as String
@@ -77,3 +78,5 @@ telnet xx.xx.xxx.xxx 8085
 ```
 
 There you go, now we are all set to start adding content to our channel!
+
+###### Copyright (c) 2018 Roku, Inc. All rights reserved.

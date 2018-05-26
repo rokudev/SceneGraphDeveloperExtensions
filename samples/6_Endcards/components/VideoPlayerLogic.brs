@@ -37,7 +37,7 @@ function OpenVideoPlayerItem(contentItem) as Object
     ' Adding the endcard handler to the video
     ' Show the video view
     m.top.ComponentController.callFunc("show", {
-        screen: video
+        View: video
     })
     ' Set it to start playing
     video.control = "play"

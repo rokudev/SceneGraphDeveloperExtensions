@@ -1,4 +1,4 @@
-# RCL Guide: Grid
+# SGDEX Guide: Grid
 
 ## Step 1: Initializing the Grid
 
@@ -24,7 +24,7 @@ content.addfields({
 })
 ```
 
-Next we need to set that content node we just made to our grid. After that, we will call the show() function to show our grid to the screen. This is a main benefit of RCL, it does much of the groundwork for you regarding organizing and setting up the screen.
+Next we need to set that content node we just made to our grid. After that, we will call the show() function to show our grid to the View. This is a main benefit of SGDEX, it does much of the groundwork for you regarding organizing and setting up the View.
 
 ```
 m.grid.content = content
@@ -33,7 +33,7 @@ m.top.ComponentController.callFunc("show", {
 })
 ```
 
-A few things to note: We save the grid in m.grid so we can access it in other functions in the scene, we will be using this in later guides. Also, the content handler you set (in this case "GridHandler") will be invoked by RCL when the grid view is shown.
+A few things to note: We save the grid in m.grid so we can access it in other functions in the scene, we will be using this in later guides. Also, the content handler you set (in this case "GridHandler") will be invoked by SGDEX when the grid view is shown.
 
 ## Step 2: Fetching the Content
 
@@ -60,7 +60,7 @@ url.AddHeader("X-Roku-Reserved-Dev-Id", "")
 url.InitClientCertificates()
 ```
 
-After that you need to parse through the feed yourself. For this feel free to look through the full code provided below. A few things to note, you should have an array of content nodes, with each node representing a row on the grid. Each row has some number of child nodes, each of those nodes represent a poster on the grid that you can select and navigate to another screen. Another thing to consider, before we add the individual pieces of content to the data structure we set the following pieces of metadata:
+After that you need to parse through the feed yourself. For this feel free to look through the full code provided below. A few things to note, you should have an array of content nodes, with each node representing a row on the grid. Each row has some number of child nodes, each of those nodes represent a poster on the grid that you can select and navigate to another View. Another thing to consider, before we add the individual pieces of content to the data structure we set the following pieces of metadata:
 
 - hdPosterUrl: A thumbnail
 - Description: A short description of the content
@@ -72,6 +72,8 @@ Once you have parsed the feed and built a tree of content nodes, you should appe
 m.top.content.appendChildren(rowsContentNodeArray)
 ```
 
-After that, if you've parsed everything correctly you should be greeted to this screen when you side load your channel.
+After that, if you've parsed everything correctly you should be greeted to this View when you side load your channel.
 
 ![](docs/1.jpg)
+
+###### Copyright (c) 2018 Roku, Inc. All rights reserved.

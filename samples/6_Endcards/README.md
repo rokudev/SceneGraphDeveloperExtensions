@@ -1,4 +1,4 @@
-# RCL Guide: Endcards
+# SGDEX Guide: Endcards
 
 ## Part 1: Setting Up Endcards
 
@@ -52,3 +52,4 @@ sub OnEndcardItemSelected(event as Object)
     end if
 end sub
 ```
+###### Copyright (c) 2018 Roku, Inc. All rights reserved.

@@ -1,7 +1,7 @@
 function ShowCustomView(hdPosterUrl)
-    m.CustomScreen = CreateObject("roSGNode", "custom")
-    m.CustomScreen.picPath = hdPosterUrl
+    m.CustomView = CreateObject("roSGNode", "custom")
+    m.CustomView.picPath = hdPosterUrl
     m.top.ComponentController.CallFunc("show", {
-        screen: m.CustomScreen
+        View: m.CustomView
     })
 end function

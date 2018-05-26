@@ -23,7 +23,7 @@ function OpenVideoPlayerItem(contentItem) as Object
     video.control = "play"
     ' Show the video view
     m.top.ComponentController.CallFunc("show", {
-        screen: video
+        View: video
     })
     return video
 end function

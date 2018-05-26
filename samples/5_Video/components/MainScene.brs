@@ -1,10 +1,10 @@
 ' ********** Copyright 2016 Roku Corp.  All Rights Reserved. **********
 
 sub show(args as Object)
-    showHomeScreen()
+    showHomeView()
 end sub
 
-function showHomeScreen() as Object
+function showHomeView() as Object
     m.grid = CreateObject("roSGNode", "GridView")
     m.grid.setFields({
         style: "standard"

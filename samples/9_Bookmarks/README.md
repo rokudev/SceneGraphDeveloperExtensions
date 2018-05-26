@@ -1,4 +1,4 @@
-# RCL Guide: Bookmarks
+# SGDEX Guide: Bookmarks
 
 The starting point for this sample is sample with details. We will modify DetailsViewLogic to add bookmarks support.
 
@@ -41,7 +41,7 @@ end sub
 
 For now, bookmark is saved only when user press back from video playback. But Roku best practice is to save it additionally every 10 seconds for cases if user press *Home* or some internet interruption happen.
 
-For this reason, we should define RegistryBookmarksHandler which extends RCL's BookmarksHandler and set it configuration into *contentItem*.
+For this reason, we should define RegistryBookmarksHandler which extends SGDEX's BookmarksHandler and set it configuration into *contentItem*.
 
 ```
     contentItem.BookmarksHandler = {
@@ -97,3 +97,5 @@ end sub
 ```
 
 For more info about roRegistrySection see SDK Docs https://sdkdocs.roku.com/display/sdkdoc/roRegistrySection
+
+###### Copyright (c) 2018 Roku, Inc. All rights reserved.

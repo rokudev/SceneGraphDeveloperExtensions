@@ -1,4 +1,4 @@
-# RCL Guide: Video
+# SGDEX Guide: Video
 
 ## Part 1: Creating the video view
 
@@ -110,3 +110,5 @@ end sub
 ```
 
 At this point your channel should be able to play videos that aren't part of a series.
+
+###### Copyright (c) 2018 Roku, Inc. All rights reserved.
