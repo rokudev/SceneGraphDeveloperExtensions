@@ -37,7 +37,7 @@ sub Init()
     ' when content for current item is loaded, currentItem field is set
     ' in OnCurrentItem RAF task is created if config for RAF exist
     ' of Video Node control set
-    ' It is triggered manually by OnCurrentItem() to make an ability to remove HandlerConfigs while video is playing
+	' It is triggered manually by OnCurrentItem() to make an ability to remove HandlerConfigs while video is playing
     ' m.top.ObserveField("currentItem", "OnCurrentItem")
 
     ' Time how much endcard should count before close or move to next video
@@ -140,9 +140,10 @@ sub OnControlSet(event as Object)
     if m.video = invalid or control = invalid then return
     if (control = "play" or control = "prebuffer")
         ' TODO Make logic for play or prebuffer here if needed
-        'Play video when ready and no raf config or raf task was not started
-        if m.ableToPlay and (m.rafHandlerConfig = Invalid or m.rafTask = invalid)
-             GetRafConfigAndPlayVideo()
+        if m.ableToPlay and m.rafHandlerConfig = Invalid
+            m.video.enableUI = true
+            m.video.SetFocus(true)
+            m.video.control = control
         else
             if m.top.currentIndex = - 1 then m.top.currentIndex = 0
         end if
@@ -232,8 +233,8 @@ end sub
 ' and observe items to get channel know that user presses a button
 ' or repeats video on Repeat button selected
 sub ShowEndcardView()
-    ' We should delete HandlerConfigEndcard only if endcard View was shown
-    ' not in case if user started playback and goes back
+	' We should delete HandlerConfigEndcard only if endcard View was shown
+	' not in case if user started playback and goes back
     if m.top.currentItem <> Invalid
         m.top.currentItem.HandlerConfigEndcard = invalid
     end if
@@ -272,7 +273,7 @@ end sub
 Sub OnEndcardVisible(event as Object)
     endcardViewVisible = event.GetData()
     if endcardViewVisible
-        ' Additional clearing of video node when endcard view is shown
+		' Additional clearing of video node when endcard view is shown
         ClearVideoNode()
     end if
 End Sub
@@ -415,45 +416,31 @@ sub OnCurrentItem()
 
     ' Set content node that we receive to Video Node
     SetVideoContent(currentItem)
-    'invalidate only once as GetRafConfigAndPlayVideo might be called often but config will be deleted from item
-    m.rafHandlerConfig = invalid
-    extractRafConfig()
-    if topControl = "play" or topControl = "prebuffer"
-        GetRafConfigAndPlayVideo()
-    end if
-end sub
 
-sub GetRafConfigAndPlayVideo()
-    ' If Raf config set, need to create RAF task
-    currentItem = m.top.currentItem
-    topControl = m.top.control
-    
-    extractRafConfig()
-    if m.rafHandlerConfig <> invalid and m.rafHandlerConfig.name <> ""
-        rafTask = StartRafTask(m.rafHandlerConfig, m.video)
-        if rafTask = invalid
+    if topControl = "play" or topControl = "prebuffer"
+        ' If Raf config set, need to create RAF task
+        m.rafHandlerConfig = Invalid
+        if (currentItem.handlerConfigRAF <> Invalid and currentItem.handlerConfigRAF.name <> "") then
+            m.rafHandlerConfig = currentItem.handlerConfigRAF
+            currentItem.handlerConfigRAF = Invalid
+        else if (m.top.content.handlerConfigRAF <> Invalid and m.top.content.handlerConfigRAF.name <> "") then
+            m.rafHandlerConfig = m.top.content.handlerConfigRAF
+        else if (m.top.handlerConfigRAF <> Invalid and m.top.handlerConfigRAF.name <> "") then
+            m.rafHandlerConfig = m.top.handlerConfigRAF
+        end if
+
+        if m.rafHandlerConfig <> Invalid and m.rafHandlerConfig.name <> ""
+            rafTask = StartRafTask(m.rafHandlerConfig, m.video)
+            if rafTask = Invalid
+                m.video.enableUI = true
+                m.video.SetFocus(true)
+                m.video.control = topControl
+            end if
+        else ' if Raf is not set, just pass control directly to Video Node
             m.video.enableUI = true
             m.video.SetFocus(true)
             m.video.control = topControl
         end if
-    else ' if RAF is not set, just pass control directly to Video Node
-        m.video.enableUI = true
-        m.video.SetFocus(true)
-        m.video.control = topControl
-    end if
-end sub
-
-sub extractRafConfig()
-    
-    currentItem = m.top.currentItem
-    topControl = m.top.control
-    if (currentItem.handlerConfigRAF <> invalid and currentItem.handlerConfigRAF.name <> "") then
-        m.rafHandlerConfig = currentItem.handlerConfigRAF
-        currentItem.handlerConfigRAF = invalid
-    else if (m.top.content.handlerConfigRAF <> invalid and m.top.content.handlerConfigRAF.name <> "") then
-        m.rafHandlerConfig = m.top.content.handlerConfigRAF
-    else if (m.top.handlerConfigRAF <> invalid and m.top.handlerConfigRAF.name <> "") then
-        m.rafHandlerConfig = m.top.handlerConfigRAF
     end if
 end sub
 
@@ -470,7 +457,7 @@ Sub CreateBookmarksHandler()
                 ?"Error : Unable to create BookmarksHandler with type " NodeName
             end if
         else
-            '?"Error : Invalid BookmarksHandler config"
+            ?"Error : Invalid BookmarksHandler config"
         end if
     end if
 End Sub
@@ -598,7 +585,7 @@ sub LoadMoreContent(content, HandlerConfig)
     facade = m.top.createChild("LoadingFacade")
     facade.bEatKeyEvents = false
 
-    ' Need to hide previous video player if it exist before loading content for new one
+	' Need to hide previous video player if it exist before loading content for new one
     if m.video <> invalid then m.video.visible = false
     callback = {
         lastFocusedItem: m.top.currentIndex

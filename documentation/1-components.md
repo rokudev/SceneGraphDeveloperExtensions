@@ -105,16 +105,16 @@ channel to implement any view specific initialization.
 <p>For common fields, see SGDEXComponent</p>
 <p>For view-specific views, refer to:</p>
 <ul>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">GridView</a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-GridViewthemeattributes">GridView</a></p></li>
 </ul>
 <ul>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">DetailsView</a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-DetailsViewthemeattributes">DetailsView</a></p></li>
 </ul>
 <ul>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">VideoView</a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-VideoViewthemeattributes">VideoView</a></p></li>
 </ul>
 <ul>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">CategoryListView</a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-CategoryListViewthemeattributes">CategoryListView</a></p></li>
 </ul>
 <p>Theme attributes can be global so that they apply to any view that supports the specific theme attribute. They can also be set at the view level in which case, they apply to that view component type only:</p>
 <p><strong>Make All Views Have Red Text</strong> </p>
@@ -458,7 +458,7 @@ This is the base component for all SGDEX views.
 
 ## CategoryListView
 
-**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
+**Extends: SGDEXComponent**
 
 ### Description
 
@@ -560,7 +560,7 @@ lists; one for categories and another for the items in the category.
 <td>{ }</td>
 <td><p>Used to change the colorÂ of the grid view elements</p>
 <p><strong>Note:</strong> Set TextColor and focusRingColor to have a generic theme and only change attributes that would not use it</p>
-<p>For all the Possible values of the field, refer to <a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">CategoryListView theme attributes</a></p></td>
+<p>For all the Possible values of the field, refer to <a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-CategoryListViewthemeattributes">CategoryListView theme attributes</a></p></td>
 </tr>
 <tr class="odd">
 <td>content</td>
@@ -749,7 +749,7 @@ m.top.ComponentController.CallFunc("show", {
 
 ## VideoView
 
-**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
+**Extends: SGDEXComponent**
 
 ### Description
 
@@ -834,7 +834,7 @@ includes a number of different features, including:
 <td>currentIndex</td>
 <td>Integer</td>
 <td>-1</td>
-<td>Indicates what is theÂ index of the current item - index of a child in the content</td>
+<td>Indicates what is theÂ indexÂ of the current item - index of a child in the content</td>
 </tr>
 <tr class="odd">
 <td>state</td>
@@ -881,17 +881,17 @@ includes a number of different features, including:
 <td>{ }</td>
 <td><p>Theme is used to change the color of the grid view elements</p>
 <p><strong>Note:</strong> Set TextColor and focusRingColor to have a generic theme and only change the attributes not using the generic theme</p>
-<p>For the possible <a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">VideoView</a> values, refer to:</p>
+<p>For the possible <a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-VideoViewthemeattributes">VideoView</a> values, refer to:</p>
 <ul>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">General attributes</a></p></li>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">Video player attributes </a></p></li>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">Buffering bar attributes</a></p></li>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">Retrieving bar attributes </a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-Generalfields">General attributes</a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-Videoplayerfields">Video player attributes </a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-BufferingBarcustomization">Buffering bar attributes</a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-RetrievingBarcustomization">Retrieving bar attributes </a></p></li>
 </ul>
-<p>For the possible <a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">EncardView</a> values, refer to :</p>
+<p>For the possible <a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-Endcardthemeattributes">EncardView</a> values, refer to :</p>
 <ul>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">View attributes</a></p></li>
-<li><p><a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">Grid attributes</a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-Viewattributes">View attributes</a></p></li>
+<li><p><a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-Gridattributes">Grid attributes</a></p></li>
 </ul></td>
 </tr>
 </tbody>
@@ -920,7 +920,7 @@ m.top.ComponentController.callFunc("show", {
 
 ## DetailsView
 
-**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
+**Extends: SGDEXComponent**
 
 ### Description
 
@@ -1027,14 +1027,14 @@ If set to false it will take content and display it on the view</p>
 <td>Associative array</td>
 <td>{ }</td>
 <td><p>Controls the color of visual elements</p>
-<p>For a list of all the possible values, refer to <a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">DetailsView theme attributes</a></p></td>
+<p>For a list of all the possible values, refer to <a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-DetailsViewthemeattributes">DetailsView theme attributes</a></p></td>
 </tr>
 </tbody>
 </table>
 
 ## GridView
 
-**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
+**Extends: SGDEXComponent**
 
 ### Description
 
@@ -1079,7 +1079,7 @@ Value is an array containing the index of the row and the items that were select
 <td>jumpToRowItem</td>
 <td>Vector2D</td>
 <td>[0, 0]</td>
-<td><p>Sets grid focus to a specified item<br />
+<td><p>Sets grid focus toÂ a specified item<br />
 Value is an array containing the index of the row and the items that should be focused</p>
 <p>This field must be set after setting the content field only</p></td>
 </tr>
@@ -1088,7 +1088,7 @@ Value is an array containing the index of the row and the items that should be f
 <td>Associative array</td>
 <td>{ }</td>
 <td><p>Controls the color of the visual elements</p>
-<p>For the possible values of Grid view theme, refer to <a href="https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/5-Themes_Guide.md">Gridview theme attributes</a></p></td>
+<p>For the possible values of Grid view theme, refer to <a href="https://confluence.portal.roku.com:8443/display/DR/Theme+attributes+for+views#Themeattributesforviews-GridViewthemeattributes">Gridview theme attributes</a></p></td>
 </tr>
 <tr class="odd">
 <td>style</td>
@@ -1207,13 +1207,13 @@ m.top.ComponentController.callFunc("show", {
 
 ## EntitlementView
 
-**Extends: [SGDEXComponent](https://sdkdocs.roku.com/display/sdkdoc/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-SGDEXComponent)**
+**Extends: SGDEXComponent**
 
 ### Description
 
 The EntitlementView gives developers a way to build a basic SVOD
 experience in their channel. It can be used to walk a user through the
-purchase of a Roku Billing subscription and also be  used after a
+purchase of a Roku Billing subscription and also beÂ  used after a
 purchase to enforce entitlement rules by checking whether a user owns a
 valid subscription.
 

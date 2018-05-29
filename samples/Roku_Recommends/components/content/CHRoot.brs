@@ -8,7 +8,7 @@ sub GetContent()
     responseArray = responseXML.GetChildElements()
     rootChildren = []
     children = []
-    
+
     itemCount = 0
     rowCount = 0
 
@@ -30,18 +30,8 @@ sub GetContent()
                         item.HDPosterUrl = xmlThumbnail.GetAttributes().url
                         itemNode = CreateObject("roSGNode", "ContentNode")
                         itemNode.SetFields(item)
-
-                        itemNode.addFields({
-                            handlerConfigRAF: {
-                                name: "HandlerRAF"
-                                fields: {
-                                    contentId: "ID"
-                                }
-                            }
-                        })
-
                         children.Push(itemNode)
-                    end if                    
+                    end if
                 end for
             end if
             itemCount++

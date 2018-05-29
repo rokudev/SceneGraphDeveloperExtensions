@@ -463,40 +463,29 @@ the title as well as a small icon for each button.
 <tr class="header">
 <th><strong>Field</strong></th>
 <th><strong>Type</strong></th>
-<th><strong>Description</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>TITLE </td>
-<td>String</td>
-<td>The label for the list item</td>
-</tr>
-<tr class="even">
-<td>HDLISTITEMICONURL</td>
-<td>Uri</td>
-<td>The image file for the icon displayed to the left of the list item label when the list item is not focused</td>
-</tr>
-<tr class="odd">
-<td>HDLISTITEMICONSELECTEDURL</td>
-<td>Uri</td>
-<td>The image file for the icon to be displayed to the left of the list item label when the list item is focused</td>
-</tr>
-</tbody>
-</table>
-
-**Fields description**
-  
-<table>
-<thead>
-<tr class="header">
-<th><strong>Field</strong></th>
-<th><strong>Type</strong></th>
 <th><strong>Default</strong></th>
 <th><strong>Description</strong></th>
 </tr>
 </thead>
 <tbody>
+<tr class="odd">
+<td>TITLEÂ </td>
+<td></td>
+<td></td>
+<td>The label for the list item</td>
+</tr>
+<tr class="even">
+<td>HDLISTITEMICONURL</td>
+<td></td>
+<td></td>
+<td>The image file for the icon displayed to the left of the list item label when the list item is not focused</td>
+</tr>
+<tr class="odd">
+<td>HDLISTITEMICONSELECTEDURL</td>
+<td></td>
+<td></td>
+<td>The image file for the icon to be displayed to the left of the list item label when the list item is focused</td>
+</tr>
 <tr class="even">
 <td>isContentList</td>
 <td>Boolean</td>
@@ -517,25 +506,25 @@ the title as well as a small icon for each button.
 <tr class="even">
 <td>itemFocused</td>
 <td>Integer</td>
-<td>0</td>
+<td></td>
 <td>Indicates the item currently in focus</td>
 </tr>
 <tr class="odd">
 <td>jumpToItem</td>
 <td>Integer</td>
-<td>0</td>
+<td></td>
 <td>Manually focus on the desired item</td>
 </tr>
 <tr class="even">
 <td>buttonFocused </td>
 <td>Integer</td>
-<td>0</td>
+<td></td>
 <td>Tells what button is focused</td>
 </tr>
 <tr class="odd">
 <td>buttonSelected</td>
 <td>Integer</td>
-<td>0</td>
+<td></td>
 <td>Is set when the button is selected by a user</td>
 </tr>
 <tr class="even">
@@ -547,7 +536,7 @@ the title as well as a small icon for each button.
 <tr class="odd">
 <td>currentItem</td>
 <td>Node</td>
-<td>-</td>
+<td></td>
 <td><p>Currently displayed item</p>
 <p>This item is set when the Content Getter finishes loading extra meta-data</p></td>
 </tr>
@@ -601,7 +590,7 @@ observers and call:
     })
 ~~~~
 
-This hides the current view (if any) and displays the non-SGDEX view.
+This hides the current view (if any) and displays theÂ non-SGDEX view.
 
 **Note:** Component controller set's focus on your view, so your view
 should implement proper focus handling.

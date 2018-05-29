@@ -145,7 +145,7 @@ managing the view stack. It essentially implements the basic default
 view management. Component Controller has fields to enable view
 development for building a channel using SceneGraph Developer
 Extensions. Refer to [ComponentController
-Component](https://github.com/rokudev/SceneGraphDeveloperExtensions/blob/master/documentation/1-components.md#componentcontroller) for
+Component](https://confluence.portal.roku.com:8443/display/DR/SceneGraph+Developer+Extensions+Components#SceneGraphDeveloperExtensionsComponents-ComponentController) for
 more details. 
 
 ### Component Controller Fields

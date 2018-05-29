@@ -1,8 +1,8 @@
-# SceneGraph Developer Extensions
+# Scene Graph Developer Extensions
 
 ## Overview
 
-This is a collection of developer sample code called SceneGraph Developer Extensions (SGDEX). This sample code demonstrates how a developer can use pre-built, reusable Roku SceneGraph (RSG) components to enable rapid development of channels that follow a consistent UX paradigm.
+This is a collection of developer sample code that we call Scene Graph Developer Extensions (SGDEX). This sample code demonstrates how a developer can use pre-built, reusable Roku Scene Graph (RSG) components to enable rapid development of channels that follow a consistent UX paradigm.
 
 ### Views
 

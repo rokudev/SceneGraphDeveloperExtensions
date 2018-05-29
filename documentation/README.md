@@ -1,4 +1,4 @@
-# SceneGraph Developer Extensions Documentation
+# Scene Graph Developer Extensions Documentation
 
 ## Overview
 
