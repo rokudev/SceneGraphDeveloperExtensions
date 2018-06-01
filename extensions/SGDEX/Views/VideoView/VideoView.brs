@@ -37,7 +37,7 @@ sub Init()
     ' when content for current item is loaded, currentItem field is set
     ' in OnCurrentItem RAF task is created if config for RAF exist
     ' of Video Node control set
-	' It is triggered manually by OnCurrentItem() to make an ability to remove HandlerConfigs while video is playing
+    ' It is triggered manually by OnCurrentItem() to make an ability to remove HandlerConfigs while video is playing
     ' m.top.ObserveField("currentItem", "OnCurrentItem")
 
     ' Time how much endcard should count before close or move to next video
@@ -116,7 +116,6 @@ Sub ClearVideoNode()
     end if
 End Sub
 
-
 sub OnVideoViewWasShown(event as Object)
     if m.video <> Invalid and m.video.HasFocus()
         m.video.SetFocus(true)
@@ -124,7 +123,7 @@ sub OnVideoViewWasShown(event as Object)
 end sub
 
 sub OnContentSet(event as Object)
-    ' User should implement own OnContentSet to update the buttons etc.
+    ' developers should implement their own OnContentSet to update the buttons etc.
 end sub
 
 ' When control of Video View is set, this sub triggers
@@ -140,10 +139,9 @@ sub OnControlSet(event as Object)
     if m.video = invalid or control = invalid then return
     if (control = "play" or control = "prebuffer")
         ' TODO Make logic for play or prebuffer here if needed
-        if m.ableToPlay and m.rafHandlerConfig = Invalid
-            m.video.enableUI = true
-            m.video.SetFocus(true)
-            m.video.control = control
+        ' Play video when ready and no raf config or raf task was not started
+        if m.ableToPlay and (m.rafHandlerConfig = Invalid or m.rafTask = invalid)
+             GetRafConfigAndPlayVideo(control)
         else
             if m.top.currentIndex = - 1 then m.top.currentIndex = 0
         end if
@@ -233,8 +231,8 @@ end sub
 ' and observe items to get channel know that user presses a button
 ' or repeats video on Repeat button selected
 sub ShowEndcardView()
-	' We should delete HandlerConfigEndcard only if endcard View was shown
-	' not in case if user started playback and goes back
+    ' We should delete HandlerConfigEndcard only if endcard View was shown
+    ' not in case if user started playback and goes back
     if m.top.currentItem <> Invalid
         m.top.currentItem.HandlerConfigEndcard = invalid
     end if
@@ -270,13 +268,13 @@ sub ShowEndcardView()
     m.endcardView.ObserveField("timerFired", "OnEndcardTimerFired")
 end sub
 
-Sub OnEndcardVisible(event as Object)
+sub OnEndcardVisible(event as Object)
     endcardViewVisible = event.GetData()
     if endcardViewVisible
-		' Additional clearing of video node when endcard view is shown
+        ' Additional clearing of video node when endcard view is shown
         ClearVideoNode()
     end if
-End Sub
+end sub
 
 ' Invalidate EndcardView, reset local config vars
 sub HideEndcardView()
@@ -416,35 +414,46 @@ sub OnCurrentItem()
 
     ' Set content node that we receive to Video Node
     SetVideoContent(currentItem)
-
+    'invalidate only once as GetRafConfigAndPlayVideo might be called often but config will be deleted from item
+    m.rafHandlerConfig = invalid
+    ExtractRafConfig()
     if topControl = "play" or topControl = "prebuffer"
-        ' If Raf config set, need to create RAF task
-        m.rafHandlerConfig = Invalid
-        if (currentItem.handlerConfigRAF <> Invalid and currentItem.handlerConfigRAF.name <> "") then
-            m.rafHandlerConfig = currentItem.handlerConfigRAF
-            currentItem.handlerConfigRAF = Invalid
-        else if (m.top.content.handlerConfigRAF <> Invalid and m.top.content.handlerConfigRAF.name <> "") then
-            m.rafHandlerConfig = m.top.content.handlerConfigRAF
-        else if (m.top.handlerConfigRAF <> Invalid and m.top.handlerConfigRAF.name <> "") then
-            m.rafHandlerConfig = m.top.handlerConfigRAF
-        end if
-
-        if m.rafHandlerConfig <> Invalid and m.rafHandlerConfig.name <> ""
-            rafTask = StartRafTask(m.rafHandlerConfig, m.video)
-            if rafTask = Invalid
-                m.video.enableUI = true
-                m.video.SetFocus(true)
-                m.video.control = topControl
-            end if
-        else ' if Raf is not set, just pass control directly to Video Node
-            m.video.enableUI = true
-            m.video.SetFocus(true)
-            m.video.control = topControl
-        end if
+        GetRafConfigAndPlayVideo(topControl)
     end if
 end sub
 
-Sub CreateBookmarksHandler()
+sub GetRafConfigAndPlayVideo(control)
+    ' If Raf config set, need to create RAF task
+    
+    ExtractRafConfig()
+    if m.rafHandlerConfig <> invalid and m.rafHandlerConfig.name <> ""
+        rafTask = StartRafTask(m.rafHandlerConfig, m.video)
+        if rafTask = invalid
+            m.video.enableUI = true
+            m.video.SetFocus(true)
+            m.video.control = control
+        end if
+    else ' if RAF is not set, just pass control directly to Video Node
+        m.video.enableUI = true
+        m.video.SetFocus(true)
+        m.video.control = control
+    end if
+end sub
+
+sub ExtractRafConfig()
+    currentItem = m.top.currentItem
+    topControl = m.top.control
+    if (currentItem.handlerConfigRAF <> invalid and currentItem.handlerConfigRAF.name <> "") then
+        m.rafHandlerConfig = currentItem.handlerConfigRAF
+        currentItem.handlerConfigRAF = invalid
+    else if (m.top.content.handlerConfigRAF <> invalid and m.top.content.handlerConfigRAF.name <> "") then
+        m.rafHandlerConfig = m.top.content.handlerConfigRAF
+    else if (m.top.handlerConfigRAF <> invalid and m.top.handlerConfigRAF.name <> "") then
+        m.rafHandlerConfig = m.top.handlerConfigRAF
+    end if
+end sub
+
+sub CreateBookmarksHandler()
     currentItem = m.top.currentItem
     if currentItem <> invalid then
         BookmarksHandler = currentItem.BookmarksHandler
@@ -457,11 +466,10 @@ Sub CreateBookmarksHandler()
                 ?"Error : Unable to create BookmarksHandler with type " NodeName
             end if
         else
-            ?"Error : Invalid BookmarksHandler config"
+            '?"Error : Invalid BookmarksHandler config"
         end if
     end if
-End Sub
-
+end sub
 
 ' Function creates a Raf handler task with provided config and video
 '
@@ -499,9 +507,7 @@ function StartRafTask(rafHandlerConfig as Object, video as Object) as Object
     return m.RafTask
 end function
 
-
 ' Function to save max time locally
-'
 ' @param event [roSGNodeEvent] - m.top.endcardCountdownTime field event - integer with number of seconds
 sub OnEndcardCountdownTimeChange(event as Object)
     endcardCountdownTime = event.GetData()
@@ -511,7 +517,7 @@ end sub
 ' This function will be called in both cases when video finishes or when user presses back
 ' when user presses back, View manger will handle it and remove top View from view
 ' Should stop video node and Raf task here to prevent some bugs
-'
+
 ' @param event [roSGNodeEvent] - m.top.wasClosed field event - boolean
 sub OnVideoWasClosed(event as Object)
     ClearVideoNode()
@@ -530,7 +536,7 @@ End Sub
 ' Handles position of video playback
 ' m.top.endcardLoadTime - how much seconds to the end of playback we should load endcards
 ' If Time has come - load Endcard content
-'
+
 ' @param event [roSGNodeEvent] - m.video.position field event - float
 sub OnPositionChanged(event as Object)
     duration = m.video.duration
@@ -585,7 +591,7 @@ sub LoadMoreContent(content, HandlerConfig)
     facade = m.top.createChild("LoadingFacade")
     facade.bEatKeyEvents = false
 
-	' Need to hide previous video player if it exist before loading content for new one
+    ' Need to hide previous video player if it exist before loading content for new one
     if m.video <> invalid then m.video.visible = false
     callback = {
         lastFocusedItem: m.top.currentIndex
