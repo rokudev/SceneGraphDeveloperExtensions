@@ -6,8 +6,9 @@ This sample shows a complete channel driven by a single RSS feed.
 
 ### GridView
 
-Primary content navigation in this sample uses a _hero_ style GridView.
-Hero style uses larger posters on the top row of the grid.
+Primary content navigation in this sample uses a _zoom_ style GridView.
+The zoom style was introduced in SGDEX v1.1 and enables a zooming animation
+as the user navigates vertically within the grid.
 
 ### DetailView
 
