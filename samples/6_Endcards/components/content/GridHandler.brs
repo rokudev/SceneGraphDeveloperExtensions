@@ -11,7 +11,7 @@ sub GetContent()
     'this is for a sample, usually feed is retrieved from url using roUrlTransfer
     feed = ReadAsciiFile("pkg:/feed/feed.json")
     sleep(2000)
-    
+
     json = ParseJson(feed)
     rootNodeArray = ParseJsonToNodeArray(json)
     m.top.content.AppendChildren(rootNodeArray)
@@ -24,7 +24,7 @@ Function ParseJsonToNodeArray(jsonAA as Object) as Object
 
     for each fieldInJsonAA in jsonAA
         ' Assigning fields that apply to both movies and series
-        if fieldInJsonAA = "movies"'' OR fieldInJsonAA = "series"
+        if fieldInJsonAA = "movies" 'OR fieldInJsonAA = "series"
             mediaItemsArray = jsonAA[fieldInJsonAA]
             itemsNodeArray = []
             for each mediaItem in mediaItemsArray
@@ -47,6 +47,7 @@ End Function
 Function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Object
     itemNode = Utils_AAToContentNode({
             "id"    : mediaItem.id
+            "title"    : mediaItem.title
             "hdPosterUrl" : mediaItem.thumbnail
             "Description" : mediaItem.shortDescription
             "Categories" : mediaItem.genres[0]
@@ -82,8 +83,9 @@ Function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Objec
                 episodeNode = Utils_AAToContentNode(episode)
                 Utils_forceSetFields(episodeNode, {
                     "url" : GetVideoUrl(episode)
-                    "hdPosterUrl" : episode.lookup("thumbnail")
-                    "Description" : episode.lookup("shortDescription")
+                    "title" : episode.title
+                    "hdPosterUrl" : episode.thumbnail
+                    "Description" : episode.shortDescription
                 })
                 episodeArray.Push(episodeNode)
             end for

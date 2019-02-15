@@ -84,8 +84,9 @@
 
             Styles are used to tell what grid UI will be used
 
-            @PossibleValue standard - is default grid style
-            @PossibleValue hero - is default grid style
+            @PossibleValue standard - This is default grid style
+            @PossibleValue hero - This style will display larger posters on the top row of the grid
+            @PossibleValue zoom - This style will enable an animated zoom effect when a row gains focus
         -->
 
         <!--

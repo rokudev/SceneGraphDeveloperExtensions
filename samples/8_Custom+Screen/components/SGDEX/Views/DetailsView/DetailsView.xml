@@ -39,6 +39,10 @@
         <field id="itemFocused" type="integer" alwaysNotify="true" />
 
         <!-- @Public -->
+        <!-- itemLoaded is set to true when currentItem field is populated with new content node when content available or loaded  -->
+        <field id="itemLoaded" type="bool" alwaysNotify="true" />
+
+        <!-- @Public -->
         <!-- @WriteOnly  -->
         <!-- Manually focus on desired item. This field must be set after setting the content field. -->
         <field id="jumpToItem" type="integer" onChange="OnJumpToItem" value="0" alwaysNotify="true" />

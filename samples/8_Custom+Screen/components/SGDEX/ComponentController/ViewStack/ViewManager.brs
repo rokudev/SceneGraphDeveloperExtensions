@@ -45,7 +45,7 @@ sub procedureObjectChange(event as Object)
                 procedureObject = procedureNode.procedureObject
                 if type(procedureObject) = "roAssociativeArray" and type(m[procedureObject.fn]) = "roFunction" then
                     ?"==============================================================================="
-                    ?" Run Procedure from ViewManager child -> functionName = "procedureObject.fn
+                    ?"SGDEX: Run Procedure from ViewManager child -> functionName = "procedureObject.fn
                     ?"==============================================================================="
                     runProcedure(procedureObject)
                 end if
@@ -57,14 +57,14 @@ sub procedureObjectChange(event as Object)
     else if field = "procedureObject" and m.top.procedureObject <> invalid
         procedureObject = m.top.procedureObject
         ?"==============================================================================="
-        ?" Run Procedure from procedureObject field -> functionName = "procedureObject.fn
+        ?"SGDEX: Run Procedure from procedureObject field -> functionName = "procedureObject.fn
         ?"==============================================================================="
         if type(procedureObject) = "roAssociativeArray" and type(m[procedureObject.fn]) = "roFunction" then
             runProcedure(procedureObject)
         end if
     else
         ?"==============================================================================="
-        ?" Run Procedure from "field" field -> functionName = "field
+        ?"SGDEX: Run Procedure from "field" field -> functionName = "field
         ?"==============================================================================="
         data = event.getData()
         if type(m[field]) = "roFunction" and type(data) = "roAssociativeArray" and data.fp <> invalid then
@@ -79,7 +79,7 @@ end sub
 ' run procedure from 0 to 5 argunments
 sub runProcedure(procedureObject)
     procedureParams = procedureObject.fp
-    ? " View Manager runProcedure "; procedureObject.fn
+    ? "SGDEX: View Manager runProcedure "; procedureObject.fn
     if type(procedureParams) = "roArray" then
         if procedureParams.count() = 0 then
             m[procedureObject.fn]()
@@ -177,12 +177,12 @@ sub addView(ViewComponentName, ViewInitData)
     if not newView.isinFocusChain() AND newView.focusedChild = invalid
         
         if newView.initialFocusedNode <> invalid
-            ?"set focus to :"newView.initialFocusedNode.subtype()
+            ?"SGDEX: set focus to :"newView.initialFocusedNode.subtype()
             newView.initialFocusedNode.setfocus(true) 
         else
             if not newView.isInFocusChain()
                 newView.setFocus(true)
-                ?"newView.setFocus(true)"
+                ?"SGDEX: newView.setFocus(true)"
             end if
         end if
     end if
@@ -219,7 +219,7 @@ sub closeView(sid = invalid, closeData = invalid)
         end if
         closedViewUI = m.ui_object[closedViewVO.sid]
         'tell the View that it was closed
-        ?"fire close for this View"
+        ?"SGDEX: fire close for this View"
         if closedViewUI.hasField("wasClosed") then
             closedViewUI.wasClosed = true
         end if
@@ -230,7 +230,7 @@ sub closeView(sid = invalid, closeData = invalid)
             nowViewVO.current_state.closed_View_data = closeData
             nowViewUI = m.ui_object[nowViewVO.sid]
             if not IsNodeContainsChild(m.ssUI,nowViewUI) ' check if new View doesn't opened in close callback
-                ?"Showing previous View"
+                ?"SGDEX: Showing previous View"
                 nowViewUI.visible = true
                 m.ssUI.appendChild(nowViewUI)
                 
@@ -246,7 +246,7 @@ sub closeView(sid = invalid, closeData = invalid)
                 end if
             end if
         else
-            ?"INFO : Last View was closed"
+            ?"SGDEX: INFO : Last View was closed"
         end if
         
         'Delete and clean closed View
@@ -321,10 +321,10 @@ sub closeToView(sid = invalid, closeData = invalid)
                     nowViewUI.wasShown = true
                 end if
             else
-                ?"closed to many View, check your id"
+                ?"SGDEX: closed to many View, check your id"
             end if
         else
-            ?"problems with sid,  m.ssA.Count():" m.ssA.Count()", sid:["sid"]"
+            ?"SGDEX: problems with sid,  m.ssA.Count():" m.ssA.Count()", sid:["sid"]"
         end if
         
         'Delete and clean closed View

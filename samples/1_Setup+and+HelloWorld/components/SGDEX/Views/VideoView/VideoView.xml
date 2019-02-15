@@ -64,6 +64,10 @@
         <field id="endcardTrigger" type="boolean" alwaysNotify="true" />
 
         <!-- @Public -->
+        <!-- Trigger to notify that next Video item in playlist should be preloaded while Endcard view is shown  -->
+        <field id="preloadContent" type="boolean" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
         <!-- Field to know what is index of current item - index of child in content Content Node  -->
         <field id="currentIndex" type="integer" value="-1" alwaysNotify="true" />
 

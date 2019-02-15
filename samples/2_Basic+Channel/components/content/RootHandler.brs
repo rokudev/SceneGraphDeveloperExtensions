@@ -19,13 +19,12 @@ sub GetContent()
                     children = []
                     for each arrayItem in value
                         itemNode = CreateObject("roSGNode", "ContentNode")
-                        itemNode.AddFields(arrayItem)
-
-                        itemNode.setFields({
+                        Utils_ForceSetFields(itemNode, {
                             hdPosterUrl: arrayItem.thumbnail
                             Description: arrayItem.shortDescription
                             id: arrayItem.id
                             Categories: arrayItem["genres"][0]
+                            title : arrayItem.title
                         })
                         if item = "movies"
                             ' Add 4k option
@@ -37,24 +36,20 @@ sub GetContent()
                             for each season in arrayItem.seasons
                                 episodeArray = []
                                 for each episode in season.episodes
-                                    ' This is just a workaround to avoid a type mismatch warning on the console
-                                    ' The episodeNumber value isn't used anywhere in this sample, so it' s safe to delete it
-                                    episode.Delete("episodeNumber")
-
                                     episodeNode = CreateObject("roSGNode", "ContentNode")
-                                    episodeNode.addFields(episode)
-                                    episodeNode.setFields(episode)
 
                                     episodeNode.setFields({
+                                        title : episode.title
                                         url: episode.content.videos[0].url
                                         hdPosterUrl: episode.thumbnail
                                         Description: episode.shortDescription
                                     })
+
                                     episodeArray.Push(episodeNode)
                                 end for
                                 seasonArray.Push(episodeArray)
                             end for
-                            itemNode.SetField("seasons", seasonArray)
+                            Utils_ForceSetFields(itemNode, {"seasons": seasonArray})
                         end if
                         children.Push(itemNode)
                     end for

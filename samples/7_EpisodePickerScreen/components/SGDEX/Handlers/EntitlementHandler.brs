@@ -1,6 +1,9 @@
 ' Copyright (c) 2018 Roku, Inc. All rights reserved.
 
 sub Init()
+    ' create channel store object here and use this instance for all operations
+    m.channelStore = CreateObject("roChannelStore")
+    
     m.top.observeField("state", "OnStateChange")
 
     ' get entitlements config params
@@ -79,10 +82,9 @@ function HasActiveSubscription() as Boolean
 
     if m.config.products <> invalid
         port = CreateObject("roMessagePort")
-        channelStore = CreateObject("roChannelStore")
-        channelStore.SetMessagePort(port)
+        m.channelStore.SetMessagePort(port)
 
-        channelStore.GetPurchases()
+        m.channelStore.GetPurchases()
         msg = Wait(0, port)
         if msg.IsRequestSucceeded()
             purchaseList = msg.GetResponse()
@@ -125,10 +127,9 @@ function GetProductsAllowedForPurchase() as Object
     result = []
 
     port = CreateObject("roMessagePort")
-    channelStore = CreateObject("roChannelStore")
-    channelStore.SetMessagePort(port)
+    m.channelStore.SetMessagePort(port)
 
-    channelStore.GetCatalog()
+    m.channelStore.GetCatalog()
     msg = Wait(0, port)
     if msg.IsRequestSucceeded()
         catalogProductList = msg.GetResponse()
@@ -157,15 +158,14 @@ sub StartPurchase(product = m.productToPurchase as Object)
     m.productToPurchase = invalid
 
     port = CreateObject("roMessagePort")
-    channelStore = CreateObject("roChannelStore")
-    channelStore.SetMessagePort(port)
+    m.channelStore.SetMessagePort(port)
 
-    channelStore.SetOrder([{
+    m.channelStore.SetOrder([{
         code: product.code
         qty: 1
     }])
 
-    if channelStore.DoOrder()
+    if m.channelStore.DoOrder()
         msg = Wait(0, port)
         if msg.IsRequestSucceeded()
             transactionsList = msg.GetResponse()
@@ -204,6 +204,10 @@ sub Subscribe()
         m.top.view.close = true
         m.top.view.isSubscribed = true
     else
+        ' use message port for processing Dialog events in the handler's 
+        ' scope as async callbacks won't work in this case for FW > 7.6
+        port = CreateObject("roMessagePort")
+    
         dialog = CreateObject("roSGNode", "ProgressDialog")
         dialog.title = "Please wait..."
         m.top.GetScene().dialog = dialog
@@ -213,22 +217,36 @@ sub Subscribe()
         numAllowedProducts = allowedProducts.Count()
         if numAllowedProducts = 0
             dialog = CreateObject("roSGNode", "Dialog")
-            dialog.ObserveField("buttonSelected", "OnErrorDialogSelection")
-            dialog.ObserveField("wasClosed", "OnErrorDialogWasClosed")
+            dialog.ObserveField("buttonSelected", port)
+            dialog.ObserveField("wasClosed", port)
             dialog.SetFields({
                 title: "Error"
                 message: "No available subscription products to purchase"
                 buttons: ["Close"]
             })
             m.top.GetScene().dialog = dialog
+            
+            ' waiting on msg port instead of async callbacks
+            ' for processing Dialog events in the handler's scope
+            while true
+                msg = Wait(0, port)
+                field = msg.Getfield()
+                
+                if field = "buttonSelected"
+                    OnErrorDialogSelection()
+                else if field = "wasClosed"
+                    OnErrorDialogWasClosed()
+                    exit while
+                end if     
+            end while
 '        else if numAllowedProducts = 1
 '            ' only 1 product, proceed with purchase without selection dialog
 '            StartPurchase(allowedProducts[0])
         else
             ' show subscription product selection dialog
             dialog = CreateObject("roSGNode", "Dialog")
-            dialog.ObserveField("buttonSelected", "OnProductDialogSelection")
-            dialog.ObserveField("wasClosed", "OnProductDialogWasClosed")
+            dialog.ObserveField("buttonSelected", port)
+            dialog.ObserveField("wasClosed", port)
 
             buttons = []
             for each product in allowedProducts
@@ -243,6 +261,20 @@ sub Subscribe()
                 buttons: buttons
             })
             m.top.GetScene().dialog = dialog
+            
+            ' waiting on msg port instead of async callbacks
+            ' for processing Dialog events in the handler's scope
+            while true
+                msg = Wait(0, port)
+                field = msg.Getfield()
+                
+                if field = "buttonSelected"
+                    OnProductDialogSelection(msg)
+                else if field = "wasClosed"
+                    OnProductDialogWasClosed()
+                    exit while
+                end if
+            end while
         end if
     end if
 end sub
@@ -255,15 +287,14 @@ sub OnProductDialogSelection(event)
     dialog = m.top.GetScene().dialog
     product = dialog.storage.allowedProducts[event.GetData()]
 
+    m.productToPurchase = product
     dialog.close = true
 
-    m.productToPurchase = product
-    m.top.functionName = "StartPurchase"
-    m.top.control = "RUN"
+    StartPurchase()
 end sub
 
 sub OnProductDialogWasClosed()
-    if not m.top.GetScene().dialog.close
+    if m.productToPurchase = invalid
         ' user has exited product selection dialog by back button
         m.top.view.close = true
         m.top.view.isSubscribed = false

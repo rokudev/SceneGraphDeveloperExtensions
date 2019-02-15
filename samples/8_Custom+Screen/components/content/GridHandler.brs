@@ -43,11 +43,12 @@ end function
 
 function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Object
     itemNode = Utils_AAToContentNode({
-        "id": mediaItem.id
-        "hdPosterUrl": mediaItem.thumbnail
-        "Description": mediaItem.shortDescription
-        "Categories": mediaItem.genres[0]
-    })
+            "id"    : mediaItem.id
+            "title"    : mediaItem.title
+            "hdPosterUrl" : mediaItem.thumbnail
+            "Description" : mediaItem.shortDescription
+            "Categories" : mediaItem.genres[0]
+        })
 
     if mediaItem = invalid then
         return itemNode
@@ -69,9 +70,10 @@ function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Objec
             for each episode in episodes
                 episodeNode = Utils_AAToContentNode(episode)
                 Utils_forceSetFields(episodeNode, {
-                    "url": GetVideoUrl(episode)
-                    "hdPosterUrl": episode.Lookup("thumbnail")
-                    "Description": episode.Lookup("shortDescription")
+                    "url" : GetVideoUrl(episode)
+                    "title" : episode.title
+                    "hdPosterUrl" : episode.thumbnail
+                    "Description" : episode.shortDescription
                 })
                 episodeArray.Push(episodeNode)
             end for

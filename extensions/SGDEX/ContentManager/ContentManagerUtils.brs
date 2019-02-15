@@ -266,7 +266,7 @@ end sub
 ' if implemented doPrioritySort() function is responsible for sorting tasks 
 '@See doPrioritySort
 sub RunNextTaskFromQueue()
-    if not m.waitingQueue.IsEmpty() then
+    if not m.waitingQueue.IsEmpty() and m.CanLoadContent then
         timer = CreateObject("roTimespan")
         if doPrioritySort <> invalid then doPrioritySort()
         if m.debug then ? "sorted in "timer.TotalMilliseconds() " size = "m.waitingQueue.Count()

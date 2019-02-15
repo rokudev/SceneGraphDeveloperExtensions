@@ -22,6 +22,10 @@ sub Init()
     ' before actual videoNode.control = "play"
     m.top.ObserveField("control", "OnControlSet")
 
+    ' User can set isContentList after content set of jump to item set
+    ' to handle this case lib need to call some callbacks again
+    m.top.ObserveField("isContentList", "OnIsContentListChanged")
+
     ' When VideoView is closed we need to stop Video Node,
     ' Stop RAF task if it exist
     m.top.ObserveField("wasClosed", "OnVideoWasClosed")
@@ -33,6 +37,8 @@ sub Init()
     ' field to set what item should be played next
     ' it triggers content loading for current item
     m.top.ObserveField("currentIndex", "OnCurrentIndex")
+
+    m.top.ObserveField("preloadContent", "OnPreloadContent")
 
     ' when content for current item is loaded, currentItem field is set
     ' in OnCurrentItem RAF task is created if config for RAF exist
@@ -55,6 +61,9 @@ sub Init()
     ' internal flag to know did we already load content for endcard View or not
     m.isEndcardLoaded = false
 
+    ' internal field to know did we already create the bookmark handler
+    m.isBookmarkHandlerCreated = false
+
     ' Video Node creates dynamically for each video item
     ' this is made because there is some firmware issue and RAF triggers state
     ' of video node
@@ -72,13 +81,28 @@ sub Init()
     ' PRIVATE field for library managers
     m.ContentManager_id = 0
     m.debug = false
+
+    ' Internal flag to signalize possibility to play content after EndcardView closes
+    ' and next content is preloaded in background
+    m.shouldStartPlaybackAfterHiddenLoading = false
+end sub
+
+
+' isContentList callback reruns currentIndex callback for case
+' if user set isContentList after setting content or jumpToItem
+sub OnIsContentListChanged()
+    if m.top.content <> invalid and m.top.jumpToItem >= 0
+        OnCurrentIndex()
+    end if
 end sub
 
 ' Function deletes current Video Node: stops, remove observes, invalidates
 ' and removes from parent - from VideoView; then creates new Video Node,
 ' configure it, set themes and create new observes
 sub CreateVideoNode() as Object
+    ? "[SGDEX] CreateVideoNode()"
     ClearVideoNode()
+    m.isBookmarkHandlerCreated = false
 
     video = m.top.createChild("Video")
     video.id = "video"
@@ -108,22 +132,42 @@ Sub ClearVideoNode()
         m.video.control = "stop"
         m.video.content = Invalid
 
-        ' this should be done because for some reason video node is not released for some time and new one can't be created
-        m.top.control = "none" ' workaround to release Video View interface field
+        ' TODO Remove after v1.1
+        ' Added toStr() to m.top.content to pass by value, not roString reference, so next lines are no longer need
+        ' ' this should be done because for some reason video node is not released for some time and new one can't be created
+        ' ' m.top.control = "none" ' workaround to release Video View interface field
 
         m.top.removeChild(m.video)
         m.video = Invalid
     end if
 End Sub
 
+sub OnPreloadContent()
+    preloadContent = m.top.preloadContent
+    if preloadContent and m.top.content <> invalid and m.video <> invalid
+        ' preload content only if it not buffering yet
+        if m.video.state <> "buffering" and m.video.state <> "playing"
+            m.top.control = "prebuffer"
+        end if
+    end if
+end sub
+
 sub OnVideoViewWasShown(event as Object)
-    if m.video <> Invalid and m.video.HasFocus()
+    if m.video <> Invalid and not m.video.HasFocus()
         m.video.SetFocus(true)
     end if
+
+    ' this if needed for starting playback
+    ' if user set control play before view was shown
+    if not m.top.preloadContent then OnCurrentIndex()
 end sub
 
 sub OnContentSet(event as Object)
     ' developers should implement their own OnContentSet to update the buttons etc.
+    if m.ableToPlay
+        ' try to preload content only if content is valid
+        OnPreloadContent()
+    end if
 end sub
 
 ' When control of Video View is set, this sub triggers
@@ -135,13 +179,15 @@ end sub
 '
 ' @param event [roSGNodeEvent] - m.top.control field event
 sub OnControlSet(event as Object)
-    control = event.GetData()
+    ' Control field is roString type we should change it to String to force firmware to pass
+    ' it by value, not reference
+    control = event.GetData().toStr()
     if m.video = invalid or control = invalid then return
     if (control = "play" or control = "prebuffer")
         ' TODO Make logic for play or prebuffer here if needed
         ' Play video when ready and no raf config or raf task was not started
         if m.ableToPlay and (m.rafHandlerConfig = Invalid or m.rafTask = invalid)
-             GetRafConfigAndPlayVideo(control)
+            GetRafConfigAndPlayVideo(control)
         else
             if m.top.currentIndex = - 1 then m.top.currentIndex = 0
         end if
@@ -170,15 +216,19 @@ sub OnVideoStateChanged(event as Object)
             if m.endcardContent <> Invalid or m.top.alwaysShowEndcards
                 ' Hide Video node and show endcard view
                 m.video.visible = false
+                m.video.content = invalid
 
+                CreateVideoNode()
                 ShowEndcardView()
 
                 ' Handled == true to not close VideoView
                 handled = true
                 ' If endcard content not available, but there is a playlist item, play it
             else if m.top.content.GetChildCount() > m.top.currentIndex + 1
+                CreateVideoNode()
+
                 m.top.currentIndex = m.top.currentIndex + 1
-                m.top.control = "play"
+                ' m.top.control = "play" ' currentIndex callback should start playback automatically
                 handled = true
             end if
         end if
@@ -212,12 +262,12 @@ sub OnEndcardTimerFired()  ' Don't insert event as parameter to use this callbac
     if m.time = 0
         ' when endcard time end, invalidate endcard content
         HideEndcardView()
-        CreateVideoNode()
+        ' CreateVideoNode() ' Removed creating new video node each time
         hasNextItemInPlaylist = (m.top.content.GetChildCount() > m.top.currentIndex + 1)
         ' if there is some video in playlist, show Video node and go to next video
         if hasNextItemInPlaylist
             m.top.currentIndex = m.top.currentIndex + 1
-            m.top.control = "play"
+            ' m.top.control = "play" ' currentIndex callback should start playback automatically
             m.video.visible = true
             m.video.SetFocus(true)
         else ' if there is no video available, close the View
@@ -266,15 +316,23 @@ sub ShowEndcardView()
     m.endcardView.ObserveField("rowItemSelected", "OnEndcardRowItemSelected")
     m.endcardView.ObserveField("repeatButtonSelectedEvent", "OnRepeatButtonSelected")
     m.endcardView.ObserveField("timerFired", "OnEndcardTimerFired")
-end sub
 
-sub OnEndcardVisible(event as Object)
-    endcardViewVisible = event.GetData()
-    if endcardViewVisible
-        ' Additional clearing of video node when endcard view is shown
-        ClearVideoNode()
+    hasNextItemInPlaylist = (m.top.content.GetChildCount() > m.top.currentIndex + 1)
+    if hasNextItemInPlaylist and m.top.preloadContent
+        ' Start loading of next item in playlist
+        nextItem = m.top.content.getChild(m.top.currentIndex + 1)
+        nextHandlerConfigVideo = nextItem.HandlerConfigVideo
+        LoadContentHidden(nextItem, nextHandlerConfigVideo)
     end if
 end sub
+
+' sub OnEndcardVisible(event as Object)
+'     endcardViewVisible = event.GetData()
+'     if endcardViewVisible
+'         ' Additional clearing of video node when endcard view is shown
+'         ' ClearVideoNode() ' Removed creating new video node each time
+'     end if
+' end sub
 
 ' Invalidate EndcardView, reset local config vars
 sub HideEndcardView()
@@ -306,7 +364,7 @@ sub OnEndcardRowItemSelected(event as Object)
     ' user pressed on first item - move to next video
     if row = 0 and col = 0 and hasNextItemFromPlaylist
         HideEndcardView()
-        CreateVideoNode()
+        ' CreateVideoNode() ' Removed creating new video node each time
         m.top.currentIndex = m.top.currentIndex + 1
         m.top.control = "play"
         m.video.visible = true
@@ -339,10 +397,8 @@ end sub
 ' Function handles index of item to play change
 ' if there is a possibility to load content - HandlerConfigVideo is set - it calls LoadMoreContent
 ' otherwise - m.top.currentItem field is set
-'
-' @param event [roSGNodeEvent] - m.top.currentIndex field event - integer of item in playlist
-sub OnCurrentIndex(event as Object)
-    currentIndex = event.GetData()
+sub OnCurrentIndex()
+    currentIndex = m.top.currentIndex
     currentItem = Invalid
     m.ableToPlay = false
     m.isEndcardLoaded = false
@@ -357,12 +413,20 @@ sub OnCurrentIndex(event as Object)
 
     if currentItem <> Invalid
         HandlerConfigVideo = currentItem.HandlerConfigVideo
-        currentItem.HandlerConfigVideo = invalid
-        if HandlerConfigVideo <> Invalid
-            LoadMoreContent(currentItem, HandlerConfigVideo)
-        else
+
+        if HandlerConfigVideo = Invalid and m.hiddenLoadTask = invalid and IsContentLoaded()
             m.top.currentItem = currentItem
             OnCurrentItem()
+        else if (m.top.wasShown or m.top.preloadContent)
+            m.loadingfacade = m.top.createChild("LoadingFacade")
+            m.loadingfacade.bEatKeyEvents = false
+            ' TODO Possibly refactor this if
+            if HandlerConfigVideo <> invalid and m.hiddenLoadTask = invalid
+                currentItem.HandlerConfigVideo = invalid
+                LoadMoreContent(currentItem, HandlerConfigVideo)
+            else if HandlerConfigVideo = invalid and m.hiddenLoadTask <> invalid
+                m.shouldStartPlaybackAfterHiddenLoading = true
+            end if
         end if
     else if m.top.isContentList and  m.top.content.getChildCount() = 0 and  m.top.content.HandlerConfigVideo <> invalid then
         'we need to load root list first
@@ -392,6 +456,17 @@ sub OnCurrentIndex(event as Object)
     end if
 end sub
 
+' Return false if content handler is running
+' Return true otherwise
+function IsContentLoaded()
+    isLoaded = true
+    if m.contentHandler <> invalid and m.contentHandler.state = "run"
+        ' if content handler is running the content is not loaded yet
+        isLoaded = false
+    end if
+    return isLoaded
+end function
+
 ' Function handles case when content for current item to play is set, 2 cases:
 ' - there is all required content in content node
 ' - user set HandlerConfigVideo and HandlerConfigVideo Task finishes
@@ -404,13 +479,14 @@ end sub
 sub OnCurrentItem()
     m.ableToPlay = true
     currentItem = m.top.currentItem
-    topControl = m.top.control
+    topControl = m.top.control.toStr() ' we should pass it by value, not roString reference
 
     ' Create new Video Node each time we start new video playback
     ' to prevent firmware issues
-    CreateVideoNode()
+    if m.video <> invalid then m.video.visible = true
+    ' CreateVideoNode() ' Removed creating new video node each time
 
-    CreateBookmarksHandler()
+    if not m.isBookmarkHandlerCreated then CreateBookmarksHandler()
 
     ' Set content node that we receive to Video Node
     SetVideoContent(currentItem)
@@ -424,7 +500,7 @@ end sub
 
 sub GetRafConfigAndPlayVideo(control)
     ' If Raf config set, need to create RAF task
-    
+
     ExtractRafConfig()
     if m.rafHandlerConfig <> invalid and m.rafHandlerConfig.name <> ""
         rafTask = StartRafTask(m.rafHandlerConfig, m.video)
@@ -433,9 +509,9 @@ sub GetRafConfigAndPlayVideo(control)
             m.video.SetFocus(true)
             m.video.control = control
         end if
-    else ' if RAF is not set, just pass control directly to Video Node
+    else if m.video <> invalid ' if RAF is not set, just pass control directly to Video Node
         m.video.enableUI = true
-        m.video.SetFocus(true)
+        if m.top.wasShown then m.video.SetFocus(true)
         m.video.control = control
     end if
 end sub
@@ -460,6 +536,7 @@ sub CreateBookmarksHandler()
         if BookmarksHandler <> invalid AND BookmarksHandler.name <> invalid then
             node = GetNodeFromChannel(BookmarksHandler.name)
             if node <> invalid then
+                m.isBookmarkHandlerCreated = true
                 if BookmarksHandler.fields <> invalid then node.setFields(BookmarksHandler.fields)
                 node.videoView = m.top
             else
@@ -579,7 +656,9 @@ end sub
 ' @param content [ContentNode] - content to set to Video Node
 sub SetVideoContent(content as Object)
     if content <> Invalid and m.video <> Invalid
-        m.video.content = content.clone(false) ' clone - To make sure if we update content node in View it will not affect playback
+        if m.video.content = invalid or not m.video.content.isSameNode(content)
+            m.video.content = content.clone(false) ' clone - To make sure if we update content node in View it will not affect playback
+        end if
     end if
 end sub
 
@@ -588,9 +667,6 @@ end sub
 ' @param content [ContentNode] - content to set to m.top.currentItem
 ' @param HandlerConfig [AA] - config with Content getter to create
 sub LoadMoreContent(content, HandlerConfig)
-    facade = m.top.createChild("LoadingFacade")
-    facade.bEatKeyEvents = false
-
     ' Need to hide previous video player if it exist before loading content for new one
     if m.video <> invalid then m.video.visible = false
     callback = {
@@ -598,11 +674,13 @@ sub LoadMoreContent(content, HandlerConfig)
         content: content
         config: HandlerConfig
         mAllowEmptyResponse: true
-        facade : facade
 
         onReceive: function(data)
             top = GetGlobalAA().top
-            top.RemoveChild(m.facade)
+            loadingfacade = GetGlobalAA().loadingfacade
+            top.RemoveChild(loadingfacade)
+            GetGlobalAA().loadingfacade = invalid
+
             GetGlobalAA().top.currentItem = data
             OnCurrentItem()
         end function
@@ -618,7 +696,56 @@ sub LoadMoreContent(content, HandlerConfig)
         end function
     }
 
-    GetContentData(callback, HandlerConfig, content)
+    m.contentHandler = GetContentData(callback, HandlerConfig, content)
+end sub
+
+' Load content for item in background
+sub LoadContentHidden(content, HandlerConfig)
+    if content.HandlerConfigVideo <> invalid
+        content.HandlerConfigVideo = invalid
+    end if
+    if content <> invalid and HandlerConfig = invalid
+        ' RDE-2412: start preloading of the content
+        ' when there is no handler config for video
+        globalAA = GetGlobalAA()
+        globalAA.video.content = content
+        globalAA.video.control = "prebuffer"
+    else
+        callback = {
+            mAllowEmptyResponse: true
+
+            onReceive: function(data)
+                top = GetGlobalAA().top
+                globalAA = GetGlobalAA()
+
+                ' Remove loading facade if it is shown
+                ' It is shown automatically after endcards timer finished
+                loadingfacade = GetGlobalAA().loadingfacade
+                if loadingFacade <> invalid
+                    top.RemoveChild(loadingfacade)
+                    globalAA.loadingfacade = invalid
+                end if
+
+                if globalAA.shouldStartPlaybackAfterHiddenLoading
+                    globalAA.top.currentItem = data
+                    OnCurrentItem()
+                    globalAA.shouldStartPlaybackAfterHiddenLoading = false
+                else
+                    ' Endcard is still shown
+                    if globalAA.top.preloadContent
+                        ' Which means that content is loaded so VideoView can
+                        ' prebuffer Video node
+                        globalAA.video.content = data
+                        globalAA.video.control = "prebuffer"
+                    end if
+                end if
+
+                globalAA.hiddenLoadTask = invalid
+            end function
+        }
+
+        m.hiddenLoadTask = GetContentData(callback, HandlerConfig, content)
+    end if
 end sub
 
 ' Loads content for Endcards with HandlerConfig

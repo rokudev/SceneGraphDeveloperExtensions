@@ -59,6 +59,7 @@ end sub
 
 sub ContinueLoadingContent()
     m.CanLoadContent = true
+    RunNextTaskFromQueue()
 end sub
 
 sub StopLoadingContent()
@@ -488,7 +489,7 @@ sub AsyngGrid_LoadContentForRow(row, isHighPriority = true as Boolean)
             QueueGetContentData(callback, HandlerConfigGrid, row, {}, isHighPriority)
         
         else
-            ?"failed too many times"
+            ?"SGDEX: failed too many times "row.cm_row_id_index
         end if
     else if isLazyRow
         LazyLoadHorizontalRow(row, 0, - 1, true)

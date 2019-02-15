@@ -46,6 +46,7 @@ End Function
 Function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Object
     itemNode = Utils_AAToContentNode({
             "id"    : mediaItem.id
+            "title"    : mediaItem.title
             "hdPosterUrl" : mediaItem.thumbnail
             "Description" : mediaItem.shortDescription
             "Categories" : mediaItem.genres[0]
@@ -72,8 +73,9 @@ Function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Objec
                 episodeNode = Utils_AAToContentNode(episode)
                 Utils_forceSetFields(episodeNode, {
                     "url" : GetVideoUrl(episode)
-                    "hdPosterUrl" : episode.lookup("thumbnail")
-                    "Description" : episode.lookup("shortDescription")
+                    "title" : episode.title
+                    "hdPosterUrl" : episode.thumbnail
+                    "Description" : episode.shortDescription
                 })
                 episodeArray.Push(episodeNode)
             end for

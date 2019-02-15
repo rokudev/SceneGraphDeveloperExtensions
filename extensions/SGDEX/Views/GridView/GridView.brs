@@ -51,7 +51,6 @@ sub OnShowSpinnerChange()
 end sub
 
 sub OnUpdateFocusedItem()
-    ?"OnUpdateFocusedItem"
     OnRowItemFocusedChange()
 end sub
 
@@ -65,7 +64,7 @@ sub RebuildRowList()
     configuration = GetConfigurationForStyle(m.top.style)
     if configuration <> invalid
         CreateNewOrUpdateGridNode(configuration.node, configuration.fields)
-        if m.gridNode <> invalid
+        if m.gridNode <> invalid AND m.gridNode.subtype() <> "ZoomRowList"
             CreateNewOrUpdateGridNode("", GetConfigurationForPosterShape(m.top.posterShape, m.gridNode.rowHeights))
         end if
     end if
@@ -98,7 +97,6 @@ sub CreateNewOrUpdateGridNode(componentName = "" as String, fields = {} as Objec
             SGDEX_SetTheme(m.LastThemeAttributes)
         end if
         if m.top.IsInFocusChain() then m.gridNode.SetFocus(true)
-
         if m.gridNode <> invalid
             for each field in observers
                 m.gridNode.ObserveFieldScoped(field, observers[field])
@@ -161,14 +159,17 @@ end sub
 
 function GetConfigurationForStyle(style as String) as Object
     ' Base row list configuration fields
-    rowListTranslation = [0, 265]
-    rowListRowWidth = 1280
+    itemAspectRatio = GetPosterAspectRatio()
     rowListRowHeight = GetDefaultRowHeight()
-    rowListHeroRowHeight = 340
-    defaultItemSpacing = [20, 20]
-    xLabelAndFocusOffset = 125
-    yLabelOffset = 14
-    numRows = 2
+    xRowTranslation = 125
+    rowListTranslation = [xRowTranslation, 265]
+    zoomRowListHeight = 720 - rowListTranslation[1]
+
+    rowListRowWidth = 1280 - xRowTranslation * 2
+    rowListHeroRowHeight = 280
+    rowTitleHeight = 30
+    defaultItemSpacing = [20, 35 + rowTitleHeight]
+
     showRowCounter = true
     showRowLabel = true
 
@@ -177,59 +178,88 @@ function GetConfigurationForStyle(style as String) as Object
     itemComponentName = "StandardGridItemComponent"
     rowTitleComponentName = "DefaultRowTitleComponent"
 
+    baseZoomRowListConfig = {
+        itemComponentName: itemComponentName
+        wrap: false
+        rowWidth : rowListRowWidth
+        translation: rowListTranslation
+
+        ' focusLimit is a special field to specify the height of the
+        ' zoomRowList area where the focus can be
+        focusLimit : rowListRowHeight - 1
+
+        spacingAfterRow: defaultItemSpacing[1]
+        spacingAfterRowItem: defaultItemSpacing[0]
+
+        rowItemYOffset: rowTitleHeight
+        rowItemZoomYOffset: rowTitleHeight
+        rowItemAspectRatio: itemAspectRatio
+
+        ' To make row counter to be placed symmetrically from right edge
+        rowCounterOffset: [[rowListRowWidth, 0]]
+
+        showRowCounter: showRowCounter
+        showRowTitle: showRowLabel
+    }
+
     styles = {
         "standard": {
-            node: "RowList"
+            node : "ZoomRowList"
             fields: {
-                rowFocusAnimationStyle: rowFocusAnimationStyle
-                itemComponentName: itemComponentName
-                rowTitleComponentName: rowTitleComponentName
-                itemSpacing: defaultItemSpacing
-                rowItemSpacing: [defaultItemSpacing]
-
-                itemSize: [rowListRowWidth, rowListRowHeight]
-                rowHeights: [rowListRowHeight]
-                translation: rowListTranslation
-                rowLabelOffset: [xLabelAndFocusOffset, yLabelOffset]
-                focusXOffset: [xLabelAndFocusOffset]
-
-                numRows: numRows
-                showRowCounter: showRowCounter
-                showRowLabel: showRowLabel
+                rowZoomHeight: rowListRowHeight
+                rowItemZoomHeight: rowListRowHeight
+                rowHeight: rowListRowHeight
+                rowItemHeight: rowListRowHeight
             }
         }
         "hero": {
-            node: "RowList"
+            node : "ZoomRowList"
             fields: {
-                rowFocusAnimationStyle: rowFocusAnimationStyle
-                itemComponentName: itemComponentName
-                rowTitleComponentName: rowTitleComponentName
-                itemSpacing: defaultItemSpacing
-                rowItemSpacing: [defaultItemSpacing]
-
-                itemSize: [rowListRowWidth, rowListRowHeight]
-                rowHeights: [rowListHeroRowHeight, rowListRowHeight]
-                translation: rowListTranslation
-                rowLabelOffset: [xLabelAndFocusOffset, yLabelOffset]
-                focusXOffset: [xLabelAndFocusOffset]
-
-                numRows: numRows
-                showRowCounter: showRowCounter
-                showRowLabel: showRowLabel
+                rowZoomHeight: [rowListHeroRowHeight, rowListRowHeight]
+                rowItemZoomHeight: [rowListHeroRowHeight, rowListRowHeight]
+                rowHeight: rowListRowHeight
+                rowItemHeight: rowListRowHeight
+            }
+        }
+        "zoom": {
+            node : "ZoomRowList"
+            fields: {
+                rowZoomHeight: [rowListHeroRowHeight]
+                rowItemZoomHeight: [rowListHeroRowHeight]
+                rowHeight: rowListRowHeight
+                rowItemHeight: rowListRowHeight
             }
         }
     }
-
     if styles[style] = invalid then style = "standard"
+    config = styles[style]
 
-    return styles[style]
+    if config.node = "ZoomRowList" then
+        complexZoomRowListConfig = baseZoomRowListConfig
+        complexZoomRowListConfig.append(config.fields)
+        config.fields = complexZoomRowListConfig
+    end if
+
+    return config
 end function
 
+Function GetPosterAspectRatio() as Float
+    style = m.top.posterShape
+    styles = {
+        "portrait": 3.0 / 4.0
+        "4x3": 4.0 / 3.0
+        "16x9": 16.0 / 9.0
+        "square": 1.0
+    }
+    if styles[style] = invalid then style = "16x9"
+    return styles[style]
+End Function
+
 function GetDefaultRowHeight() as Float
-    defaultItemHeight = 150
+    defaultItemHeight = 100
     topMargin = 45 ' label height + spacing
     if m.top.posterShape = "portrait" then
-        defaultRowHeight = defaultItemHeight * 1.5
+        defaultItemHeight = defaultItemHeight * 1.5
     end if
 
     return defaultItemHeight + topMargin
@@ -245,7 +275,6 @@ function GetRowItemSizeForPosterShape(style as String, rowHeight as Integer) as 
         "square": [height, height]
     }
     if styles[style] = invalid then style = "16x9"
-
     return styles[style]
 end function
 
@@ -265,6 +294,8 @@ sub SGDEX_SetTheme(theme as Object)
         TextColor: {
             gridNode: [
                 "rowLabelColor"
+                "rowTitleColor"
+                "rowCounterColor"
                 "itemTextColorLine1"
                 "itemTextColorLine2"
             ]
@@ -273,16 +304,15 @@ sub SGDEX_SetTheme(theme as Object)
                 "descriptionColor"
             ]
         }
-        focusRingColor : {
+        focusRingColor: {
             gridNode: ["focusBitmapBlendColor"]
         }
     }
 
     SGDEX_setThemeFieldstoNode(m, colorTheme, theme)
 
-
     gridThemeAttributes = {
-        rowLabelColor:       { gridNode: "rowLabelColor" }
+        rowLabelColor:       { gridNode: ["rowLabelColor", "rowTitleColor", "rowCounterColor"] }
         focusRingColor:      { gridNode: "focusBitmapBlendColor" }
         focusFootprintColor: { gridNode: "focusFootprintBlendColor" }
         itemTextColorLine1:  { gridNode: "itemTextColorLine1" }

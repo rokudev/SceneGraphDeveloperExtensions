@@ -1,6 +1,7 @@
 ' Copyright (c) 2018 Roku, Inc. All rights reserved.
 
 sub Init()
+    ?"SGDEX: create new view: "m.top.subtype()
     m.themeDebug = false
     m.top.overhang = m.top.FindNode("overhang")
     m.top.getScene().ObserveField("theme", "SGDEX_GlobalThemeObserver")

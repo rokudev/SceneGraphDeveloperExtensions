@@ -96,6 +96,7 @@ sub OnWasShown()
         else ' This is single item that has everything loaded
 '           update current item so developer would know that everything is loaded
             m.top.currentItem = m.top.content
+            m.top.itemLoaded = true
 '           set details as is
             SetDetailsContent(m.top.content)
         end if
@@ -120,6 +121,7 @@ sub OnItemFocusedChanged(event as Object)
             m.top.currentItem = invalid
         else
             m.top.currentItem = content
+            m.top.itemLoaded = true
         end if
     else
 '        ?"this is not list"
@@ -180,6 +182,7 @@ sub LoadMoreContent(content, HandlerConfig)
             gThis.detailsLoadingMap.Delete(m.detailsLoadingMap_ID.Tostr())
             if m.lastFocusedItem = gThis.top.itemFocused
                 gThis.top.currentItem = content
+                gThis.top.itemLoaded = true
                 SetDetailsContent(content)
             end if
         end sub

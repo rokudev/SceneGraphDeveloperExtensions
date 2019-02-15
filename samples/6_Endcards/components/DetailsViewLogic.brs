@@ -42,9 +42,7 @@ sub OnButtonSelected(event as Object)
     if selectedButton.id = "play"
         OpenVideoPlayer(details.content, details.itemFocused, details.isContentList)
     else if selectedButton.id = "episodes"
-        if details.currentItem.seasons <> Invalid then
-            ShowEpisodePickerView(details.currentItem.seasons)
-        end if
+        ' handle episode button
     else
         ' handle all other button presses
     end if

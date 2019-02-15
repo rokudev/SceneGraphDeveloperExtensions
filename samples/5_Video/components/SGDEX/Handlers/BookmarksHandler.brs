@@ -23,8 +23,8 @@ Sub bookmarksHandler()
     topFields    = m.top.GetFields()
     interval     = topFields.interval
     videoView    = topFields.videoView
-    minBookmark = topFields.minBookmark
-    maxBookmark = topFields.maxBookmark
+    minBookmark  = topFields.minBookmark
+    maxBookmark  = topFields.maxBookmark
 
     videoFields  = videoView.GetFields()
     lastPosition = videoFields.position
@@ -118,11 +118,6 @@ Sub bookmarksHandler()
                 'Used getFields to minimizing randevouz
                 'content = GetFieldsIfNode(data)
             else if field = "wasClosed" then
-                if content <> invalid then
-                    'Update bookmark position in content node on close
-                    IgnoreBookmarkPositionChange(content)
-                    content.bookmarkPosition = lastSavedPosition
-                end if
                 exit while
             else if lcase(field) = "bookmarkposition" then
                 _PrintBookmarkWarningMessage()
@@ -131,7 +126,11 @@ Sub bookmarksHandler()
             end if
         end if
     end while
-    ''?"EXIT bookmarksHandler"
+    if content <> invalid then
+        'Update bookmark position in content node on close
+        IgnoreBookmarkPositionChange(content)
+        content.bookmarkPosition = lastSavedPosition
+    end if
 End Sub
 
 Function GetFieldsIfNode(obj as Object) as Object
