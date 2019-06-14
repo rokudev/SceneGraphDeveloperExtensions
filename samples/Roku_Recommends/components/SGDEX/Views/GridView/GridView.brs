@@ -76,6 +76,7 @@ sub CreateNewOrUpdateGridNode(componentName = "" as String, fields = {} as Objec
         "rowItemSelected": "SimulateAlias"
         "numRows": "SimulateAlias"
         "jumpToRowItem": "SimulateAlias"
+        "jumpToRow": "SimulateAlias"
     }
 
     if componentName.Len() > 0 and m.gridNode <> invalid and m.gridNode.Subtype() <> componentName
@@ -92,6 +93,7 @@ sub CreateNewOrUpdateGridNode(componentName = "" as String, fields = {} as Objec
         m.gridNode = m.top.CreateChild(componentName)
         m.gridNode.AddField("itemTextColorLine1", "color", true)
         m.gridNode.AddField("itemTextColorLine2", "color", true)
+        m.gridNode.AddField("itemTextBackgroundColor", "string", true)
 
         if m.LastThemeAttributes <> invalid then
             SGDEX_SetTheme(m.LastThemeAttributes)
@@ -110,11 +112,23 @@ sub CreateNewOrUpdateGridNode(componentName = "" as String, fields = {} as Objec
     end if
 end sub
 
-sub OnContentSet()
+sub OnContentSet(event as Object)
+    content = m.top.content
+    
     if m.gridNode <> invalid
-        isNewContent = m.gridNode.content = invalid or m.top.content = invalid or not m.gridNode.content.IsSameNode(m.top.content)
+        isNewContent = m.gridNode.content = invalid or content = invalid or not m.gridNode.content.IsSameNode(content)
         if isNewContent then
-            SetAliasData("content", m.top.content)
+            ' new content received, completely rebuild gridNode and restore focus if needed
+            wasFocused = m.gridNode.HasFocus()
+            
+            m.top.RemoveChild(m.gridNode)
+            m.gridNode = invalid
+            RebuildRowList()
+            
+            if wasFocused
+                m.gridNode.SetFocus(true)
+            end if
+                        
             if m.gridNode.rowItemFocused = invalid or m.gridNode.rowItemFocused.Count() = 0
                 m.gridNode.rowItemFocused = [0, 0]
             end if
@@ -159,10 +173,18 @@ end sub
 
 function GetConfigurationForStyle(style as String) as Object
     ' Base row list configuration fields
-    itemAspectRatio = GetPosterAspectRatio()
+    rowItemAspectRatio = GetRowsAspectRatio()
     rowListRowHeight = GetDefaultRowHeight()
     xRowTranslation = 125
-    rowListTranslation = [xRowTranslation, 265]
+
+    ' adjust the position of the grid depending on whether
+    ' the developer wants the metadata area displayed
+    m.details.visible = m.top.showMetadata
+    if m.top.showMetadata
+        rowListTranslation = [xRowTranslation, 275]
+    else
+        rowListTranslation = [xRowTranslation, 130]
+    end if
     zoomRowListHeight = 720 - rowListTranslation[1]
 
     rowListRowWidth = 1280 - xRowTranslation * 2
@@ -193,7 +215,7 @@ function GetConfigurationForStyle(style as String) as Object
 
         rowItemYOffset: rowTitleHeight
         rowItemZoomYOffset: rowTitleHeight
-        rowItemAspectRatio: itemAspectRatio
+        rowItemAspectRatio: rowItemAspectRatio
 
         ' To make row counter to be placed symmetrically from right edge
         rowCounterOffset: [[rowListRowWidth, 0]]
@@ -243,17 +265,33 @@ function GetConfigurationForStyle(style as String) as Object
     return config
 end function
 
-Function GetPosterAspectRatio() as Float
-    style = m.top.posterShape
+function GetRowsAspectRatio() as Object
     styles = {
         "portrait": 3.0 / 4.0
         "4x3": 4.0 / 3.0
         "16x9": 16.0 / 9.0
         "square": 1.0
     }
-    if styles[style] = invalid then style = "16x9"
-    return styles[style]
-End Function
+    posterShape = m.top.posterShape
+    if styles[posterShape] = invalid then posterShape = "16x9"
+
+    ' if rowPosterShapes was set then set appropriate aspect ratio to rows
+    rowPosterShapes = m.top.rowPosterShapes
+    if rowPosterShapes <> invalid and rowPosterShapes.Count() > 0
+        rowsAspectRatio = []
+        for each shape in rowPosterShapes
+            if styles[shape] <> invalid
+                rowsAspectRatio.Push(styles[shape])
+            else
+                rowsAspectRatio.Push(styles[posterShape])
+            end if
+        end for
+        rowsAspectRatio.Push(styles[posterShape]) ' set rest of rows to posterShape
+        return rowsAspectRatio
+    end if
+
+    return [styles[posterShape]]
+end function
 
 function GetDefaultRowHeight() as Float
     defaultItemHeight = 100
@@ -317,12 +355,15 @@ sub SGDEX_SetTheme(theme as Object)
         focusFootprintColor: { gridNode: "focusFootprintBlendColor" }
         itemTextColorLine1:  { gridNode: "itemTextColorLine1" }
         itemTextColorLine2:  { gridNode: "itemTextColorLine2" }
+        itemTextBackgroundColor: { gridNode : "itemTextBackgroundColor"}
 
         ' details attributes
         descriptionmaxWidth: { details: "maxWidth" }
         titleColor:          { details: "titleColor" }
         descriptionColor:    { details: "descriptionColor" }
         descriptionMaxLines: { details: "descriptionMaxLines" }
+        
+        busySpinnerColor: { spinner : { poster: "blendColor"} }
     }
     SGDEX_setThemeFieldstoNode(m, gridThemeAttributes, theme)
 end sub

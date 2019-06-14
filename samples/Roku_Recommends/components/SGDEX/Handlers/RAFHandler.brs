@@ -43,6 +43,20 @@ sub PlayContentWithFullRAFIntegration()
     ' developer can configure Raf via overrided ConfigureRAF function inside Handler in channel
     ConfigureRAF(adIface)
 
+
+    adUrl = adIface.getAdUrl()
+    if adUrl <> invalid and adUrl <> ""
+        RIDA = ""
+        dev_info = createObject("roDeviceInfo")
+        if not dev_info.IsRIDADisabled()
+            RIDA = dev_info.GetRida()
+        end if
+
+        adUrl.replace("ROKU_ADS_TRACKING_ID", RIDA)
+        adUrl.replace("ROKU_ADS_LIMIT_TRACKING", dev_info.IsRIDADisabled().ToStr())
+        adIface.SetAdUrl(adUrl)
+    end if
+
     ' Should developer scene as a place for ads rendering
     view = m.top.getScene()
     if view = invalid

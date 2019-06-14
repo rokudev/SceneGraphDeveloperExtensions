@@ -51,7 +51,7 @@ Now that the SGDEX library knows where to go to initialize your SGDEX components
 
 ```
 m.grid = CreateObject("roSGNode", "GridView")
-m.grid.setFields({
+m.grid.SetFields({
     style: "standard"
     posterShape: "16x9"
 })
@@ -61,7 +61,7 @@ After this we create a ContentNode and add a content handler to it in order to g
 
 ```
 content = CreateObject("roSGNode", "ContentNode")
-content.addfields({
+content.AddFields({
     HandlerConfigGrid: {
         name: "RootHandler"
     }
@@ -77,13 +77,13 @@ m.grid.content = content
 Next we set up observers for what navigating the grid.
 
 ```
-m.grid.ObserveField("rowItemSelected","OnGridItemSelected")
+m.grid.ObserveField("rowItemSelected", "OnGridItemSelected")
 ```
 
 Finally, we display the grid.
 
 ```
-m.top.ComponentController.callFunc("show", {
+m.top.ComponentController.CallFunc("show", {
     view: m.grid
 })
 ```
@@ -130,7 +130,7 @@ Now it is our job to parse the data. In this sample we are dividing the content 
 The result data structure should be passed to m.top.content Content node like:
 
 ```
-m.top.content.appendChildren(rowsContentNodeArray)
+m.top.content.Update(rootChildren)
 ```
 
 At this point, once you side load your channel you should be greeted to a screen that looks like this
@@ -156,8 +156,8 @@ After that you get some other information about the function and then open the d
 ```
 sub OnGridItemSelected(event as Object)
     grid = event.GetRoSGNode()
-    selectedIndex = event.getData()
-    rowContent = grid.content.getChild(selectedIndex[0])
+    selectedIndex = event.GetData()
+    rowContent = grid.content.GetChild(selectedIndex[0])
     detailsView = ShowDetailsView(rowContent, selectedIndex[1])
     detailsView.ObserveField("wasClosed", "OnDetailsWasClosed")
  end sub
@@ -175,7 +175,7 @@ end sub
 Now create the file “DetailsViewLogic.brs” under the components folder. First thing we do is implement the ShowDetailsView function we called in the previous function. The function header looks as such
 
 ```
-function ShowDetailsView(content, index, isContentList = true)
+function ShowDetailsView(content as Object, index as Integer, isContentList = true as Boolean) as Object
 ```
 
 We begin by creating an DetailsView and observing the content and buttonSelected Field.
@@ -189,27 +189,30 @@ details.ObserveField("buttonSelected", "OnButtonSelected")
 You then set the details fields to their respective function arguments.
 
 ```
-details.content = content
-details.jumpToItem = index
-details.isContentList = isContentList
+details.SetFields({
+    content: content
+    jumpToItem: index
+    isContentList: isContentList
+})
 ```
 
-Setting the details.content will trigger the observer, so we should implement that now. In this View we need to contextually provide different information whether the content we selected is a series or a movie, so we check the event.getData.Title to see whether the title is series or not.
+Setting the details.content will trigger the observer, so we should implement that now. In this View we need to contextually provide different information whether the content we selected is a series or a movie, so we check the event.GetData.Title to see whether the title is series or not.
 
-Go into details about the SceneGraph tree, seeing where we set the information in the getData call. Display in a UML tree.
+Go into details about the SceneGraph tree, seeing where we set the information in the GetData call. Display in a UML tree.
 
 The final function should look like this
 
 ```
 sub OnDetailsContentSet(event as Object)
-    if event.getData().TITLE = "series"
-        m.btnsContent = Utils_ContentList2Node([{title:"Play S1:E1", id:"playFirstEp"}, {title:"Episodes", id:"episodes"}])
+    btnsContent = CreateObject("roSGNode", "ContentNode")
+    if event.GetData().TITLE = "series"
+        btnsContent.Update({ children: [{ title: "Episodes", id: "episodes" }] })
     else
-        m.btnsContent = Utils_ContentList2Node([{title:"Play", id:"play"}])
+        btnsContent.Update({ children: [{ title: "Play", id: "play" }] })
     end if
 
-    details = event.getRoSGNode()
-    details.buttons = m.btnsContent
+    details = event.GetRoSGNode()
+    details.buttons = btnsContent
  end sub
 ```
 
@@ -234,7 +237,7 @@ end if
 Going back to the ShowDetailsView() function, we show the details View and return the object.
 
 ```
-m.top.ComponentController.callFunc("show", {
+m.top.ComponentController.CallFunc("show", {
     view: details
 })
 return details
@@ -266,21 +269,10 @@ video.isContentList = isContentList
 Next we set the video.control to “play” and finally show the video view object then return it.
 
 ```
-m.top.ComponentController.callFunc("show", {
+m.top.ComponentController.CallFunc("show", {
     view: video
 })
 return video
-```
-
-The only other function we will add is addressing the event where the video is exited mid playback. The content should be cleared in order to stop playback without issues on re-buffering.
-
-```
-sub OnVideoWasClosed(event as Object)
-    video = event.getRoSGNode()
-    if video <> invalid then
-        video.content = invalid
-    end if
- end sub
 ```
 
 ## Step 7: EpisodePicker Logic
@@ -296,7 +288,7 @@ We then create a content node and add a content handler to it to get the seasons
 
 ```
 content = CreateObject("roSGNode", "ContentNode")
-content.addfields({
+content.AddFields({
     HandlerConfigCategoryList: {
         name: "SeasonsHandler"
         seasons: seasonContent
@@ -327,23 +319,27 @@ We then go through and parse it similarly to before.
 ```
 sub GetContent()
     seasons = m.top.HandlerConfig.Lookup("seasons")
-    rootChildren = []
+    rootChildren = {
+       children: []
+    }
+    seasonNumber = 1
     for each season in seasons
-        children = []
+        seasonAA = {
+           children: []
+        }
         for each episode in season
-            children.Push(episode)
+            seasonAA.children.Push(episode)
         end for
-        seasonNode = CreateObject("roSGNode", "ContentNode")
-        seasonNode.SetFields({
-            Fix Before publishing
+        strSeasonNumber = StrI(seasonNumber)
+        seasonAA.Append({
             title: "this is a title" 'season.Lookup("title")
             contentType : "section" 'season.Lookup("genre")
         })
-        seasonNode.AppendChildren(children)
-
-        rootChildren.Push(seasonNode)
+        seasonNumber++
+        rootChildren.children.Push(seasonAA)
     end for
-    m.top.content.AppendChildren(rootChildren)
+    
+    m.top.content.Update(rootChildren)
  end sub
 ```
 
@@ -351,7 +347,7 @@ Moving back to our EpisodePickerLogic we add the content to the episodePicker ob
 
 ```
 episodePicker.content = content
-m.top.ComponentController.callFunc("show", {
+m.top.ComponentController.CallFunc("show", {
     view: episodePicker
 })
 ```
@@ -374,7 +370,7 @@ This launches the Details View for the piece of content that you would like to p
 Finally back in the ShowEpisodePickerView(seasonContent) we show the View and return it'this will trigger job to show this View
 
 ```
-m.top.ComponentController.callFunc("show", {
+m.top.ComponentController.CallFunc("show", {
     view: episodePicker
 })
 return episodePicker

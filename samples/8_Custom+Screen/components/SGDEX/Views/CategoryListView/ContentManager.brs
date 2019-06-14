@@ -354,10 +354,6 @@ function AddPaginationForSectionToQueue(section as Object, child as Object, page
     end if
 end function
 
-function isPageAlreadyInQueue(rowIndex as Object, itemIndex as Object) as Boolean
-    return m.ContentManager_Page_IDs[rowIndex.Tostr()] <> invalid and m.ContentManager_Page_IDs[rowIndex.Tostr()][itemIndex.Tostr()] <> invalid
-end function
-
 sub LoadSerialPaginationForItem(focusedItem)
     ITEMS_TO_CHECK = GetVisibleItems()
     ' get this item section and load content for it

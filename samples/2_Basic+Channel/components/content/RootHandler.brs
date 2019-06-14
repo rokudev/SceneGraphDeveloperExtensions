@@ -1,3 +1,5 @@
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
 sub GetContent()
     ' url = CreateObject("roUrlTransfer")
     ' url.SetUrl("FEED_URL")
@@ -7,12 +9,14 @@ sub GetContent()
     ' feed = url.GetToString()
     ' this is for a sample, usually feed is retrieved from url using roUrlTransfer
     feed = ReadAsciiFile("pkg:/feed/feed.json")
-    Sleep(2000)
+    Sleep(2000) ' to emulate API call
 
     if feed.Len() > 0
         json = ParseJson(feed)
         if json <> invalid ' and json.rows <> invalid and json.rows.Count() > 0
-            rootChildren = []
+            rootChildren = {
+               children: []
+            }
             for each item in json
                 value = json[item]
                 if item = "movies" or item = "series"
@@ -24,7 +28,7 @@ sub GetContent()
                             Description: arrayItem.shortDescription
                             id: arrayItem.id
                             Categories: arrayItem["genres"][0]
-                            title : arrayItem.title
+                            title: arrayItem.title
                         })
                         if item = "movies"
                             ' Add 4k option
@@ -38,8 +42,8 @@ sub GetContent()
                                 for each episode in season.episodes
                                     episodeNode = CreateObject("roSGNode", "ContentNode")
 
-                                    episodeNode.setFields({
-                                        title : episode.title
+                                    episodeNode.SetFields({
+                                        title: episode.title
                                         url: episode.content.videos[0].url
                                         hdPosterUrl: episode.thumbnail
                                         Description: episode.shortDescription
@@ -49,20 +53,19 @@ sub GetContent()
                                 end for
                                 seasonArray.Push(episodeArray)
                             end for
-                            Utils_ForceSetFields(itemNode, {"seasons": seasonArray})
+                            Utils_ForceSetFields(itemNode, { "seasons": seasonArray })
                         end if
                         children.Push(itemNode)
                     end for
-                    rowNode = CreateObject("roSGNode", "ContentNode")
-                    rowNode.SetFields({
-                        title: item
-                    })
-                    rowNode.AppendChildren(children)
 
-                    rootChildren.Push(rowNode)
-                    m.top.content.AppendChildren(rootChildren)
+                    rowAA = {
+                        title: item
+                        children: children
+                    }
+                    rootChildren.children.Push(rowAA)
                 end if
             end for
+            m.top.content.Update(rootChildren)
         end if
     end if
 end sub

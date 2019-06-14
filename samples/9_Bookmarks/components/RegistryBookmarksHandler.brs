@@ -1,16 +1,18 @@
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
 'BookmarksHandler interface functions'
-Sub SaveBookmark()
+sub SaveBookmark()
     content = m.top.content
     position = m.top.position
     BookmarksHelper_SetBookmarkData(content.id, position)
-End Sub
+end sub
 
-Function GetBookmark() as Integer
+function GetBookmark() as Integer
     content = m.top.content
     return BookmarksHelper_GetBookmarkData(content.id)
-End Function
+end function
 
-Sub RemoveBookmark()
+sub RemoveBookmark()
     content = m.top.content
     BookmarksHelper_DeleteBookmark(content.id)
-End Sub
+end sub

@@ -1,4 +1,6 @@
-function ShowEpisodePickerView(seasonContent = invalid as Object)
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
+function ShowEpisodePickerView(seasonContent = invalid as Object) as Object
     ' Create an CategoryListView object and set the posterShape field
     episodePicker = CreateObject("roSGNode", "CategoryListView")
     episodePicker.posterShape = "16x9"

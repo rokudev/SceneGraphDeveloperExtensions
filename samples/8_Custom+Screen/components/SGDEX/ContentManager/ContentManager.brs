@@ -5,7 +5,7 @@ sub Init()
 end sub
 
 ' this function is called outside to set view to this content manager
-'this is done so that view doesn' t even have to know about content manager
+' this is done so that view doesn' t even have to know about content manager
 sub setView(view as Object)
     m.view = view
     if m.view <> invalid then
@@ -38,6 +38,12 @@ sub onControlChanged(event as Object)
     end if
 end sub
 
+sub OnConfigFieldNameChanged()
+    if m.top.configFieldName <> ""
+        m.Handler_ConfigField = m.top.configFieldName
+    end if
+end sub
+
 ' Initializes content loading
 sub StartLoadingContent()
     if m.view <> invalid and m.view.content <> invalid and m.view.content[m.Handler_ConfigField] <> invalid and m.view.content[m.Handler_ConfigField].name <> invalid and m.view.content[m.Handler_ConfigField].name.Len() > 0 then
@@ -47,6 +53,9 @@ sub StartLoadingContent()
         config = m.view.content[m.Handler_ConfigField]
         ' erase config so we will know if any additional work will be needed
         m.view.content[m.Handler_ConfigField] = invalid
+        ' if there is task running we need to cancel it
+        ' since we will start a new content handler
+        if m.task <> invalid and m.task.state = "run" then m.task.control = "stop"
         if m.view.showSpinner <> invalid then m.view.showSpinner = true
         m.task = GetContentData({
             view: m.view
@@ -248,18 +257,7 @@ end function
 ' callback for loading non-serial model
 ' this function should be called before getting cotnent as it adds itself to pending queue so pages are not called twice 
 function getHorizontalpaginationCallback(row, HandlerConfigGrid, itemIndexToCheck, page)
-    ' add this row and page to loading map
-    map = m.ContentManager_Page_IDs
-    rowindex = row.CM_row_ID_Index.Tostr()
-    pageIndex = page.Tostr()
-
-    if map[rowindex] = invalid then
-        map[rowindex] = {}
-    end if
-    ' add this item to row map
-    if map[rowindex][pageIndex] = invalid
-        map[rowindex][pageIndex] = ""
-    end if
+    addPageToQueue(row, page)
 
     ' return callback that handles cleaning current map
     return {
@@ -349,12 +347,6 @@ function getHorizontalpaginationCallback(row, HandlerConfigGrid, itemIndexToChec
     }
 end function
 
-' This will tell if page is already in queue
-'So we don' t start new loading
-function isPageAlreadyInQueue(rowIndex as Object, itemIndex as Object) as Boolean
-    return m.ContentManager_Page_IDs[rowIndex.Tostr()] <> invalid and m.ContentManager_Page_IDs[rowIndex.Tostr()][itemIndex.Tostr()] <> invalid
-end function
-
 sub TryToLoadHorizontalPagination(row, currentItemIndex as Integer, previousItemIndex as Integer)
     if IsPaginationRow(row) and currentItemIndex >= 0 then
         childCount = row.GetChildCount()
@@ -410,7 +402,10 @@ sub OnNoMainContentReceived(content as Object)
         if m.view.showSpinner <> invalid then m.view.showSpinner = true
         
         m.task = GetContentData(m, m.config, m.view.content)
-    else if m.view <> invalid 
+    else if m.view <> invalid
+        ' content was not populated with rows, remove the spinner
+        ' developer should decide the following steps by his own
+        if m.view.showSpinner <> invalid then m.view.showSpinner = false
         m.view.content = content
     end if
 end sub
@@ -640,52 +635,24 @@ function GetCurrentPage(item)
     end if
 end function
 
-function getFocusedItem(row, defaultIndex = 0 as Integer) as Integer
-    if row.CM_focusedItem <> invalid then
-        if row.getChildCount() > 0 and row.CM_row_ID_Index = 2 then return 13
-        return row.CM_focusedItem
-    else
-        setFocusedItem(row, defaultIndex)
-        return defaultIndex
-    end if
-end function
-
-sub setFocusedItem(row, newIndex)
-    if not row.Hasfield("CM_focusedItem") then row.AddField("CM_focusedItem", "int", false)
-    row.CM_focusedItem = newIndex
-end sub
-
 sub OnContentLoaded()
     hasConfig = m.view.content <> invalid and m.view.content[m.Handler_ConfigField] <> invalid and m.view.content[m.Handler_ConfigField].name <> invalid and m.view.content[m.Handler_ConfigField].name.Len() > 0 
     canLoad = hasConfig AND not IsPaginationRow(m.view.content)
     
     if m.content = invalid or not m.content.IsSameNode(m.view.content) or canLoad then
         needToStartNewLoading = false
-        if m.content <> invalid then
+        if m.content <> invalid or hasConfig then
             needToStartNewLoading = true
         end if
         
         m.content = m.view.content
-        m.view.content.ObserveFieldScoped("change", "MarkRows")
+        
+        if m.view.content <> invalid
+            m.view.content.ObserveFieldScoped("change", "MarkRows")
+        end if
         MarkRows()
         if needToStartNewLoading then StartLoadingContent()
     end if
-end sub
-
-sub MarkRows()
-    index = 0
-    children = m.view.content.Getchildren( - 1, 0)
-    ' TODO if rows were added/deleted/inserted we have to change map references too
-    'TODO add another references field to hold in map so we don' t use row index
-
-    for each row in children
-        if not row.HasField("CM_row_ID_Index") then
-            row.AddFields({ CM_row_ID_Index: index })
-        else
-            row.SetFields({ CM_row_ID_Index: index })
-        end if
-        index++
-    end for
 end sub
 
 sub doPrioritySort()

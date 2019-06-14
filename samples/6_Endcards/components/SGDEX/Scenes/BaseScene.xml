@@ -36,18 +36,21 @@
         <!-- Exits channel if set to true -->
         <field id="exitChannel" type="bool" alwaysNotify="true" />
 
-        <!-- Deep linking launch arguments will be passed via this field to Show function -->
+        <!-- Deep linking launch arguments will be passed via this field to Show() function -->
         <field id="launch_args" type="assocarray" onChange="LaunchArgumentsReceived" />
+
+        <!-- roInput deep linking arguments will be passed via this field to Input() function -->
+        <field id="input_args" type="assocarray" onChange="InputArgumentsReceived" />
 
         <!-- @Public -->
         <!-- Theme is used to customize the appearance of all SGDEX views.
-        For common fields see [SGDEXComponent](#SGDEXComponent#fields#theme)
+        For common fields see [SGDEXComponent](#sgdexcomponent)
         For view specific views see view documentation
 
-        [GridView](#GridView#fields#theme)
-        [DetailsView](#DetailsView#fields#theme)
-        [VideoView](#VideoView#fields#theme)
-        [CategoryListView](#CategoryListView#fields#theme)
+        [GridView](#gridview)
+        [DetailsView](#detailsview)
+        [VideoView](#videoview)
+        [CategoryListView](#categorylistview)
 
         <b>Theme can be set to several levels</b>
         <b>Any view:</b>
@@ -103,7 +106,7 @@
 
         <!-- @Public -->
         <!-- Field to update themes by passing the config
-            Structure of config is same as for [theme](#BaseScene#fields#theme) field.
+            Structure of config is same as for [theme](#basescene) field.
             You should only pass fields that should be updated not all theme fields.
 
             Note. if you want to change a lot of fields change them with as smaller amount of configs as you can, it wouldn't redraw views too often then.

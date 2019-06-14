@@ -1,7 +1,9 @@
-function ShowCustomView(hdPosterUrl)
-    m.CustomView = CreateObject("roSGNode", "custom")
-    m.CustomView.picPath = hdPosterUrl
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
+sub ShowCustomView(hdPosterUrl as String)
+    m.customView = CreateObject("roSGNode", "custom")
+    m.customView.picPath = hdPosterUrl
     m.top.ComponentController.CallFunc("show", {
-        View: m.CustomView
+        view: m.customView
     })
-end function
+end sub

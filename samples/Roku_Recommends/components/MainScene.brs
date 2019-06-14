@@ -1,4 +1,5 @@
 ' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
 sub Show(args as Object)
     m.grid = CreateObject("roSGNode", "GridView")
 
@@ -25,6 +26,6 @@ end sub
 sub OnGridItemSelected(event as Object)
     grid = event.GetRoSGNode()
     selectedIndex = event.GetData()
-    row = grid.content.getChild(selectedIndex[0])
+    row = grid.content.GetChild(selectedIndex[0])
     detailsView = ShowDetailsView(row, selectedIndex[1])
 end sub

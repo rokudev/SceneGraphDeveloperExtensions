@@ -17,6 +17,11 @@ sub StartSGDEXChannel(componentName, args)
     screen.Show()
     scene.ObserveField("exitChannel", m.port)
     scene.launch_args = args
+    
+    ' create roInput context for handling roInputEvent messages
+    input = CreateObject("roInput")
+    input.setMessagePort(m.port)
+    
     while (true)
         msg = Wait(0, m.port)
         msgType = Type(msg)
@@ -28,6 +33,9 @@ sub StartSGDEXChannel(componentName, args)
             if field = "exitChannel" and data = true
                 END
             end if
+        else if msgType = "roInputEvent"
+            ' roInputEvent deep linking, pass arguments to the scene
+            scene.input_args = msg.getInfo()
         end if
     end while
 end sub

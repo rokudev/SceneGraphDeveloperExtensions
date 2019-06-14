@@ -1,8 +1,10 @@
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
 sub GetContent()
     ' Emulate API call
-    sleep(200)
+    Sleep(200)
     ' Create item for details View
-    item = Utils_AAToContentNode({
+    m.top.content.Update({ children: [{
         title: "Supre cinema"
         releaseDate: "25.12.2018"
         rating: "7.5"
@@ -12,7 +14,6 @@ sub GetContent()
         url: "http://roku.content.video.llnw.net/smedia/59021fabe3b645968e382ac726cd6c7b/Gb/siCt-V7LOSU08W_Ve1ByJY5N9emKZeXZvnrH2Yb9c/117_segment_2_twitch__nw_060515.mp4"
         hdposterUrl: "http://s2.content.video.llnw.net/lovs/images-prod/59021fabe3b645968e382ac726cd6c7b/media/decbe34b64ea4ca281dc09997d0f23fd/j5_.540x304.jpeg"
         bookmarkPosition: BookmarksHelper_GetBookmarkData(m.top.content.id)
+        }]    
     })
-
-    m.top.content.AppendChild(item)
 end sub

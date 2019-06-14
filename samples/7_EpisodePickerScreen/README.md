@@ -19,7 +19,7 @@ function ShowEpisodePickerView()
     episodePicker.posterShape = "16x9"
     content = CreateObject("roSGNode", "ContentNode")
 
-    content.addfields({
+    content.AddFields({
         HandlerConfigCategoryList: {
             name: "SeasonsHandler"
             fields: {
@@ -32,7 +32,7 @@ function ShowEpisodePickerView()
     episodePicker.ObserveField("selectedItem", "OnEpisodeSelected")
 
     ' this will trigger job to show this view
-    m.top.ComponentController.callFunc("show", {
+    m.top.ComponentController.CallFunc("show", {
         view: episodePicker
     })
 
@@ -56,36 +56,37 @@ The component should extend ContentHandler and contain an interface which contai
     <interface>
         <field id="seasons" type="array" />
     </interface>
-    <script type="text/brightscript" uri="pkg:/components/content/SeasonsHandler.brs" />     
+    <script type="text/brightscript" uri="SeasonsHandler.brs" />     
 </component>
 ```
 
-In SeasonsHandler.brs you need to override GetContent() function from ContentHandler().  In this function we get our seasons that we passed in, go through them and organize it and append it to m.top.content, along with getting appropriate season information for the right panel.
+In SeasonsHandler.brs you need to override GetContent() function from ContentHandler().  In this function we get our seasons that we passed in, go through them and organize it and update m.top.content with them, along with getting appropriate season information for the right panel.
 
 Ours looks like this after we are done, but again it will differ depending on your GridHandler.brs.
 
 ```
 sub GetContent()
-    seasons = m.top.HandlerConfig.Lookup("seasons")
-    rootChildren = []
+    seasons = m.top.seasons
+    rootChildrenAA = {
+       children: []
+    }
     seasonNumber = 1
     for each season in seasons
-        children = []
+        seasonNodeAA = {
+           children: []
+        }
         for each episode in season
-            children.Push(episode)
+            seasonNodeAA.children.Push(episode)
         end for
-
-        seasonNode = CreateObject("roSGNode", "ContentNode")
         strSeasonNumber = StrI(seasonNumber)
-        seasonNode.SetFields({
+        seasonNodeAA.Append({
             title: "Season " + strSeasonNumber
-            contentType : "section"
-       })
-       seasonNumber = seasonNumber + 1
-       seasonNode.AppendChildren(children)
-       rootChildren.Push(seasonNode)
+            contentType: "section"
+        })
+        seasonNumber++
+        rootChildrenAA.children.Push(seasonNodeAA)
     end for
-    m.top.content.AppendChildren(rootChildren)
+    m.top.content.Update(rootChildrenAA)
 end sub
 ```
 

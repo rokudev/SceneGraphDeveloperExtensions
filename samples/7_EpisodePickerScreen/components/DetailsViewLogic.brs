@@ -1,38 +1,43 @@
-function ShowDetailsView(content, index, isContentList = true)
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
+function ShowDetailsView(content as Object, index as Integer, isContentList = true as Boolean) as Object
     ' Create an DetailsView Object
     details = CreateObject("roSGNode", "DetailsView")
     ' Observe the content, so that when it is set the callback
     ' function will run and the buttons can be created
     details.ObserveField("currentItem", "OnDetailsContentSet")
     details.ObserveField("buttonSelected", "OnButtonSelected")
-    details.content = content
-    details.jumpToItem = index
-    details.isContentList = isContentList
+    details.SetFields({
+        content: content
+        jumpToItem: index
+        isContentList: isContentList
+    })
     ' This will cause the View to be shown on the View
-    m.top.ComponentController.callFunc("show", {
+    m.top.ComponentController.CallFunc("show", {
         view: details
     })
     return details
 end function
 
 sub OnDetailsContentSet(event as Object)
-    details = event.getRoSGNode()
-    currentItem = event.getData()
+    details = event.GetRoSGNode()
+    currentItem = event.GetData()
     if currentItem <> invalid
         buttonsToCreate = []
 
-        if currentItem.url <> Invalid and currentItem.url <> ""
-            buttonsToCreate.push({title:"Play", id:"play"})
+        if currentItem.url <> invalid and currentItem.url <> ""
+            buttonsToCreate.Push({ title: "Play", id: "play" })
         else if details.content.TITLE = "series"
-            buttonsToCreate.push({title:"Episodes", id:"episodes"})
+            buttonsToCreate.Push({ title: "Episodes", id: "episodes" })
         end if
 
-        if buttonsToCreate.count() = 0
-            buttonsToCreate.push({title:"No Content to play", id:"no_content"})
+        if buttonsToCreate.Count() = 0
+            buttonsToCreate.Push({ title: "No Content to play", id: "no_content" })
         end if
-        m.btnsContent = Utils_ContentList2Node(buttonsToCreate)
+        btnsContent = CreateObject("roSGNode", "ContentNode")
+        btnsContent.Update({ children: buttonsToCreate })
     end if
-    details.buttons = m.btnsContent
+    details.buttons = btnsContent
 end sub
 
 sub OnButtonSelected(event as Object)
@@ -42,7 +47,7 @@ sub OnButtonSelected(event as Object)
     if selectedButton.id = "play"
         OpenVideoPlayer(details.content, details.itemFocused, details.isContentList)
     else if selectedButton.id = "episodes"
-        if details.currentItem.seasons <> Invalid then
+        if details.currentItem.seasons <> invalid then
             ShowEpisodePickerView(details.currentItem.seasons)
         end if
     else

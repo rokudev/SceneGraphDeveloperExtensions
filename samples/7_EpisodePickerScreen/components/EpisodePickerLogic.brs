@@ -1,19 +1,21 @@
-function ShowEpisodePickerView(seasonContent = invalid as Object)
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
+function ShowEpisodePickerView(seasonContent = invalid as Object) as Object
     ' Create an CategoryListView object and set the posterShape field
     episodePicker = CreateObject("roSGNode", "CategoryListView")
     episodePicker.posterShape = "16x9"
     content = CreateObject("roSGNode", "ContentNode")
     ' This gets the seasonContent we parsed out in GridHandler
-    content.addfields({
+    content.AddFields({
         HandlerConfigCategoryList: {
             name: "SeasonsHandler"
-            fields : {seasons: seasonContent}
+            fields : { seasons: seasonContent }
         }
     })
     episodePicker.content = content
     episodePicker.ObserveField("selectedItem", "OnEpisodeSelected")
     ' This will show the CategoryListView to the View and call SeasonsHandler
-    m.top.ComponentController.callFunc("show", {
+    m.top.ComponentController.CallFunc("show", {
         view: episodePicker
     })
     return episodePicker

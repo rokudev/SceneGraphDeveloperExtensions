@@ -8,17 +8,22 @@ sub GetContent()
     responseXML = ParseXML(rsp)
     responseXML = responseXML.GetChildElements()
     responseArray = responseXML.GetChildElements()
-    children = []
+    rowAA = {
+       children: [{
+            title: "Playlist Videos"
+            children: []
+       }]
+    }
 
     for each xmlItem in responseArray
-        'print "xmItem Name: " + xmlItem.getName()
-        if xmlItem.getName() = "item"
+        'print "xmItem Name: " + xmlItem.GetName()
+        if xmlItem.GetName() = "item"
             itemAA = xmlItem.GetChildElements() ' itemAA contains a single feed <item> element
             if itemAA <> invalid
                 for each xmlItem in itemAA
                     item = {}
-                    if xmlItem.getName() = "media:content"
-                        item.url = xmlItem.getAttributes().url
+                    if xmlItem.GetName() = "media:content"
+                        item.url = xmlItem.GetAttributes().url
                         xmlTitle = xmlItem.GetNamedElements("media:title")
                         item.title = xmlTitle.GetText()
                         xmlDescription = xmlItem.GetNamedElements("media:description")
@@ -26,21 +31,15 @@ sub GetContent()
                         item.streamFormat = "mp4"
                         xmlThumbnail = xmlItem.GetNamedElements("media:thumbnail")
                         item.HDPosterUrl = xmlThumbnail.GetAttributes().url
-                        itemNode = CreateObject("roSGNode", "ContentNode")
-                        itemNode.SetFields(item)
 
-                        children.Push(itemNode)
+                        rowAA.children[0].children.Push(item)
                     end if
                 end for
             end if
         end if
     end for
 
-    rowNode = CreateObject("roSGNode", "ContentNode")
-    rowNode.title = "Playlist Videos"
-
-    rowNode.AppendChildren(children)
-    m.top.content.AppendChild(rowNode)
+    m.top.content.Update(rowAA)
 end sub
 
 function ParseXML(str As String) As dynamic

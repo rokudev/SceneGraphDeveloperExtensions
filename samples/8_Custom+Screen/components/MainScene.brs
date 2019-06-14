@@ -1,6 +1,6 @@
-' ********** Copyright 2016 Roku Corp.  All Rights Reserved. **********
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
 
-sub show(args as Object)
+sub Show(args as Object)
     ' Create an GridView object and assign some fields
     m.grid = CreateObject("roSGNode", "GridView")
     m.grid.SetFields({
@@ -9,7 +9,7 @@ sub show(args as Object)
     })
     content = CreateObject("roSGNode", "ContentNode")
     ' This tells the GridView where to go to fetch the content
-    content.Addfields({
+    content.AddFields({
         HandlerConfigGrid: {
             name: "GridHandler"
         }
@@ -35,13 +35,3 @@ sub OnDetailsWasClosed(event as Object)
     details = event.GetRoSGNode()
     m.grid.jumpToRowItem = [m.grid.rowItemFocused[0], details.itemFocused]
 end sub
-
-function listToNode(list as Object, nodeType as String) as Object
-    result = CreateObject("roSGNode", nodeType)
-    for each itemAA in list
-        item = CreateObject("roSGNode", nodeType)
-        item.SetFields(itemAA)
-        result.AppendChild(item)
-    end for
-    return result
-end function

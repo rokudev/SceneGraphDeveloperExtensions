@@ -12,7 +12,7 @@ These handle all the logistics for displaying your content, and they each use a 
 
 ## Step 1: Setting up the environment
 
-If youÕre new to Roku Development and you donÕt have your environment set up, use the guide here https://www.youtube.com/watch?v=-gq_5NRuHQ8 to set up your Roku and you can use Eclipse with the Brightscript plugin using this guide here https://sdkdocs.roku.com/display/sdkdoc/Roku+Plugin+for+Eclipse+IDE .  If you are new to Brightscript an or Roku Scenegraph development please read through our documentation on it here https://sdkdocs.roku.com/display/sdkdoc/BrightScript+Language+Reference to learn the basics on the language.
+If youï¿½re new to Roku Development and you donï¿½t have your environment set up, use the guide here https://www.youtube.com/watch?v=-gq_5NRuHQ8 to set up your Roku and you can use Eclipse with the Brightscript plugin using this guide here https://sdkdocs.roku.com/display/sdkdoc/Roku+Plugin+for+Eclipse+IDE .  If you are new to Brightscript an or Roku Scenegraph development please read through our documentation on it here https://sdkdocs.roku.com/display/sdkdoc/BrightScript+Language+Reference to learn the basics on the language.
 
 ## Step 2: Setting up SGDEX
 
@@ -41,7 +41,7 @@ The first line is there because all of the views are developed for HD and autosc
 
 Now it is time to start coding your channel!
 We begin with the Main.brs file.
-You should add the line override the function ÒGetSceneName()Ó to provide SGDEX the name of your entry scene.  It should look like this:
+You should add the line override the function ï¿½GetSceneName()ï¿½ to provide SGDEX the name of your entry scene.  It should look like this:
 
 ```
 function GetSceneName() as String
@@ -59,14 +59,14 @@ First, we should write xml file.  It should look like this.
 <?xml version="1.0" encoding="UTF-8"?>
     <component name="MainScene" extends="BaseScene" />
     <!-- importing main handler -->
-    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+    <script type="text/brightscript" uri="MainScene.brs" />
 </component>
 ```
 
 We extend BaseScene and import the MainScene.brs.  Now, in our MainScene.brs file we must override the show() function, the file should look like this.
 
 ```
-sub show(args as Object)
+sub Show(args as Object)
     print "Hello World!"
 end sub
 ```

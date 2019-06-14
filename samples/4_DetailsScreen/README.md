@@ -6,7 +6,7 @@ Create the file DetailsViewLogic.brs in the components folder and then add the
 line 
 
 ```
-<script type="text/brightscript" uri="pkg:/components/DetailsViewLogic.brs" /\>
+<script type="text/brightscript" uri="DetailsViewLogic.brs" />
 ```
 
 to your MainScene.xml.  Now you can start adding functions to your DetailsViewLogic file.  Create the function ShowDetailsView(content, index, isContentList = true).  The arguments will be used for video playback, which we will get to in the next part of this guide.  In this function you need to create the DetailsView, Observe the content, and set the details fields to their respective arguments.  After that, you call show and return the details view object.
@@ -16,13 +16,14 @@ function ShowDetailsView(content, index, isContentList = true)
      details = CreateObject("roSGNode", "DetailsView")
      details.ObserveField("currentItem", "OnDetailsContentSet")
      details.ObserveField("buttonSelected", "OnButtonSelected")
-
-     details.content = content
-     details.jumpToItem = index
-     details.isContentList = isContentList
+     details.SetFields({
+         content: content
+         jumpToItem: index
+         isContentList: isContentList
+     })
 
      ' this will trigger job to show this view
-     m.top.ComponentController.callFunc("show", {
+     m.top.ComponentController.CallFunc("show", {
          view: details
      })
 
@@ -30,36 +31,35 @@ function ShowDetailsView(content, index, isContentList = true)
  end function
 ```
 
-Now it is time to create the event function we are observing, "OnDetailsContentSet(event as Object)."  The purpose of this function is to update the button information contextually based on the type of content. event.getData() returns the object that was being observed, which in this case is currentItem.  You first must check to see if it is an episode, series, or other (we will launch an episode viewer in a later guide if it is a series, and play the video if it is not).  After that you use event.getRoSGNode() to get the entire object that was being observed (details in this case) and set details.buttons to the buttons we just set.
+Now it is time to create the event function we are observing, "OnDetailsContentSet(event as Object)."  The purpose of this function is to update the button information contextually based on the type of content. event.GetData() returns the object that was being observed, which in this case is currentItem.  You first must check to see if it is an episode, series, or other (we will launch an episode viewer in a later guide if it is a series, and play the video if it is not).  After that you use event.GetRoSGNode() to get the entire object that was being observed (details in this case) and set details.buttons to the buttons we just set.
 
 ```
 sub OnDetailsContentSet(event as Object)
-    details = event.getRoSGNode()
-    currentItem = event.getData()
+    details = event.GetRoSGNode()
+    currentItem = event.GetData()
     if currentItem <> invalid
         buttonsToCreate = []
 
-        if currentItem.url <> Invalid and currentItem.url <> ""
-            buttonsToCreate.push({title: "Play", id: "play"})
+        if currentItem.url <> invalid and currentItem.url <> ""
+            buttonsToCreate.Push({ title: "Play", id: "play" })
         end if
 
-        if buttonsToCreate.count() = 0
-            buttonsToCreate.push({title: "No Content to play", id: "no_content"})
+        if buttonsToCreate.Count() = 0
+            buttonsToCreate.Push({ title: "No Content to play", id: "no_content" })
         end if
-        m.btnsContent = Utils_ContentList2Node(buttonsToCreate)
+        btnsContent = CreateObject("roSGNode", "ContentNode")
+        btnsContent.Update({ children: buttonsToCreate })
     end if
-    details.buttons = m.btnsContent
+    details.buttons = btnsContent
 end sub
 ```
-
-The function included in the previous function "Utils_ContentList2Node ()" is a utility function added to rsg_utils.brs.  It takes in an array of Associative Arrays and creates a node tree that contains the Associative Array data.  
 
 ## Part 2: Opening and Closing the DetailsView
 
 Now we need to find out where to call ShowDetailsView() in the first place.  We do this by adding the line 
 
 ```
-m.grid.ObserveField("rowItemSelected","OnGridItemSelected")
+m.grid.ObserveField("rowItemSelected", "OnGridItemSelected")
 ```
 
 to your Mainscene.brs.  Now we create that function.  What we do is get the grid, get the index that was clicked from and the content of the row, then call ShowDetailsView() with the appropriate arguments.  From there we observe "wasClosed" to handle coming back from that details view.
@@ -68,8 +68,8 @@ to your Mainscene.brs.  Now we create that function.  What we do is get the gr
 sub OnGridItemSelected(event as Object)
      grid = event.GetRoSGNode()
 
-     selectedIndex = event.getdata()
-     rowContent = grid.content.getChild(selectedIndex[0])
+     selectedIndex = event.GetData()
+     rowContent = grid.content.GetChild(selectedIndex[0])
 
      detailsView = ShowDetailsView(rowContent, selectedIndex[1])
      detailsView.ObserveField("wasClosed", "OnDetailsWasClosed")

@@ -1,3 +1,4 @@
+' ********** Copyright 2017 Roku Corp.  All Rights Reserved. **********
 
 ' Converts associative array to a node of a given type
 ' @param inputAA associative array, which will be transformed to roSGNode

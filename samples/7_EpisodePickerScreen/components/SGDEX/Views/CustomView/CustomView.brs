@@ -96,6 +96,8 @@ sub SGDEX_SetTheme(theme as Object)
         buttonsUnFocusedColor:          { buttons: "color" }
         buttonsFocusRingColor:          { buttons: "focusBitmapBlendColor" }
         buttonsSectionDividerTextColor: { buttons: "sectionDividerTextColor" }
+        
+        busySpinnerColor: { spinner : { poster: "blendColor"} }
     }
 
     SGDEX_setThemeFieldstoNode(m, detailsThemeAttributes, theme)

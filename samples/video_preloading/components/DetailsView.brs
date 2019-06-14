@@ -1,11 +1,13 @@
 ' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
 
-function ShowDetailsView(content, index) as Object
+function ShowDetailsView(content as Object, index as Integer) as Object
     details = CreateObject("roSGNode", "DetailsView")
-    details.content = content
-    details.jumpToItem = index
-    details.observeField("currentItem","onDetailsContentSet")
-    details.observeField("buttonSelected", "onButtonSelected")
+    details.SetFields({
+        content: content
+        jumpToItem: index
+    })
+    details.ObserveField("currentItem","OnDetailsContentSet")
+    details.ObserveField("buttonSelected", "OnButtonSelected")
 
     m.top.ComponentController.CallFunc("show", {
         view: details
@@ -14,23 +16,19 @@ function ShowDetailsView(content, index) as Object
     return details
 end function
 
-function onDetailsContentSet(event as Object) as void
-    content = event.getData()
+sub OnDetailsContentSet(event as Object)
+    content = event.GetData()
     if (content <> invalid)
-        m.btnsContent = CreateObject("roSGNode", "ContentNode")
+        btnsContent = CreateObject("roSGNode", "ContentNode")
         streamUrl = content.url
         if (streamUrl <> invalid and streamUrl <> "")
-            playButton = CreateObject("roSGNode", "ContentNode")
-            playButton.title = "Play"
-            m.btnsContent.AppendChild(playButton)
+            btnsContent.Update({ children: [{ title: "Play" }] })
         else
-            loadingButton = CreateObject("roSGNode", "ContentNode")
-            loadingButton.title = "Loading..."
-            m.btnsContent.AppendChild(loadingButton)
-        endif
+            btnsContent.Update({ children: [{ title: "Loading..." }] })
+        end if
 
-        details = event.getRoSGNode()
-        details.buttons = m.btnsContent
+        details = event.GetRoSGNode()
+        details.buttons = btnsContent
 
         ' create a video view so we can start preloading content
         ' we won't show this view until the user selects the "Play" button on the DetailsView
@@ -38,7 +36,7 @@ function onDetailsContentSet(event as Object) as void
 
         ' we'll use this observer to print the state of the VideoView to the console
         ' this let's us see when prebuffering starts
-        m.video.observeField("state", "OnVideoState")
+        m.video.ObserveField("state", "OnVideoState")
 
         ' preloading also works while endcards are displayed
         m.video.alwaysShowEndcards = true
@@ -50,16 +48,16 @@ function onDetailsContentSet(event as Object) as void
         ' it's off by default for backward compatibility
         m.video.preloadContent = true
     end if
-end function
+end sub
 
-function onButtonSelected(event as Object) as void
+sub OnButtonSelected(event as Object)
     ' the video view already exists and has been preloading content
     ' all we do now is push it onto the view stack
     m.top.ComponentController.CallFunc("show", {
         view: m.video
     })
     m.video.control = "play"
-end function
+end sub
 
 sub OnVideoState(event)
   ? "OnVideoState " + m.video.state

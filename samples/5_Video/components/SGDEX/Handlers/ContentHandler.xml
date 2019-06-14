@@ -4,7 +4,7 @@
 <!--
     @Public
     Content Handlers are responsible for all content loading tasks in SGDEX.
-    When you extend a Content Hander, you must implement a function called GetContent().
+    When you extend a Content Handler, you must implement a function called GetContent().
     This function is where you will do things like make API requests and build ContentNodes
     to be rendered in your SGDEX views.
 
@@ -41,6 +41,10 @@
         <field id="pageSize" type="int" />
 
         <!-- @Public -->
+        <!-- When working with SearchView, this will contain search query passed in config. -->
+        <field id="query" type="string" />
+
+        <!-- @Public -->
         <!-- When your ContentHandler fails to load the requested content
         you should set this field to TRUE in your GetContent() function. This will
         force SGDEX to re-try the ContentHandler.
@@ -52,7 +56,10 @@
         <!-- @Public -->
         <!-- This is a copy of the config that was used to invoke the ContentHandler. -->
         <field id="HandlerConfig" type="assocarray" />
-
+		
+        <field type="integer" id="startTime" value="0"/>
+        <field type="integer" id="endTime" value="0"/>
+		
         <!--
             Used intenally by SGDEX. You should not change this.
         -->

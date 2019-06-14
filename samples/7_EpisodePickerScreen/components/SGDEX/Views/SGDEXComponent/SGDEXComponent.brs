@@ -6,11 +6,11 @@ sub Init()
     m.top.overhang = m.top.FindNode("overhang")
     m.top.getScene().ObserveField("theme", "SGDEX_GlobalThemeObserver")
     m.top.getScene().ObserveField("updateTheme", "SGDEX_GlobalUpdateThemeObserver")
-    
+
     m.backgroundRectangle = m.top.FindNode("backgroundRectangle")
     m.backgroundImage = m.top.FindNode("backgroundImage")
-    
-    
+
+
     SGDEX_InternalBuildAndSetTheme(m.top.theme, m.top.getScene().actualThemeParameters)
 end sub
 
@@ -26,7 +26,7 @@ end sub
 sub SGDEX_ViewUpdateThemeObserver(event as Object)
     if m.themeDebug then ? "SGDEX_ViewUpdateThemeObserver"
     theme = {}
-    
+
     data = event.GetData()
     if m.themeDebug then ? "data="event.GetData()
     theme.Append(data)
@@ -77,7 +77,7 @@ end sub
 sub SGDEX_InternalBuildAndSetTheme(viewTheme as Object, newTheme as Object, isUpdate = false as Boolean)
     if GetInterface(newTheme, "ifAssociativeArray") <> invalid then
         viewKey = SGDEX_GetViewType()
-        
+
         theme = {}
         if GetInterface(newTheme["global"], "ifAssociativeArray") <> invalid then theme.Append(newTheme["global"])
         if GetInterface(newTheme[viewKey], "ifAssociativeArray") <> invalid then theme.Append(newTheme[viewKey])
@@ -95,7 +95,7 @@ sub SGDEX_InternalSetTheme(theme as Object, isUpdate = false as Boolean)
     end if
     SGDEX_SetOverhangTheme(theme)
     SGDEX_SetBackgroundTheme(theme)
-    
+
     SGDEX_SetTheme(theme)
 end sub
 
@@ -115,7 +115,7 @@ sub SGDEX_SetOverhangTheme(theme)
                 ]
             }
         }, theme)
-        
+
         overhangThemeAttributes = {
             'Main attribute
             Overhangtitle:                   "title"
@@ -129,7 +129,7 @@ sub SGDEX_SetOverhangTheme(theme)
             OverhangoptionsText:             "optionsText"
             Overhangheight:                  "height"
             OverhangBackgroundColor:         "color"
-                                                                                         
+
             'Additional attributes, no need to document these
             OverhangclockColor:              "clockColor"
             OverhangclockText:               "clockText"
@@ -144,11 +144,18 @@ sub SGDEX_SetOverhangTheme(theme)
             OverhangrightDividerUri:         "rightDividerUri"
             OverhangrightDividerVertOffset:  "rightDividerVertOffset"
             OverhangrightLogoBaselineOffset: "rightLogoBaselineOffset"
-            OverhangrightLogoUri:            "rightLogoUri"
-            OverhangshowRightLogo:           "showRightLogo"
             Overhangtranslation:             "translation"
         }
-        
+
+        ' RDE-2697: work around a FW issue where setting showOptions changes the overhang height unexpectedly
+        if theme.OverhangshowOptions = false
+            if theme.OverhanglogoBaselineOffset = invalid
+                theme.OverhanglogoBaselineOffset = 13
+            else
+                theme.OverhanglogoBaselineOffset += 13
+            end if
+        end if
+
         for each key in theme
             if overhangThemeAttributes[key] <> invalid then
                 field = overhangThemeAttributes[key]
@@ -163,29 +170,29 @@ sub SGDEX_SetBackgroundTheme(theme as Object)
     isUriBackground = GetInterface(theme.backgroundImageURI, "ifString") <> invalid
 
     if isUriBackground then
-        ' don't use backgroundColor for blending color as it's used for other Views 
+        ' don't use backgroundColor for blending color as it's used for other Views
         ' so developers don't want it to be applied to this View
         colorTheme = { backgroundImageURI: { backgroundImage: "uri" } }
     else
         colorTheme = { backgroundColor: { backgroundRectangle: "color" } }
     end if
-    
+
     m.backgroundRectangle.visible = not isUriBackground
     m.backgroundImage.visible = isUriBackground
-    
-   
+
+
     SGDEX_setThemeFieldstoNode(m, colorTheme, theme)
 end sub
 
 'This function is used to set theme attributes to nodes
-'It support advanced setup of theming config 
+'It support advanced setup of theming config
 'Example
 
 
 'map = {
 '    >>> 'Theme attribute name
 '    genericColor: {
-'        'for each attribute in video node set "genericColor" value   
+'        'for each attribute in video node set "genericColor" value
 '        video: [
 '            "bufferingTextColor",
 '            "retrievingTextColor"
@@ -198,7 +205,7 @@ end sub
 '                ]
 '            }
 '        ]
-'    
+'
 '    }
 '
 '
@@ -206,7 +213,7 @@ end sub
 '
 '    textColor:                      { video: { trickPlayBar: "textColor" } }
 '    currentTimeMarkerBlendColor:    "currentTimeMarkerBlendColor"
-'    
+'
 '}
 
 
@@ -254,7 +261,7 @@ sub SGDEX_SetThemeAttribute(node, field as String, value as Object, defaultValue
     if value <> invalid then
         properValue = value
     end if
-    
+
     if m.themeDebug then ? "SGDEX_SetThemeAttribute, field="field" , value=["properValue"]"
     node[field] = properValue
 end sub

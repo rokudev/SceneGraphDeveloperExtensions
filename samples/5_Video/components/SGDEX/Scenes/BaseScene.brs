@@ -1,4 +1,4 @@
-' Copyright (c) 2018 Roku, Inc. All rights reserved.
+' Copyright (c) 2018-2019 Roku, Inc. All rights reserved.
 
 ' This function will be called by library when channel is ready to be shown
 sub Init()
@@ -13,15 +13,26 @@ sub Init()
     m.top.ObserveField("theme", "SceneSetTheme")
 end sub
 
+' launch_args interface callback
 sub LaunchArgumentsReceived()
     ' This is safe to start channel
-    show(m.top.launch_args)
+    Show(m.top.launch_args)
 end sub
 
-' this function should be extended
+' input_args interface callback
+sub InputArgumentsReceived()
+    Input(m.top.input_args)
+end sub
+
+' This function should be overridden
 sub Show(args as Object)
     ? "please implement sub show(args) in your code in order to show any View"
 end sub
+
+' This function should be overridden
+sub Input(args as Object)
+    ?"SGDEX: Please implement 'sub Input(args)' in your scene to handle roInputEvent deep linking"
+end sub 
 
 sub SceneSetTheme(event as Object)
     m.top.actualThemeParameters = event.getData()

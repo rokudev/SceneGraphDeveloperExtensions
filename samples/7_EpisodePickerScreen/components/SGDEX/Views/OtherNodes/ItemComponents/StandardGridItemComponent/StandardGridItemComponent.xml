@@ -17,13 +17,16 @@
             opacity="0.4" 
             color="#000000"
         />
-        <Poster 
+        <Poster
             id="poster"
             loadDisplayMode="scaleToFit"
         />
+        <Rectangle
+            id="labelsBackground"
+            opacity="0"/>
         <LayoutGroup id="labelsLayout" layoutDirection="vert" itemSpacings="[5]" vertAlignment="bottom">
-            <Label id="line1" maxLines="1" wrap="false" />
-            <Label id="line2" maxLines="1" wrap="false" />
+            <Label id="line1" maxLines="1" wrap="false" visible="false" />
+            <Label id="line2" maxLines="1" wrap="false" visible="false" />
         </LayoutGroup>
         <DurationBar 
             id="durationBar" 

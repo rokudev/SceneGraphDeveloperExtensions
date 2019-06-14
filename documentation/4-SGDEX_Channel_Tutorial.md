@@ -304,32 +304,29 @@ sub GetContent()
     if feed.Len() > 0
         json = ParseJson(feed)
         if json <> invalid AND json.rows <> invalid AND json.rows.Count() > 0
-            rootChildren = []
+            rootChildren = {
+                children: []
+            }
  
             for each row in json.rows
                 if row.items <> invalid
-                    children = []
+                    rowAA = {
+                       children: []
+                    }
  
                     for childIndex = 0 to 3
- 
                         for each item in row.items
-                            itemNode = CreateObject("roSGNode", "ContentNode")
-                            itemNode.SetFields(item)
-                            children.Push(itemNode)
+                            rowAA.children.Push(itemNode)
                         end for
                     end for
+                    
+                    rowAA.Append({ title: row.title })
  
-                    rowNode = CreateObject("roSGNode", "ContentNode")
-                    rowNode.SetFields({ title: row.title })
-                    rowNode.AppendChildren(children)
- 
-                    rootChildren.Push(rowNode)
- 
+                    rootChildren.children.Push(rowAA)
                 end if
             end for
  
-            m.top.content.AppendChildren(rootChildren)
- 
+            m.top.content.Update(rootChildren)
         end if
     end if
 end sub
@@ -369,7 +366,7 @@ end sub
 **Note:** According to SceneGraph best practices, it is suggested to use
 
 ~~~~
-m.top.content.AppendChildren(rootChildren)
+m.top.content.Update(rootChildren)
 ~~~~
 
 As this removes multiple rendezvous between the render thread and the

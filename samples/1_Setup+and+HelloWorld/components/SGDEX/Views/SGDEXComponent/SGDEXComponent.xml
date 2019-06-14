@@ -17,6 +17,8 @@
             *backgroundImageURI - Set url to background image
             *backgroundColor - Set background color
 
+            *busySpinnerColor - Set loading spinner color
+
             *OverhangTitle - text that will be displayed in overhang title
             *OverhangTitleColor - Color of overhang title
             *OverhangShowClock - toggle showing of overhang clock
@@ -32,7 +34,7 @@
 
         Usage:
 
-        To set global theme attributes refer to [BaseScene](#BaseScene#fields#theme)
+        To set global theme attributes refer to [BaseScene](#basescene)
 
         To set view specific fields use:
 
@@ -45,8 +47,8 @@
         <!-- @Public -->
         <!-- updateTheme is used to update view specific theme fields
 
-        Usage is same as [theme](#SGDEXComponent#fields#theme) field but here you should only set field that you want to update
-        If you want global updates use [BaseScene updateTheme](#BaseScene#fields#updateTheme) -->
+        Usage is same as [theme](#sgdexcomponent) field but here you should only set field that you want to update
+        If you want global updates use [BaseScene updateTheme](#basescene) -->
         <field id="updateTheme" type="assocarray" onChange="SGDEX_ViewUpdateThemeObserver" />
 
         <!-- @Public -->

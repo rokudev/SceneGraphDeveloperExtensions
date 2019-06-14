@@ -2,6 +2,7 @@
 
 sub Init()
     m.labelsLayout = m.top.findNode("labelsLayout")
+    m.labelsBackground = m.top.findNode("labelsBackground")
     m.line1 = m.top.findNode("line1")
     m.line2 = m.top.findNode("line2")
     
@@ -14,15 +15,11 @@ sub onContentSet()
     content = m.top.itemContent
     if content <> invalid
         m.poster.uri = content.hdPosterUrl
-        setLabelDataOrHide(m.line1,content.shortDescriptionLine1)
-        setLabelDataOrHide(m.line2,content.shortDescriptionLine2)
+        ' contentSetLine is field to check if text is set to label
+        setLabelDataOrHide(m.line1, content.shortDescriptionLine1)
+        setLabelDataOrHide(m.line2, content.shortDescriptionLine2)
         setDurationBarData(content.length, content.bookmarkposition, content.hideItemDurationBar <> true)
-
-        parent = Utils_getParentbyIndex(3, m.top)
-        if parent <> invalid and parent.itemTextColorLine1 <> invalid
-            m.line1.color = parent.itemTextColorLine1
-            m.line2.color = parent.itemTextColorLine2
-        end if
+        updateLabelsLayout()
     end if
 end sub
 
@@ -44,11 +41,42 @@ sub updateLabelsLayout()
     width = m.top.width
     height = m.top.height
     if width > 0 and height > 0
+        ' set theme parametres
+        parent = Utils_getParentbyIndex(3, m.top)
+        if parent <> invalid
+            if parent.itemTextColorLine1 <> invalid
+                m.line1.color = parent.itemTextColorLine1
+            end if
+            if parent.itemTextColorLine2 <> invalid
+                m.line2.color = parent.itemTextColorLine2
+            end if
+
+            itemTextBgColor = parent.itemTextBackgroundColor
+            if itemTextBgColor <> invalid and itemTextBgColor <> "" ' when itemTextBackgroundColor field is set
+                if m.line1.visible Or m.line2.visible ' show background if there is text for atleast one label
+                    m.labelsBackground.color = parent.itemTextBackgroundColor
+                    m.labelsBackground.opacity = 1
+                end if
+            end if
+        end if
+
         padding = 5
-        if height > 200 then padding = 10
-        m.labelsLayout.translation = [padding, height - padding]
+        if height > 200 then padding = 10   
         setLabelStyle(m.line1, width, height, padding)
         setLabelStyle(m.line2, width, height, padding)
+
+        ' set rectangle background width and height
+        heightLayout = m.labelsLayout.boundingRect().height
+        m.labelsBackground.width = width + 1 ' background should fill whole item width
+        m.labelsBackground.height = heightLayout + 2 * padding
+
+        ' translate layouts to the bottom of item
+        m.labelsBackground.translation = [0, height - m.labelsBackground.height]
+        if m.line1.visible and not m.line2.visible ' to centralize text on labelsLayout
+            m.labelsLayout.translation = [padding, height - padding + m.labelsLayout.itemSpacings[0]]
+        else
+            m.labelsLayout.translation = [padding, height - padding]
+        end if
     end if
 end sub
 

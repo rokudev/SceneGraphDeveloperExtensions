@@ -93,6 +93,9 @@ sub OnContentChange()
                 OnRootContentLoaded()
             end if
         end if
+    else
+        m.categoryList.content = invalid
+        m.itemsList.content = invalid
     end if
 end sub
 
@@ -502,6 +505,8 @@ sub SGDEX_SetTheme(theme as Object)
 
         categoryfocusRingColor:  { categoryList: "focusBitmapBlendColor" }
         itemsListfocusRingColor: { itemsList:    "focusBitmapBlendColor" }
+
+        busySpinnerColor: { spinner : { poster: "blendColor"} }
     }
     SGDEX_setThemeFieldstoNode(m, themeAttributes, theme)
 end sub

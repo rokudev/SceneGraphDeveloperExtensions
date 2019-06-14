@@ -22,7 +22,7 @@ function Show(config as Object)
     data = {}
     
     if View <> invalid then
-        subTypesSupported = { GridView: "" }
+        subTypesSupported = { GridView: "", SearchView: "" }
         subtype = View.subtype()
         parentType = View.parentSubtype(View.subtype())
         createContentManager = false
@@ -36,6 +36,9 @@ function Show(config as Object)
             if contentManager = invalid then contentManager = CreateObject("roSgNode", "ContentManager")
             ' attach this View to this content manager
             contentManager.Parent = m.top.getparent()
+            if subtype = "SearchView"
+                contentManager.configFieldName = "HandlerConfigSearch"
+            end if
             
             contentManager.callFunc("setView", View)
             data.contentManager = contentManager

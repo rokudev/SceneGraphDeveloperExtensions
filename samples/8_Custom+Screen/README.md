@@ -27,7 +27,7 @@ You can add a custom.brs file if you would like to add in additional functionali
 Create the file "CustomViewLogic.brs" file in the components folder.  Add in the line to the Mainscene.xml file to include the new file
 
 ```
-    <script type="text/brightscript" uri="pkg:/components/CustomViewLogic.brs" /\>
+    <script type="text/brightscript" uri="CustomViewLogic.brs" />
 ```
 
 Now in this script we need to create the view, find the path, specify the path, and show the view. This is done in the following code:
@@ -36,7 +36,7 @@ Now in this script we need to create the view, find the path, specify the path, 
 function ShowCustomView(hdPosterUrl)
     m.CustomView = CreateObject("roSGNode", "custom")
     m.CustomView.picPath = hdPosterUrl
-    m.top.ComponentController.callFunc("show", {
+    m.top.ComponentController.CallFunc("show", {
         view: m.CustomView
     })
 end function

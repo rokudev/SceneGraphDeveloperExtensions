@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component name="HandlerRAF" extends="RAFHandler" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
-    <interface>
-        <field id="contentId" type="string" />
-    </interface>
+<!--********** Copyright 2019 Roku Corp.  All Rights Reserved. **********-->
 
+<component name="HandlerRAF" extends="RAFHandler" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
     <script type="text/brightscript" uri="HandlerRAF.brs" />
 </component>

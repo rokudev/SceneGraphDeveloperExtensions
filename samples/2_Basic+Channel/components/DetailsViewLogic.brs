@@ -1,14 +1,17 @@
-function ShowDetailsView(content, index, isContentList = true)
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
+function ShowDetailsView(content as Object, index as Integer, isContentList = true as Boolean) as Object
     details = CreateObject("roSGNode", "DetailsView")
     details.ObserveField("content", "OnDetailsContentSet")
     details.ObserveField("buttonSelected", "OnButtonSelected")
-
-    details.content = content
-    details.jumpToItem = index
-    details.isContentList = isContentList
+    details.SetFields({
+        content: content
+        jumpToItem: index
+        isContentList: isContentList
+    })
 
     'this will trigger job to show this View
-    m.top.ComponentController.callFunc("show", {
+    m.top.ComponentController.CallFunc("show", {
         view: details
     })
 
@@ -16,14 +19,15 @@ function ShowDetailsView(content, index, isContentList = true)
 end function
 
 sub OnDetailsContentSet(event as Object)
-    if event.getData().TITLE = "series"
-        m.btnsContent = Utils_ContentList2Node([{title:"Episodes", id:"episodes"}])
+    btnsContent = CreateObject("roSGNode", "ContentNode")
+    if event.GetData().TITLE = "series"
+        btnsContent.Update({ children: [{ title: "Episodes", id: "episodes" }] })
     else
-        m.btnsContent = Utils_ContentList2Node([{title:"Play", id:"play"}])
+        btnsContent.Update({ children: [{ title: "Play", id: "play" }] })
     end if
 
-    details = event.getRoSGNode()
-    details.buttons = m.btnsContent
+    details = event.GetRoSGNode()
+    details.buttons = btnsContent
 end sub
 
 sub OnButtonSelected(event as Object)

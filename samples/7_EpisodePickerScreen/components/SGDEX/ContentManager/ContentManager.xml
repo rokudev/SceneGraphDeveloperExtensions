@@ -46,6 +46,11 @@
         <field id="IDLE_ROW_LOAD_TIME" type="int" value="4" onChange="onIdleTimerChanged" />
         <field id="control" type="string" onChange="onControlChanged" />
 
+        <!--
+            Allows to specify the name of the content node field
+            where content handler config should be situated.
+        -->
+        <field id="configFieldName" type="string" onChange="OnConfigFieldNameChanged" />
         <function name="setView" />
     </interface>
 

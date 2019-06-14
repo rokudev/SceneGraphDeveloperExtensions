@@ -1,5 +1,7 @@
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
 ' There are two functions depending on whether or not a focus index and isContentList are provided
-function OpenVideoPlayer(content, index, isContentList) as Object
+function OpenVideoPlayer(content as Object, index as Integer, isContentList as Boolean) as Object
     ' Create VideoView Object and set its fields
     video = CreateObject("roSGNode", "VideoView")
     video.content = content
@@ -14,7 +16,7 @@ function OpenVideoPlayer(content, index, isContentList) as Object
     return video
 end function
 
-function OpenVideoPlayerItem(contentItem) as Object
+function OpenVideoPlayerItem(contentItem as Object) as Object
     ' Create VideoView Object and set its fields
     video = CreateObject("roSGNode", "VideoView")
     video.content = contentItem
@@ -23,7 +25,7 @@ function OpenVideoPlayerItem(contentItem) as Object
     video.control = "play"
     ' Show the video view
     m.top.ComponentController.CallFunc("show", {
-        View: video
+        view: video
     })
     return video
 end function

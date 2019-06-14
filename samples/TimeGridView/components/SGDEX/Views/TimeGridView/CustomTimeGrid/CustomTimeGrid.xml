@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component
+    name="CustomTimeGrid"
+    extends="TimeGrid"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd"
+>
+
+    <interface>
+        <!--
+            Set to true when user scrolling right or left without releasing button
+        -->
+        <field id="isScrolling" type="boolean" value="false" />
+    </interface>
+
+    <script type="text/brightscript" uri="CustomTimeGrid.brs" />
+</component>

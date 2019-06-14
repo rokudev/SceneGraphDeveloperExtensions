@@ -5,13 +5,13 @@
 Create the file "VideoPlayerLogic.brs" in the components folder.  We will be creating two functions, OpenVideoPlayer(content, index, isContentList) and OpenVideoPlayer(contentItem).  The function with three arguments is used to play videos launched from a menu, the one with one argument is used for playing videos during autoplay, which we will get to in another guide.  We will start with the one with one argument.  Like the other views, we need to start by creating the object, setting values, and calling show() then returning the object.  Your function should look like the one below
 
 ```
-function OpenVideoPlayerItem(contentItem) as Object
+function OpenVideoPlayerItem(contentItem as Object) as Object
     video = CreateObject("roSGNode", "VideoView")
     video.content = contentItem
     video.isContentList = false
     video.control = "play"
 
-    m.top.ComponentController.callFunc("show", {
+    m.top.ComponentController.CallFunc("show", {
         view: video
     })
 
@@ -22,14 +22,14 @@ end function
 Now the one with three arguments is primarily the same but you assign a few more fields in video.  It should like like the one below
 
 ```
-function OpenVideoPlayer(content, index, isContentList) as Object
+function OpenVideoPlayer(content as Object, index as Integer, isContentList as Boolean) as Object
     video = CreateObject("roSGNode", "VideoView")
     video.content = content
     video.jumpToItem = index
     video.isContentList = isContentList
     video.control = "play"
 
-    m.top.ComponentController.callFunc("show", {
+    m.top.ComponentController.CallFunc("show", {
         view: video
     })
 

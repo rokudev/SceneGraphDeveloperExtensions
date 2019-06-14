@@ -1,29 +1,29 @@
-' ********** Copyright 2016 Roku Corp.  All Rights Reserved. **********
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
 
-sub show(args as Object)
+sub Show(args as Object)
     m.grid = CreateObject("roSGNode", "GridView")
-    m.grid.setFields({
+    m.grid.SetFields({
         style: "standard"
         posterShape: "16x9"
     })
     content = CreateObject("roSGNode", "ContentNode")
-    content.addfields({
+    content.AddFields({
         HandlerConfigGrid: {
             name: "RootHandler"
         }
     })
     m.grid.content = content
-    m.grid.ObserveField("rowItemSelected","OnGridItemSelected")
+    m.grid.ObserveField("rowItemSelected", "OnGridItemSelected")
 
-    m.top.ComponentController.callFunc("show", {
+    m.top.ComponentController.CallFunc("show", {
         view: m.grid
     })
 end sub
 
 sub OnGridItemSelected(event as Object)
     grid = event.GetRoSGNode()
-    selectedIndex = event.getdata()
-    rowContent = grid.content.getChild(selectedIndex[0])
+    selectedIndex = event.GetData()
+    rowContent = grid.content.GetChild(selectedIndex[0])
     detailsView = ShowDetailsView(rowContent, selectedIndex[1])
     detailsView.ObserveField("wasClosed", "OnDetailsWasClosed")
 end sub

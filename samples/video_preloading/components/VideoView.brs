@@ -1,4 +1,6 @@
-function OpenVideoView(content as Object, index as Integer) as void
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
+sub OpenVideoView(content as Object, index as Integer)
     video = CreateObject("roSGNode", "VideoView")
     video.content = content
     video.jumpToItem = index
@@ -6,4 +8,4 @@ function OpenVideoView(content as Object, index as Integer) as void
         view: video
     })
     video.control = "play"
-end function
+end sub

@@ -26,11 +26,15 @@ sub Init()
 
     m.top.ObserveField("focusedChild", "OnFocusedChildChanged")
     m.top.ObserveField("itemFocused", "OnItemFocusedChanged")
-    m.top.ObserveField("content", "OnContentListSet")
+    m.contentObserverIsSet = false
 
     if m.LastThemeAttributes <> invalid then
         SGDEX_SetTheme(m.LastThemeAttributes)
     end if
+
+    ' Reference to current ContentNode which populated to DetailsView
+    ' To differentiate ContentNode change and ContentNode field change
+    m.currentContentNode = invalid
 end sub
 
 sub OnFocusedChildChanged()
@@ -51,55 +55,79 @@ sub OnPosterShapeChange()
 end sub
 
 sub OnWasShown()
-    if m.top.content <> invalid
-        if m.top.isContentList
-            ' check if we have empty root content with proper HandlerConfig
-            if m.top.content.HandlerConfigDetails <> invalid and m.top.content.GetChildCount() = 0 then
-                ' Show loading indicator
-                ' Content should be visible
-                ShowBusySpinner(true)
-                config = m.top.content.HandlerConfigDetails
-                callback = {
-                    config: config
+    if m.top.wasShown
+        OnContentSet()
 
-                    onReceive: sub(data)
-                        gthis = GetGlobalAA()
-                        if data <> invalid and data.GetChildCount() > 0
-                            ' replace data if needed
-                            if not data.IsSameNode(gthis.top.content) then gthis.top.content = data
-                            ' fire focus change that will redraw UI and tell developer which item is focused
-                            gthis.top.itemFocused = gthis.top.jumpToItem
-                        end if
-                    end sub
-
-                    onError: sub(data)
-                        gthis = GetGlobalAA()
-                        if gthis.top.content.HandlerConfigDetails <> invalid then
-                            m.config = gthis.top.content.HandlerConfigDetails
-                            gthis.top.content.HandlerConfigDetails = invalid
-                        end if
-                        GetContentData(m, m.config, gthis.top.content)
-                    end sub
-                }
-                GetContentData(callback, config, m.top.content)
-            else if m.top.content.GetChildCount() > 0
-'                trigger loading of first content
-                m.top.itemFocused = m.top.jumpToItem
-            end if
-'            this is not list of items
-'            check if we need to load extra data for this item
-        else if m.top.content.HandlerConfigDetails <> invalid then
-'           this is one item but it needs extra data
-            SetDetailsContent(m.top.content)
-'           but load extra metadata
-            LoadMoreContent(m.top.content, m.top.content.HandlerConfigDetails)
-        else ' This is single item that has everything loaded
-'           update current item so developer would know that everything is loaded
-            m.top.currentItem = m.top.content
-            m.top.itemLoaded = true
-'           set details as is
-            SetDetailsContent(m.top.content)
+        ' Content observer should be set after DetailsView was shown
+        ' in other case there can be race condition with setting
+        ' content and isContentList fields
+        if not m.contentObserverIsSet
+            m.top.ObserveField("content", "OnContentSet")
+            m.contentObserverIsSet = true
         end if
+    end if
+end sub
+
+sub OnContentSet()
+    if m.top.content <> invalid
+        ' Handles if callback triggered by changing field of ContentNode or
+        ' replace with new ContentNode by saving reference to m.currentContentNode
+        if (m.currentContentNode = invalid or not m.currentContentNode.isSameNode(m.top.content))
+            if m.top.isContentList
+                ' check if we have empty root content with proper HandlerConfig
+                if m.top.content.HandlerConfigDetails <> invalid and m.top.content.GetChildCount() = 0 then
+                    ' Show loading indicator
+                    ' Content should be visible
+                    ShowBusySpinner(true)
+                    config = m.top.content.HandlerConfigDetails
+                    callback = {
+                        config: config
+
+                        onReceive: sub(data)
+                            gthis = GetGlobalAA()
+                            if data <> invalid and data.GetChildCount() > 0
+                                ' replace data if needed
+                                if not data.IsSameNode(gthis.top.content) then gthis.top.content = data
+                                ' fire focus change that will redraw UI and tell developer which item is focused
+                                gthis.top.itemFocused = gthis.top.jumpToItem
+                            end if
+                        end sub
+
+                        onError: sub(data)
+                            gthis = GetGlobalAA()
+                            if gthis.top.content.HandlerConfigDetails <> invalid then
+                                m.config = gthis.top.content.HandlerConfigDetails
+                                gthis.top.content.HandlerConfigDetails = invalid
+                            end if
+                            GetContentData(m, m.config, gthis.top.content)
+                        end sub
+                    }
+                    GetContentData(callback, config, m.top.content)
+                else if m.top.content.GetChildCount() > 0
+    '                trigger loading of first content
+                    m.top.itemFocused = m.top.jumpToItem
+                end if
+    '            this is not list of items
+    '            check if we need to load extra data for this item
+            else if m.top.content.HandlerConfigDetails <> invalid then
+    '           this is one item but it needs extra data
+                SetDetailsContent(m.top.content)
+    '           but load extra metadata
+                LoadMoreContent(m.top.content, m.top.content.HandlerConfigDetails)
+            else ' This is single item that has everything loaded
+    '           update current item so developer would know that everything is loaded
+                m.top.currentItem = m.top.content
+                m.top.itemLoaded = true
+    '           set details as is
+                SetDetailsContent(m.top.content)
+            end if
+
+            m.currentContentNode = m.top.content
+        end if
+    else
+        ' Clear previous content
+        SetDetailsContent(invalid)
+        m.buttons.content = invalid
     end if
 end sub
 
@@ -145,6 +173,13 @@ sub SetDetailsContent(content as Object, isLoadinExtrainfo = false as Boolean)
         m.info2.text = ConvertToStringAndJoin([content.Rating, Content.categories])
         m.descriptionLabel.text = content.description
         m.actorsLabel.text = ConvertToStringAndJoin(content.actors, ", ")
+    else ' clear content
+        SetOverhangTitle("")
+        m.poster.uri = ""
+        m.info1.text = ""
+        m.info2.text = ""
+        m.descriptionLabel.text = ""
+        m.actorsLabel.text = ""
     end if
     if not isLoadinExtrainfo
         ShowBusySpinner(false)
@@ -255,8 +290,10 @@ function ConvertToStringAndJoin(dataArray as Object, divider = " | " as String) 
                     strFormat = item.Join(", ")
                 end if
                 if strFormat <> invalid then
-                    if result.Len() > 0 then result += divider
-                    result += strFormat
+                    if strFormat.Len() > 0
+                        if result.Len() > 0 then result += divider
+                        result += strFormat
+                    end if
                 end if
             end if
         end for
@@ -330,6 +367,8 @@ sub SGDEX_SetTheme(theme as Object)
         buttonsUnFocusedColor:          { buttons: "color" }
         buttonsFocusRingColor:          { buttons: "focusBitmapBlendColor" }
         buttonsSectionDividerTextColor: { buttons: "sectionDividerTextColor" }
+
+        busySpinnerColor: { spinner : { poster: "blendColor"} }
     }
 
     SGDEX_setThemeFieldstoNode(m, detailsThemeAttributes, theme)

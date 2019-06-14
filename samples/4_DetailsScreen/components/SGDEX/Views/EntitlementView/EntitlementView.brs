@@ -2,6 +2,8 @@
 
 sub Init()
     m.top.ObserveField("silentCheckEntitlement", "OnSilentCheckEntitlement")
+    m.top.ObserveField("silentCheckAuthentication", "OnSilentCheckAuthentication")
+    m.top.ObserveField("silentDeAuthenticate", "OnSilentDeAuthenticate")
     m.top.ObserveField("wasShown", "OnWasShown")
 end sub
 
@@ -21,7 +23,7 @@ sub RunEntitlementHander(name as String, functionName as String)
 end sub
 
 ' "silentCheckEntitlement" interface callback,
-' initiates entitlement checking in headless mode
+' initiates entitlement checking in non-UI mode
 sub OnSilentCheckEntitlement()
     content = m.top.content
     if content <> invalid
@@ -34,6 +36,35 @@ sub OnSilentCheckEntitlement()
     end if
 end sub
 
+' "silentCheckAuthentication" interface callback,
+' initiates authentication checking in non-UI mode
+sub OnSilentCheckAuthentication()
+    content = m.top.content
+    if content <> invalid
+        handlerConfig = content.handlerConfigEntitlement
+        if handlerConfig = invalid
+            m.top.isAuthenticated = true
+        else if handlerConfig.name <> invalid
+            RunEntitlementHander(handlerConfig.name, "SilentCheckAuthentication")
+        end if
+    end if
+end sub
+
+' "silentDeAuthenticate" interface callback,
+' initiates de-authentication in non-UI mode
+sub OnSilentDeAuthenticate()
+    content = m.top.content
+    if content <> invalid
+        handlerConfig = content.handlerConfigEntitlement
+        if handlerConfig = invalid
+            m.top.isAuthenticated = false
+        else if handlerConfig.name <> invalid
+            RunEntitlementHander(handlerConfig.name, "SilentDeAuthenticate")
+        end if
+    end if
+end sub
+
+
 ' "wasShown" interface callback, initiates subscription flow with UI
 sub OnWasShown()
     content = m.top.content
@@ -43,7 +74,7 @@ sub OnWasShown()
             m.top.close = true
             m.top.isSubscribed = true
         else if handlerConfig.name <> invalid
-            RunEntitlementHander(handlerConfig.name, "Subscribe")
+            RunEntitlementHander(handlerConfig.name, "RunEntitlementFlow")
         end if
     end if
 end sub

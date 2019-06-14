@@ -39,6 +39,8 @@ sub UpdateSize()
     if width <> invalid and height <> invalid
         m.top.width     = width
         m.top.height    = height
+        m.top.loadWidth = width 
+        m.top.loadHeight = height
     end if
 end sub
 

@@ -9,13 +9,14 @@ Take a look to the file DetailsViewLogic.brs in the components folder.
 The buttons are refreshed according to bookmarks availability. We need to have an ability to update them in run-time. For this reason, we should make some refactoring and move logic for button creation to separate function. Let's create function RefreshButtons(details) it will have one parameter DetailsView object. This should be made like this because function RefreshButtons shouldn't care about where to take View for update.
 
 ```
-sub RefreshButtons(details)
-    item = details.content.getChild(details.itemFocused)
+sub RefreshButtons(details as Object)
+    item = details.content.GetChild(details.itemFocused)
     ' play button is always available
-    buttons = [{title:"Play", id:"play"}]
+    buttons = [{ title: "Play", id: "play" }]
     ' continue button available only when this item has bookmark
-    if item.bookmarkPosition > 0 then buttons.push({title : "Continue", id:"continue"})
-    btnsContent = Utils_ContentList2Node(buttons)
+    if item.bookmarkPosition > 0 then buttons.Push({ title: "Continue", id: "continue" })
+    btnsContent = CreateObject("roSGNode", "ContentNode")
+    btnsContent.Update({ children: buttons})
     ' set buttons
     details.buttons = btnsContent
 end sub
@@ -44,34 +45,36 @@ For now, bookmark is saved only when user press back from video playback. But Ro
 For this reason, we should define RegistryBookmarksHandler which extends SGDEX's BookmarksHandler and set it configuration into *contentItem*.
 
 ```
-    contentItem.BookmarksHandler = {
-        name : "RegistryBookmarksHandler",
-        fields : {
-            minBookmark : 10 ' if position > minBookmark (position > 10)
-            maxBookmark : 10 ' if position < duration - maxBookmark (position < duration - 10)
-            interval : 10 ' bookmark saving interface
+    contentItem.AddFields({
+            HandlerConfigBookmarks: {
+            name: "RegistryBookmarksHandler"
+            fields: {
+                minBookmark: 10 ' if position > minBookmark (position > 10)
+                maxBookmark: 10 ' if position < duration - maxBookmark (position < duration - 10)
+                interval : 10 ' bookmark saving interface
+            }
         }
-    }
+    })
 ```
 
 In RegistryBookmarksHandler we should define SaveBookmark, GetBookmark and RemoveBookmark functions which will be called by inner BookmarksHandler logic.
 
 ```
-Sub SaveBookmark()
+sub SaveBookmark()
     content = m.top.content
     position = m.top.position
     BookmarksHelper_SetBookmarkData(content.id, position)
-End Sub
+end sub
 
-Function GetBookmark() as Integer
+function GetBookmark() as Integer
     content = m.top.content
     return BookmarksHelper_GetBookmarkData(content.id)
-End Function
+end function
 
-Sub RemoveBookmark()
+sub RemoveBookmark()
     content = m.top.content
     BookmarksHelper_DeleteBookmark(content.id)
-End Sub
+end sub
 
 ```
 
@@ -82,8 +85,8 @@ In GetBookmarkData we check if bookmark exists for some id in registry.
 ```
 function BookmarksHelper_GetBookmarkData(id as Object) as Integer
     sec = CreateObject("roRegistrySection", "Bookmarks")
-    if sec.Exists("Bookmark_" + id.toStr())
-        return sec.Read("Bookmark_" + id.toStr()).ToInt()
+    if sec.Exists("Bookmark_" + id.ToStr())
+        return sec.Read("Bookmark_" + id.ToStr()).ToInt()
     end if
 
     return 0

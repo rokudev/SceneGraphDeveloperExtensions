@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--********** Copyright 2019 Roku Corp.  All Rights Reserved. **********-->
+
 <component name="DetailsHandler" extends="ContentHandler" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
-    <interface>
-        <field id="param" type="string" />
-        <field id="currentItemContent" type="node" />
-    </interface>
     <script type="text/brightscript" uri="DetailsHandler.brs" />
-    <script type="text/brightscript" uri="pkg:/source/rsg_utils.brs" />
-    <script type="text/brightscript" uri="pkg:/components/BookmarksHelper.brs" />
+    <script type="text/brightscript" uri="../../source/rsg_utils.brs" />
+    <script type="text/brightscript" uri="../BookmarksHelper.brs" />
 </component>

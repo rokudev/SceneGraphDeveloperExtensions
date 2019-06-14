@@ -1,11 +1,13 @@
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
 ' function for getting bookmark position for item by id
 ' read bookmark from registry
 function BookmarksHelper_GetBookmarkData(id as Object) As Integer
     ?"BookmarksHelper_GetBookmarkData(" id ")"
     sec = CreateObject("roRegistrySection", "Bookmarks")
     ' check whether bookmark for this item exists
-    if sec.Exists("Bookmark_" + id.toStr())
-        return sec.Read("Bookmark_" + id.toStr()).ToInt()
+    if sec.Exists("Bookmark_" + id.ToStr())
+        return sec.Read("Bookmark_" + id.ToStr()).ToInt()
     end if
     return 0
 end function
@@ -15,7 +17,7 @@ end function
 sub BookmarksHelper_SetBookmarkData(id as String, position as Integer)
     ?"BookmarksHelper_SetBookmarkData(" id "," position ")"
     sec = CreateObject("roRegistrySection", "Bookmarks")
-    sec.Write("Bookmark_" + id, position.tostr())
+    sec.Write("Bookmark_" + id, position.ToStr())
     sec.Flush()
 end sub
 

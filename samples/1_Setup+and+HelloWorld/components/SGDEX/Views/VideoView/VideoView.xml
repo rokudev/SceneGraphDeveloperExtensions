@@ -144,6 +144,9 @@
                 @PossibleValue retrievingBarEmptyBarBlendColor - Same as bufferingBarEmptyBarBlendColor but for retrieving bar
                 @PossibleValue retrievingBarFilledBarBlendColor - Same as bufferingBarFilledBarBlendColor but for retrieving bar
 
+                <b>BIF customization</b>
+                @PossibleValue focusRingColor - a color to be blended with the image displayed behind individual BIF images displayed on the screen
+
                 <b>Endcard view theme attributes</b>
                 @PossibleValue buttonsFocusedColor - repeat button focused text color
                 @PossibleValue buttonsUnFocusedColor - repeat button unfocused text color

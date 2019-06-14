@@ -7,7 +7,7 @@ To begin, start with the sample in [1_Setup+and+HelloWorld](../1_Setup+and+Hello
 ```
 m.grid = CreateObject("roSGNode", "GridView")
 
-m.grid.setFields({
+m.grid.SetFields({
     style: "standard"
     posterShape: "16x9"
 })
@@ -17,7 +17,7 @@ Next we need to set up the Content Handler to fetch your content. To do this we 
 
 ```
 content = CreateObject("roSGNode", "ContentNode")
-content.addfields({
+content.AddFields({
     HandlerConfigGrid: {
         name: "GridHandler"
     }
@@ -28,7 +28,7 @@ Next we need to set that content node we just made to our grid. After that, we w
 
 ```
 m.grid.content = content
-m.top.ComponentController.callFunc("show", {
+m.top.ComponentController.CallFunc("show", {
     view: m.grid
 })
 ```
@@ -44,7 +44,7 @@ These are the content handler we referenced earlier. Your GridHandler.xml should
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <component name="GridHandler" extends="ContentHandler">
-    <script type="text/brightscript" uri="pkg:/components/content/GridHandler.brs" />
+    <script type="text/brightscript" uri="GridHandler.brs" />
 </component>
 ```
 
@@ -66,10 +66,10 @@ After that you need to parse through the feed yourself. For this feel free to lo
 - Description: A short description of the content
 - Categories: The genre of content
 
-Once you have parsed the feed and built a tree of content nodes, you should append the array of row nodes to the content node associated with your Content Handler like this:
+Once you have parsed the feed and built a tree of content nodes, you should update the content node associated with your Content Handler with the array of rows like this:
 
 ```
-m.top.content.appendChildren(rowsContentNodeArray)
+m.top.content.Update(rootChildren)
 ```
 
 After that, if you've parsed everything correctly you should be greeted to this View when you side load your channel.

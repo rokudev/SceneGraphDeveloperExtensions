@@ -1,4 +1,4 @@
-' ********** Copyright 2017 Roku Corp.  All Rights Reserved. **********
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
 
 sub GetContent()
     ' url = CreateObject("roUrlTransfer")
@@ -9,17 +9,18 @@ sub GetContent()
     ' feed = url.GetToString()
     'this is for a sample, usually feed is retrieved from url using roUrlTransfer
     feed = ReadAsciiFile("pkg:/feed/feed.json")
-    sleep(2000)
+    Sleep(2000) ' to emulate API call
     
     json = ParseJson(feed)
     rootNodeArray = ParseJsonToNodeArray(json)
-    m.top.content.AppendChildren(rootNodeArray)
+    m.top.content.Update(rootNodeArray)
 end sub
 
-
-Function ParseJsonToNodeArray(jsonAA as Object) as Object
+function ParseJsonToNodeArray(jsonAA as Object) as Object
     if jsonAA = invalid then return []
-    resultNodeArray = []
+    resultNodeArray = {
+       children: []
+    }
 
     for each fieldInJsonAA in jsonAA
         ' Assigning fields that apply to both movies and series
@@ -30,26 +31,25 @@ Function ParseJsonToNodeArray(jsonAA as Object) as Object
                 itemNode = ParseMediaItemToNode(mediaItem, fieldInJsonAA)
                 itemsNodeArray.Push(itemNode)
             end for
-            rowNode = Utils_AAToContentNode({
-                    title : fieldInJsonAA
-                })
-            rowNode.AppendChildren(itemsNodeArray)
+            rowAA = {
+               title: fieldInJsonAA
+               children: itemsNodeArray
+            }
 
-            resultNodeArray.Push(rowNode)
-        end if
+           resultNodeArray.children.Push(rowAA)
+       end if
     end for
 
     return resultNodeArray
-End Function
+end function
 
-
-Function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Object
+function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Object
     itemNode = Utils_AAToContentNode({
-            "id"    : mediaItem.id
-            "title"    : mediaItem.title
-            "hdPosterUrl" : mediaItem.thumbnail
-            "Description" : mediaItem.shortDescription
-            "Categories" : mediaItem.genres[0]
+            "id": mediaItem.id
+            "title": mediaItem.title
+            "hdPosterUrl": mediaItem.thumbnail
+            "Description": mediaItem.shortDescription
+            "Categories": mediaItem.genres[0]
         })
 
     if mediaItem = invalid then
@@ -59,36 +59,37 @@ Function ParseMediaItemToNode(mediaItem as Object, mediaType as String) as Objec
     ' Assign movie specific fields
     if mediaType = "movies"
         Utils_forceSetFields(itemNode, {
-                "Url" : GetVideoUrl(mediaItem)
+                "Url": GetVideoUrl(mediaItem)
             })
     end if
+
     ' Assign series specific fields
     if mediaType = "series"
         seasons = mediaItem.seasons
         seasonArray = []
         for each season in seasons
             episodeArray = []
-            episodes = season.lookup("episodes")
+            episodes = season.Lookup("episodes")
             for each episode in episodes
                 episodeNode = Utils_AAToContentNode(episode)
                 Utils_forceSetFields(episodeNode, {
-                    "url" : GetVideoUrl(episode)
-                    "title" : episode.title
-                    "hdPosterUrl" : episode.thumbnail
-                    "Description" : episode.shortDescription
+                    "url": GetVideoUrl(episode)
+                    "title": episode.title
+                    "hdPosterUrl": episode.thumbnail
+                    "Description": episode.shortDescription
                 })
                 episodeArray.Push(episodeNode)
             end for
             seasonArray.Push(episodeArray)
         end for
         Utils_forceSetFields(itemNode, {
-                "seasons" : seasonArray
+                "seasons": seasonArray
             })
     end if
     return itemNode
-End Function
+end function
 
-Function GetVideoUrl(mediaItem) as String
+function GetVideoUrl(mediaItem as Object) as String
     content = mediaItem.Lookup("content")
     if content = invalid then
         return ""
@@ -104,10 +105,10 @@ Function GetVideoUrl(mediaItem) as String
         return ""
     end if
 
-    url = entry.lookup("url")
+    url = entry.Lookup("url")
     if url = invalid then
         return ""
     end if
 
     return url
-End Function
+end function

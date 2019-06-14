@@ -1,13 +1,17 @@
-function ShowDetailsView(content, index, isContentList = true)
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
+function ShowDetailsView(content as Object, index as Integer, isContentList = true as Boolean) as Object
     ' Create an DetailsView Object
     details = CreateObject("roSGNode", "DetailsView")
     ' Observe the content, so that when it is set the callback
     ' function will run and the buttons can be created
     details.ObserveField("currentItem", "OnDetailsContentSet")
     details.ObserveField("buttonSelected", "OnButtonSelected")
-    details.content = content
-    details.jumpToItem = index
-    details.isContentList = isContentList
+    details.SetFields({
+        content: content
+        jumpToItem: index
+        isContentList: isContentList
+    })
     ' This will cause the View to be shown on the View
     m.top.ComponentController.CallFunc("show", {
         view: details
@@ -32,9 +36,10 @@ sub OnDetailsContentSet(event as Object)
         if buttonsToCreate.Count() = 0
             buttonsToCreate.Push({ title: "No Content to play", id: "no_content" })
         end if
-        m.btnsContent = Utils_ContentList2Node(buttonsToCreate)
+        btnsContent = CreateObject("roSGNode", "ContentNode")
+        btnsContent.Update({ children: buttonsToCreate })
     end if
-    details.buttons = m.btnsContent
+    details.buttons = btnsContent
 end sub
 
 sub OnButtonSelected(event as Object)

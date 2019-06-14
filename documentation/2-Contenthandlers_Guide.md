@@ -154,8 +154,8 @@ is a details view that displays only one item.
 > 
 > To load the list of items to be displayed in a details view,
 > set a HandlerConfigDetails on the view's root Content node. Then, in
-> the CH's GetContent() function, append the
-> children to m.top.content for each of the items to be displayed.
+> the CH's GetContent() function, update the
+> m.top.content with children for each of the items to be displayed.
 
 ### Single Item Model
 

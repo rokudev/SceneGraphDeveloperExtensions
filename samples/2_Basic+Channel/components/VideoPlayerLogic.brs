@@ -1,11 +1,13 @@
+' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+
 'This is logic for video playback
-function OpenVideoPlayer(content, index, isContentList) as Object
+function OpenVideoPlayer(content as Object, index as Integer, isContentList as Boolean) as Object
     video = CreateObject("roSGNode", "VideoView")
     content.AddFields({
-            HandlerConfigEndcard : {
-            name : "CGEndcard"
-            fields : {
-                param : "Supre cinema"
+            HandlerConfigEndcard: {
+            name: "CGEndcard"
+            fields: {
+                param: "Supre cinema"
                 currentItemContent: content
             }
         }
@@ -17,42 +19,28 @@ function OpenVideoPlayer(content, index, isContentList) as Object
     m.isEndcardShown = true
 
     video.currentItem.AddFields({
-            HandlerConfigEndcard : {
-            name : "CGEndcard"
-            fields : {
-                param : "Supre cinema"
+            HandlerConfigEndcard: {
+            name: "CGEndcard"
+            fields: {
+                param: "Supre cinema"
                 currentItemContent: content
             }
         }
     })
-    m.top.ComponentController.callFunc("show", {
+    m.top.ComponentController.CallFunc("show", {
         view: video
     })
-
     return video
 end function
 
-function OpenVideoPlayerItem(contentItem) as Object
+function OpenVideoPlayerItem(contentItem as Object) as Object
     video = CreateObject("roSGNode", "VideoView")
     video.content = contentItem
     video.isContentList = false
-
     video.control = "play"
-
     m.isEndcardShown = true
-
-    m.top.ComponentController.callFunc("show", {
-        View: video
+    m.top.ComponentController.CallFunc("show", {
+        view: video
     })
-
     return video
 end function
-
-'this function will be called in both cases when video finishes or when user presses back
-'when user presses back, View manger will handle it and remove top View from view
-sub OnVideoWasClosed(event as Object)
-    video = event.getRoSGNode()
-    if video <> invalid then
-        video.control = "stop"
-    end if
-end sub
