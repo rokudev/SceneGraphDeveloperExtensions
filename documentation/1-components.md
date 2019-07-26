@@ -38,7 +38,7 @@ BaseScene.
 | --------------------------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
 | currentView                 | Node     |  -          | Holds the reference to the view that is currently shown                                                                |
 | allowCloseChannelOnLastView | Boolean  | True        | If true, the channel closes when the back button is pressed or if the previous view set the view's close field to true |
-| allowCloseLastViewOnBack    | Boolean  | True        | If true, the current view is closed, and the user can open another view through the new view's wasClosedÂ callback      |
+| allowCloseLastViewOnBack    | Boolean  | True        | If true, the current view is closed, and the user can open another view through the new view's wasClosed callback      |
 
 ####   
 Functions
