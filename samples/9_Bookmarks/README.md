@@ -22,7 +22,7 @@ sub RefreshButtons(details as Object)
 end sub
 ```
 
-Now we should decide at what point buttons should be refreshed. It should be done once user gets to it. For this reason, we can observe *wasClosed* field of video view.
+Now we should decide at what point buttons should be refreshed. It should be done once user gets to it. For this reason, we can observe *wasClosed* field of media view.
 
 Add one line of code to OnButtonSelected method
 

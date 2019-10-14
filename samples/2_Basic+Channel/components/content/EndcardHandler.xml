@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--********** Copyright 2019 Roku Corp.  All Rights Reserved. **********-->
+
+<component name="EndcardHandler" extends="ContentHandler" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <script type="text/brightscript" uri="EndcardHandler.brs" />
+    <script type="text/brightscript" uri="../../source/rsg_utils.brs" />
+</component>

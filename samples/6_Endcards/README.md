@@ -2,7 +2,7 @@
 
 ## Part 1: Setting Up Endcards
 
-The endcard is a part of the VideoView component.  We add this in function OpenVideoPlayer() right before we show it.  We add it by adding a ContentHandler and passing in the current video details that are stored video.content.  It is bad to pass in the reference directly however, so we make a deep copy using the Clone() function.  You want to add it before setting video.control = "play".  Create EndcardHandler.brs and EndcardHandler.xml.  In the xml extend ContentHandler and create an interface which contains "currentItemContent" of type node.  The xml should look like this
+The endcard is a part of the MediaView component.  We add this in function OpenVideoPlayer() right before we show it.  We add it by adding a ContentHandler and passing in the current video details that are stored video.content.  It is bad to pass in the reference directly however, so we make a deep copy using the Clone() function.  You want to add it before setting video.control = "play".  Create EndcardHandler.brs and EndcardHandler.xml.  In the xml extend ContentHandler and create an interface which contains "currentItemContent" of type node.  The xml should look like this
 
 ```
 <?xml version="1.0" encoding="UTF-8"?>

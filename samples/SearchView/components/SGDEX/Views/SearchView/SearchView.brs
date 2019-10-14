@@ -14,6 +14,7 @@ sub init()
     ' internal variables
     m.Handler_ConfigField = "HandlerConfigSearch"
     m.isClearContent = true
+    m.lastFocusedNode = m.keyboard
 
     ' limit the render zone so keyboard won't overlap the overhang
     ' when user navigates to grid
@@ -27,6 +28,7 @@ sub init()
     ' set up observers
     m.top.ObserveFieldScoped("content", "OnContentChanged")
     m.keyboard.ObserveFieldScoped("text", "OnKeyboardTextChanged")
+    m.top.ObserveFieldScoped("focusedChild", "OnFocuseChange")
 
     ' set specific to this view global theme attributes
     if m.LastThemeAttributes <> invalid then
@@ -36,6 +38,12 @@ sub init()
     ' set default values
     m.top.posterShape = "16x9"
     m.noResultsLabel.text = m.top.noResultsLabelText
+end sub
+
+sub OnFocuseChange(event as Object)
+    if m.top.IsInFocusChain()
+        m.lastFocusedNode.SetFocus(true)
+    end if
 end sub
 
 ' callback to the showSpinner field
@@ -305,10 +313,12 @@ function OnKeyEvent(key as String, press as Boolean) as Boolean
         if m.gridNode <> invalid ' sliding can happen only if there is grid on the screen
             if key = "down" and m.keyboard.IsInFocusChain()
                 SlideLayout(m.layoutBaseY, m.layoutTopY)
+                m.lastFocusedNode = m.gridNode
                 m.gridNode.SetFocus(true)
                 handled = true
             else if key = "up" and m.gridNode.IsInFocusChain()
                 SlideLayout(m.layoutTopY, m.layoutBaseY)
+                m.lastFocusedNode = m.keyboard
                 m.keyboard.SetFocus(true)
                 handled = true
             end if

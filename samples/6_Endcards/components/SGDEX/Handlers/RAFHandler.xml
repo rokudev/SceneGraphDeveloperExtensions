@@ -27,7 +27,10 @@
     <interface>
         <!-- Reference to Video node should be passed outside to make Raf handler works with it -->
         <field id="video" type="node" />
-        
+
+        <!-- Set to true when RAF is rendering ad -->
+        <field id="isPlayingAds" type="bool" alwaysNotify="true" value="false" />
+
         <!-- This is internal field for CM to know when task finished -->
         <field id="finished" type="bool" />
     </interface>

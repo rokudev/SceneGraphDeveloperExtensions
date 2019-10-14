@@ -1,8 +1,26 @@
 # Scene Graph Developer Extensions
 
-> 06.14.19
+> 10.11.19
 
-## v2.0
+## v.2.1
+
+### New Views
+
+#### MediaView
+
+MediaView replaces VideoView and adds support for audio content. MediaView is backward compatible with VideoView and will work with existing SGDEX channels with minimal integration work required. VideoView is now deprecated and will not be maintained in future versions of SGDEX.
+
+### New Features and Enhancements
+
+* When preloading and endcards are enabled in playlist mode, SGDEX will now preload the last item in the playlist while its endcard is visible
+
+### Bug Fixes
+
+* Fixed an issue where an empty endcard was sometimes displayed unexpectedly 
+* Fixed an issue where the next video in a playlist sometimes did not preload while the endcard was visible
+* Fixed an issue where RAF ads were sometimes played at the wrong time if preloading was turned on
+
+## v.2.0
 
 ### New Views
 

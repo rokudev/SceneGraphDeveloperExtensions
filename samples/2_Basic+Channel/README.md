@@ -6,7 +6,7 @@ This sample will be using Scene Graph Developer Extensions (SGDEX) to streamline
 You can build a basic channel using the built-in tools like the one we do in this sample but you also have the power of Roku SceneGraph at your disposal.
 
 Framework is composed of a few different components. They have the few basic views: a
-grid view, a category list view, a details view, and a video view. These handle all
+grid view, a category list view, a details view, and a media view. These handle all
 the logistics for displaying your content, and they each use a ContentHandler.
 A ContentHandler is used to get and parse out the data you get from your own
 content feed. To use these Components you extend them and then override the
@@ -257,16 +257,16 @@ We first implement the function we call in the previous file, OpenVideoPlayer. T
 function OpenVideoPlayer(content, index, isContentList) as Object
 ```
 
-We create a VideoView object and add the arguments to it.
+We create a MediaView object and add the arguments to it.
 
 ```
-video = CreateObject("roSGNode", "VideoView")
+video = CreateObject("roSGNode", "MediaView")
 video.content = content
 video.jumpToItem = index
 video.isContentList = isContentList
 ```
 
-Next we set the video.control to “play” and finally show the video view object then return it.
+Next we set the video.control to “play” and finally show the media view object then return it.
 
 ```
 m.top.ComponentController.CallFunc("show", {

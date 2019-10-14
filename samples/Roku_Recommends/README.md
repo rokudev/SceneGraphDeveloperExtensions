@@ -15,10 +15,10 @@ as the user navigates vertically within the grid.
 Selecting a poster from the grid opens a DetailView for that piece of content.
 The DetailView operates in list mode, so you can navigate left/right through the list of content using the d-pad on the remote.
 
-### Video View
+### Media View
 
-Selecting the _Play_ button on the DetailView opens a VideoView for that piece of content.
-The VideoView operates in list mode without endcards, so the next video in the list will play immediately.
-When the last video in the playlist finishes, the VideoView closes and the DetailView is displayed.
+Selecting the _Play_ button on the DetailView opens a MediaView for that piece of content.
+The MediaView operates in list mode without endcards, so the next video in the list will play immediately.
+When the last video in the playlist finishes, the MediaView closes and the DetailView is displayed.
 
 ###### Copyright (c) 2018 Roku, Inc. All rights reserved.

@@ -49,7 +49,7 @@ sub OnButtonSelected(event as Object)
     video.ObserveFieldScoped("wasClosed", "OnVideoWasClosed")
 end sub
 
-' callback for video view close event
+' callback for media view close event
 sub OnVideoWasClosed()
     RefreshButtons(m.details)
 end sub

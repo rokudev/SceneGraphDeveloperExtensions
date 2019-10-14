@@ -239,10 +239,11 @@ sub ProcessEndState()
 
     if state = "finished"
         ' If there is content for endcard, show it and start timer to next video
-        if m.endcardContent <> Invalid or m.top.alwaysShowEndcards
+        if (m.endcardContent <> Invalid and m.endcardContent.GetChildCount() > 0) or m.top.alwaysShowEndcards
             ' Hide Video node and show endcard view
             m.video.visible = false
             m.video.content = invalid
+            m.ableToPlay = false
 
             CreateVideoNode()
             ShowEndcardView()
@@ -343,11 +344,23 @@ sub ShowEndcardView()
     m.endcardView.ObserveField("timerFired", "OnEndcardTimerFired")
 
     hasNextItemInPlaylist = (m.top.content.GetChildCount() > m.top.currentIndex + 1)
-    if hasNextItemInPlaylist and m.top.preloadContent
-        ' Start loading of next item in playlist
-        nextItem = m.top.content.getChild(m.top.currentIndex + 1)
-        nextHandlerConfigVideo = nextItem.HandlerConfigVideo
-        LoadContentHidden(nextItem, nextHandlerConfigVideo)
+    if m.top.preloadContent
+        if hasNextItemInPlaylist
+            ' Start loading of next item in playlist
+            nextItem = m.top.content.getChild(m.top.currentIndex + 1)
+            nextHandlerConfigVideo = nextItem.HandlerConfigVideo
+            LoadContentHidden(nextItem, nextHandlerConfigVideo)
+        else
+            ' RDE-2288: Start prebuffering of current item if there is no next
+            ' That would improve the buffer time if the user selects "Play Again"
+            if m.top.isContentList
+                currItem = m.top.content.getChild(m.top.currentIndex)
+            else
+                currItem = m.top.content
+            end if
+            currHandlerConfigVideo = currItem.HandlerConfigVideo
+            LoadContentHidden(currItem, currHandlerConfigVideo)
+        end if
     end if
 end sub
 
@@ -526,7 +539,7 @@ sub GetRafConfigAndPlayVideo(control)
     ' If Raf config set, need to create RAF task
 
     ExtractRafConfig()
-    if m.rafHandlerConfig <> invalid and m.rafHandlerConfig.name <> ""
+    if m.rafHandlerConfig <> invalid and m.rafHandlerConfig.name <> "" and m.top.control <> "prebuffer"
         rafTask = StartRafTask(m.rafHandlerConfig, m.video)
         if rafTask = invalid
             m.video.enableUI = true

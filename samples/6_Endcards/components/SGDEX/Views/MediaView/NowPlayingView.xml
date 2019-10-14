@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component name="NowPlayingView" extends="NowPlayingNode" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+
+    <interface>
+        <field id="backButtonPressed" type="bool" alwaysNotify="true" />
+   </interface>
+
+    <script type="text/brightscript" uri="NowPlayingView.brs" />
+</component>

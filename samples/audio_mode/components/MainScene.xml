@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2019 Roku, Inc. All rights reserved. -->
+<component name="MainScene" extends="BaseScene" >
+    <script type="text/brightscript" uri="MainScene.brs" />
+    <script type="text/brightscript" uri="DetailsScreenLogic.brs" />
+    <script type="text/brightscript" uri="MediaPlayerLogic.brs" />
+    <script type="text/brightscript" uri="pkg:/source/rsg_utils.brs" />
+</component>

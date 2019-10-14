@@ -6,7 +6,7 @@ This sample will be using Scene Graph Developer Extensions, or SGDEX for short.
 SGDEX is a framework built for Roku SceneGraph development to streamline the process and make it quicker to build channels that conform to the Roku UX guidelines.  You can build a basic channel using the built-in tools like the one we do in this sample but you also have the power of Roku SceneGraph at your disposal.
 
 SGDEX is composed of a few different components.
-They have the few basic views: a grid view, a details view, a category list view, and a video view.
+They have the few basic views: a grid view, a details view, a category list view, and a media view.
 These handle all the logistics for displaying your content, and they each use a ContentHandler.  A ContentHandler is used to get and parse out the data you get from your own content feed.  To use these Components you extend them and then override the functions in them to fit your channel.
 
 

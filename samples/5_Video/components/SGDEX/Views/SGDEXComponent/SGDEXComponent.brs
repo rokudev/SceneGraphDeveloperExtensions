@@ -77,10 +77,10 @@ end sub
 sub SGDEX_InternalBuildAndSetTheme(viewTheme as Object, newTheme as Object, isUpdate = false as Boolean)
     if GetInterface(newTheme, "ifAssociativeArray") <> invalid then
         viewKey = SGDEX_GetViewType()
-
         theme = {}
+
+        theme.Append(SGDEX_GetViewSpecificTheme(viewKey, newTheme)) ' Setting specific theme attributes, e.g. for endcard
         if GetInterface(newTheme["global"], "ifAssociativeArray") <> invalid then theme.Append(newTheme["global"])
-        if GetInterface(newTheme[viewKey], "ifAssociativeArray") <> invalid then theme.Append(newTheme[viewKey])
         if GetInterface(viewTheme, "ifAssociativeArray") <> invalid then theme.Append(viewTheme)
         SGDEX_InternalSetTheme(theme, isUpdate)
     end if
@@ -100,7 +100,6 @@ sub SGDEX_InternalSetTheme(theme as Object, isUpdate = false as Boolean)
 end sub
 
 sub SGDEX_SetOverhangTheme(theme)
-'    overhang = m.top.overhang
     overhang = m.top.overhang
     if overhang <> invalid then
         SGDEX_setThemeFieldstoNode(m.top, {
@@ -183,6 +182,26 @@ sub SGDEX_SetBackgroundTheme(theme as Object)
 
     SGDEX_setThemeFieldstoNode(m, colorTheme, theme)
 end sub
+
+' Function returns all theme attributes specified especially for this view
+' For example:
+' m.top.theme = {
+'     mediaView: {
+'          textColor: "0xFFFFFF"
+'     }
+' }
+function SGDEX_GetViewSpecificTheme(viewKey as String, newTheme as Object) as Object
+    viewTheme = {}
+
+    if viewKey = "endcardView"
+        if newTheme["videoView"] <> invalid then viewTheme.Append(newTheme["videoView"]) ' Sharing videoView theme attributes with endcardView.
+        if newTheme["mediaView"] <> invalid then viewTheme.Append(newTheme["mediaView"]) ' Sharing mediaView theme attributes with endcardView.
+    else if viewKey = "mediaView"
+        if newTheme["videoView"] <> invalid then viewTheme.Append(newTheme["videoView"]) ' Sharing videoView theme attributes with mediaView.
+    end if
+    if newTheme[viewKey] <> invalid then viewTheme.Append(newTheme[viewKey])
+    return viewTheme
+end function
 
 'This function is used to set theme attributes to nodes
 'It support advanced setup of theming config

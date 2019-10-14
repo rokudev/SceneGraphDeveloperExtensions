@@ -43,7 +43,7 @@ This guide is composed of the following sections:
 
 5. [**SGDEX Guide: Video**](5_Video)
     The section describes how to:
-    - create video view component
+    - create media view component
     - implement logic for video content
     - open video player
 

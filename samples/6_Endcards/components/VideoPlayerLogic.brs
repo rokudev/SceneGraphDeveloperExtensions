@@ -2,13 +2,13 @@
 
 ' There are two functions depending on whether or not a focus index and isContentList are provided
 function OpenVideoPlayer(content as Object, index as Integer, isContentList as Boolean) as Object
-    ' Create VideoView Object and set its fields
-    video = CreateObject("roSGNode", "VideoView")
+    ' Create MediaView Object and set its fields
+    video = CreateObject("roSGNode", "MediaView")
     video.ObserveField("endcardItemSelected", "OnEndcardItemSelected")
     video.content = content
     video.jumpToItem = index
     video.isContentList = isContentList
-    ' Show the video view
+    ' Show the media view
     m.top.ComponentController.CallFunc("show", {
         view: video
     })
@@ -17,8 +17,8 @@ function OpenVideoPlayer(content as Object, index as Integer, isContentList as B
 end function
 
 function OpenVideoPlayerItem(contentItem as Object) as Object
-    ' Create VideoView Object and set its fields
-    video = CreateObject("roSGNode", "VideoView")
+    ' Create MediaView Object and set its fields
+    video = CreateObject("roSGNode", "MediaView")
     contentItem.AddFields({
         HandlerConfigEndcard: {
             name: "EndcardHandler"
@@ -28,7 +28,7 @@ function OpenVideoPlayerItem(contentItem as Object) as Object
     video.isContentList = false
     video.ObserveField("endcardItemSelected", "OnEndcardItemSelected")
     ' Adding the endcard handler to the video
-    ' Show the video view
+    ' Show the media view
     m.top.ComponentController.CallFunc("show", {
         view: video
     })

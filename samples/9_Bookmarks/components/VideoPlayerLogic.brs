@@ -3,14 +3,14 @@
 ' There are two functions depending on whether or not a focus index and isContentList are provided
 function OpenVideoPlayer(content as Object, index as Integer, isContentList as Boolean) as Object
     AddBookmarksHandler(content, index)
-    ' Create VideoView Object and set its fields
-    video = CreateObject("roSGNode", "VideoView")
+    ' Create MediaView Object and set its fields
+    video = CreateObject("roSGNode", "MediaView")
     video.content = content
     video.jumpToItem = index
     video.isContentList = isContentList
     ' Set it to start playing, it wont begin playback until show() is called
     video.control = "play"
-    ' Show the video view
+    ' Show the media view
     m.top.ComponentController.CallFunc("show", {
         view: video
     })
@@ -18,15 +18,15 @@ function OpenVideoPlayer(content as Object, index as Integer, isContentList as B
 end function
 
 function OpenVideoPlayerItem(contentItem as Object) as Object
-    ' Create VideoView Object and set its fields
+    ' Create MediaView Object and set its fields
     AddBookmarksHandler(contentItem)
 
-    video = CreateObject("roSGNode", "VideoView")
+    video = CreateObject("roSGNode", "MediaView")
     video.content = contentItem
     video.isContentList = false
     ' Set it to start playing, it wont begin playback until show() is called
     video.control = "play"
-    ' Show the video view
+    ' Show the media view
     m.top.ComponentController.CallFunc("show", {
         view: video
     })

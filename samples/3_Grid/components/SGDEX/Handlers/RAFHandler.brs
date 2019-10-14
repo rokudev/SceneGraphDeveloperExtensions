@@ -28,10 +28,10 @@ sub PlayContentWithFullRAFIntegration()
     ' We should override Raf functions to know that thay were called in channel handler
     ' and for importAds we should save ads array somewhere to pass it later to ShowAds
     adIface.sgdex_original_importAds = adIface.importAds
-    adIface.importAds = sub(ads)
+    adIface.importAds = sub(ads, enableLogging = false as Boolean)
             m.sgdex_flag_importAds_was_called = true
             m.sgdex_importedAds = ads
-            m.sgdex_original_importAds(ads)
+            m.sgdex_original_importAds(ads, enableLogging)
         end sub
 
     adIface.sgdex_original_StitchedAdsInit = adIface.StitchedAdsInit
@@ -85,7 +85,9 @@ sub PlayContentWithFullRAFIntegration()
     ' If there are some ads to play and it is not stitched ads, try to play preroll
     playContent = true
     if adPods <> invalid and adPods.count() > 0 and adIface.sgdex_flag_StitchedAdsInit_was_called = Invalid
+        m.top.isPlayingAds = true
         playContent = adIface.ShowAds(adPods, invalid, view)
+        m.top.isPlayingAds = false
     end if
 
     m.port = CreateObject("roMessagePort")
@@ -151,7 +153,9 @@ sub PlayContentWithFullRAFIntegration()
                         videoNode.control = "stop"
 
                         ' play midroll
+                        m.top.isPlayingAds = true
                         playContent = adIface.ShowAds(adPod, invalid, view)
+                        m.top.isPlayingAds = false
 
                         ' save local variable to handle "stopped" state for midroll playback
                         m.midRoll = playContent
@@ -182,7 +186,9 @@ sub PlayContentWithFullRAFIntegration()
                             ' postroll ad. stop video. show postroll when
                             ' state changes to  "sаtopped".
                             videoNode.control = "stop"
+                            m.top.isPlayingAds = true
                             adIface.ShowAds(adPod, invalid, view)
+                            m.top.isPlayingAds = false
                         end if
                         exit while
                     else if curState = "stopped"

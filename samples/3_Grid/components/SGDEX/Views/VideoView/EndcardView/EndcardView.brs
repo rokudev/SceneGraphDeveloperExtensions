@@ -228,6 +228,7 @@ Sub SGDEX_SetTheme(theme as Object)
 
         timerLabelColor:                { timerLabel: "color" }
     }
+
     SGDEX_setThemeFieldstoNode(m, themeAttributes, theme)
 End Sub
 
@@ -247,5 +248,5 @@ Sub SGDEX_SetBackgroundTheme(theme as Object)
 End Sub
 
 Function SGDEX_GetViewType() as String
-    return "videoView"
+    return "endcardView"
 End Function
