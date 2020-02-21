@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2019 Roku, Inc. All rights reserved. -->
+
+<component name="GetDefaultFontTask" extends="Task">
+    <interface>
+        <field id="oneCharWidth" type="integer" value="0" />
+    </interface>
+
+    <script type="text/brightscript" uri="GetDefaultFontTask.brs" />
+</component>

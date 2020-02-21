@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2018 Roku, Inc. All rights reserved. -->
+
+<!--
+    @Public
+    EntitlementView is a view that allows SGDEX developer to make subscription easy.
+    There are two basic behaviours:
+    1) Silen check of available subscription
+    2) Checking with show Entitlement view/flow
+
+    To pass configs to View, developer should implement handler that extends EntitlementHandler
+
+    @Sample:
+    // [In channel]
+    // contentItem - content node with handlerConfigEntitlement: {name : "HandlerEntitlement"}
+
+    // To make just silent check if developer subscribed
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.ObserveField("isSubscribed", "OnSubscriptionChecked")
+    ent.content = contentItem
+    ent.silentCheckEntitlement = true
+
+    // To show billing flow:
+    ent = CreateObject("roSGNode","EntitlementView")
+    ent.ObserveField("isSubscribed", "OnIsSubscribedToPlay")
+    ent.content = contentItem
+    m.top.ComponentController.callFunc("show", {view: ent})
+ -->
+
+<component name="EntitlementView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+  <interface>
+        <!-- @Public -->
+        <!-- [ObserveOnly] sets to true|false and shows if developer is subscribed after:
+        1) checking via silentCheckEntitlement=true (see below)
+        2) exitting from subscription flow initiated by adding view to View stack -->
+        <field id="isSubscribed" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- initiates silent entitlement checking (no UI) -->
+        <field id="silentCheckEntitlement" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- [ObserveOnly] sets to true|false and shows if developer is authenticated after:
+        1) checking via silentCheckAuthentication=true (see below)
+        2) exitting from authentication flow initiated by adding view to View stack -->
+        <field id="isAuthenticated" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- a boolean telling SGDEX whether it should prompt the user to share their
+        Roku account email address and use that value to pre-populate the KeyboardView. -->
+        <field id="prepopulateEmail" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- initiates silent authentication checking (no UI) -->
+        <field id="silentCheckAuthentication" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- initiates silent de-authentication (no UI) -->
+        <field id="silentDeAuthenticate" type="bool" value="false" alwaysNotify="true" />
+        
+        <!-- @Public -->
+        <!-- a string field which contains username. This field used in case of 
+        custom UI for collecting the credentials. -->
+        <field id="username" type="string" />
+        
+        <!-- @Public -->
+        <!-- a string field which contains user password. This field used in case of 
+        custom UI for collecting the credentials. -->
+        <field id="password" type="string" />
+  </interface>
+
+  <script type="text/brightscript" uri="EntitlementView.brs" />
+  <script type="text/brightscript" uri="../../ContentManager/ContentManagerUtils.brs" />
+</component>

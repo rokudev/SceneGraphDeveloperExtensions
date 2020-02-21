@@ -187,31 +187,38 @@
                     />
                 </LayoutGroup>
             </LayoutGroup>
+            <Group
+                id="spinnerGroup"
+                translation="[640,430]"
+                >
+                <LayoutGroup
+                    horizAlignment="center"
+                    vertAlignment="center"
+                    >
+                    <BusySpinner
+                        id="spinner"
+                        visible="false"
+                        control="stop"
+                    />
+                </LayoutGroup>
+            </Group>
+
+            <Group
+                id="noResultsLabelGroup"
+                translation="[640,430]"
+                >
+                <LayoutGroup
+                    horizAlignment="center"
+                    vertAlignment="center"
+                    >
+                    <Label
+                        id="noResultsLabel"
+                        font="font:LargeSystemFont"
+                        visible="false"
+                    />
+                </LayoutGroup>
+            </Group>
         </Group>
-
-        <LayoutGroup
-            translation="[640,560]"
-            horizAlignment="center"
-            vertAlignment="center"
-            >
-            <BusySpinner
-                id="spinner"
-                visible="false"
-                control="stop"
-            />
-        </LayoutGroup>
-
-        <LayoutGroup
-            translation="[640,560]"
-            horizAlignment="center"
-            vertAlignment="center"
-            >
-            <Label
-                id="noResultsLabel"
-                font="font:LargeSystemFont"
-                visible="false"
-            />
-        </LayoutGroup>
 
         <Animation
             id="slidingAnimation"

@@ -18,12 +18,13 @@ sub init()
 
     ' limit the render zone so keyboard won't overlap the overhang
     ' when user navigates to grid
-    m.visibleArea.clippingRect = [0, m.top.overhang.height, 1280, 720]
+    m.visibleArea.clippingRect = [0, -15, 1280, 720]
     ' set constants for sliding the layout up and down
-    m.layoutBaseY = m.top.overhang.height + 25
-    m.layoutTopY = -60
+    m.layoutBaseY = -10
     ' move SearchView layout under the overhang
     m.layout.translation = [0, m.layoutBaseY]
+    m.top.viewContentGroup.appendChild(m.visibleArea)
+
 
     ' set up observers
     m.top.ObserveFieldScoped("content", "OnContentChanged")
@@ -316,7 +317,7 @@ function OnKeyEvent(key as String, press as Boolean) as Boolean
                 m.lastFocusedNode = m.gridNode
                 m.gridNode.SetFocus(true)
                 handled = true
-            else if key = "up" and m.gridNode.IsInFocusChain()
+            else if (key = "up" or key = "back") and m.gridNode.IsInFocusChain()
                 SlideLayout(m.layoutTopY, m.layoutBaseY)
                 m.lastFocusedNode = m.keyboard
                 m.keyboard.SetFocus(true)
@@ -327,3 +328,10 @@ function OnKeyEvent(key as String, press as Boolean) as Boolean
 
     return handled
 end function
+
+sub SGDEX_UpdateViewUI()
+    buttonBarHeight = m.top.GetScene().buttonBar.findNode("backgroundRectangle").height
+    overhangHeight = m.top.overhang.height
+    m.layoutTopY = (0-(buttonBarHeight+buttonBarHeight))
+end sub
+

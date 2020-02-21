@@ -1,0 +1,38 @@
+<?xml version = "1.0" encoding = "utf-8" ?>
+<!--********** Copyright 2019 Roku Corp.  All Rights Reserved. **********-->
+
+<component name="ButtonBarItemComponent" extends="Group" >
+    <interface>
+        <field id="itemContent" type="node" onChange="OnContentSet" />
+        <field id="width" type="float" onChange="OnWidthChange" />
+        <field id="height" type="float" onChange="OnHeightChange" />
+        <field id="focusPercent" type="float" />
+        <field id="rowListHasFocus" type="bool" />
+        <field id="itemHasFocus" type="bool" />
+    </interface>
+
+    <script type="text/brightscript" uri="ButtonBarItemComponent.brs" />
+    <script type="text/brightscript" uri="../../../utils/Utils.brs" />
+
+    <children>
+        <RoundedRectangleItemComponent
+            id="roundedRectangle" >
+            <LayoutGroup
+             id="posterTitleGroup"
+             layoutDirection = "horiz"
+             itemSpacings = "[15]" >
+                <Poster
+                    id="poster"
+                    loadDisplayMode="noScale"
+                />
+                <Label
+                    id="title"
+                    color="0xffffff"
+                    horizAlign="center"
+                    vertAlign="center"
+                    maxLines="1"
+                />
+            </LayoutGroup>
+        </RoundedRectangleItemComponent>
+    </children>
+</component>

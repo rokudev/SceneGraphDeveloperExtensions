@@ -1,6 +1,8 @@
 ' Copyright (c) 2018 Roku, Inc. All rights reserved.
 
 sub Init()
+    initCategoryListViewNodes()
+
     ' init content manager utils field
     m.itemToSection = []
     m.firstItemInSection = [0]
@@ -13,11 +15,6 @@ sub Init()
     m.ItemKeyField = "CM_CL_Item_Index"
     ' is used by utils to populate id of loading data
     m.SectionKeyField = "CM_row_ID_Index"
-
-    ' setup nodes
-    m.categoryList = m.top.FindNode("categoryList")
-    m.itemsList = m.top.FindNode("itemsList")
-    m.itemsList.focusBitmapUri = "pkg:/components/SGDEX/Images/focus.9.png"
 
     m.spinner = m.top.FindNode("spinner")
     m.spinner.uri = "pkg:/components/SGDEX/Images/loader.png"
@@ -39,6 +36,7 @@ sub Init()
     m.top.ObserveField("animateToCategory", "OnanimateToSection")
     m.top.ObserveField("jumpToItemInCategory", "OnjumpToItemInSection")
     m.top.ObserveField("animateToItemInCategory", "OnanimateToItemInSection")
+    m.top.ObserveField("focusedChild", "OnFocusedChildChanged")
 
     m.categoryList.ObserveField("itemFocused", "OnCategoryListItemFocused")
 
@@ -60,8 +58,30 @@ sub Init()
     end if
 end sub
 
+sub initCategoryListViewNodes()
+    layoutGroup = m.top.viewContentGroup.CreateChild("LayoutGroup")
+    layoutGroup.layoutDirection = "horiz"
+    layoutGroup.translation = [90.0, 0.0]
+    layoutGroup.itemSpacings = [20]
+
+    m.categoryList = layoutGroup.CreateChild("LabelList")
+    m.categoryList.id = "categoryList"
+    m.categoryList.itemSpacing = [0, 10]
+    m.categoryList.itemSize = [360, 48]
+
+    m.itemsList = layoutGroup.CreateChild("MarkupListWithRewFF")
+    m.itemsList.id = "itemsList"
+    m.itemsList.itemComponentName = "StandardCategoryListItemComponent"
+    m.itemsList.drawFocusFeedbackIfViewUnfocused = false
+    m.itemsList.drawFocusFeedbackOnTop = true
+    m.itemsList.itemSize = [650, 180]
+    m.itemsList.itemSpacing = [0, 20]
+    m.itemsList.numRows = 4
+    m.itemsList.focusBitmapUri = "pkg:/components/SGDEX/Images/focus.9.png"
+end sub
+
 sub OnWasShown()
-    if m.itemsList.content <> invalid then m.itemsList.SetFocus(true)
+    if m.itemsList.content <> invalid and m.top.IsInFocusChain() then m.itemsList.SetFocus(true)
 end sub
 
 sub OnContentChange()
@@ -247,6 +267,13 @@ sub InitSectionMaps(content as Object)
     m.firstItemInSection.Pop() ' remove last redundant item
 end sub
 
+sub OnFocusedChildChanged()
+    isOuterFocusChange = m.top.IsInFocusChain() and not m.categoryList.HasFocus() and not m.itemsList.HasFocus()
+    if m.categoryList <> invalid and isOuterFocusChange
+        m.itemsList.SetFocus(true)
+    end if
+end sub
+
 sub OnCategoryListItemFocused(event as Object)
     m.IdleUpdateTimer.control = "stop"
     if m.categoryListGainFocus
@@ -362,7 +389,7 @@ end sub
 sub OnItemsListContentSet(event as Object)
     if m.itemsList.content = invalid or not m.itemsList.content.IsSameNode(m.top.content) or ( not m.categoryList.HasFocus() and not m.itemsList.HasFocus()) then
         itemsContent = event.GetData()
-        if itemsContent <> invalid then m.itemsList.SetFocus(true)
+        if itemsContent <> invalid and m.top.IsInFocusChain() then m.itemsList.SetFocus(true)
     end if
 end sub
 

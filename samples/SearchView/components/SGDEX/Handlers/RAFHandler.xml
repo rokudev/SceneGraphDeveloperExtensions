@@ -20,7 +20,7 @@
         adIface.SetNielsenAppId("P123QWE-1A2B-1234-5678-C7D654348321")
     end sub
 -->
-<component 
+<component
     name="RAFHandler"
     extends="Task"
     xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
@@ -33,10 +33,19 @@
 
         <!-- This is internal field for CM to know when task finished -->
         <field id="finished" type="bool" />
+
+        <!-- This is public field to allow developer set Client-stitched ads mode -->
+        <field id="useCSAS" type="bool" value="false"/>
+
+        <!-- This is internal field for MV to theme RAFContentRender -->
+        <field id="renderNode" type="node"/>
+
+        <!-- This is a copy of the config that was used to invoke the ContentHandler. -->
+        <field id="HandlerConfig" type="assocarray" />
     </interface>
-    
+
     <script type="text/brightscript" uri="RAFHandler.brs" />
-    
+
     <children>
     </children>
 </component>
