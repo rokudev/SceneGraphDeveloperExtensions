@@ -1,7 +1,5 @@
-' ********** Copyright 2020 Roku Corp.  All Rights Reserved. **********
 
 function Init()
-    InitTimeGridViewNodes()
     m.spinner = m.top.FindNode("spinner")
     m.spinner.uri = "pkg:/components/SGDEX/Images/loader.png"
     ShowSpinner(true)
@@ -15,6 +13,10 @@ function Init()
     m.top.ObserveField("focusedChild", "OnFocusedChild")
     m.top.ObserveField("wasShown", "OnWasShown")
     m.top.ObserveField("content", "OnContentChange")
+
+    m.details = m.top.findNode("details")
+    m.poster = m.top.findNode("poster")
+    m.view = m.top.findNode("timeGrid")
 
     m.view.observeField("content", "onTimeGridViewContentChange")
 
@@ -48,33 +50,10 @@ function Init()
     m.view.loadingDataText = "Loading..."
     m.view.automaticLoadingDataFeedback = false
 
-    m.view.numRows = 7
+    m.view.numRows = 5
+
     m.view.fillProgramGaps = true
-
-    ' View constants
-    m.detailsTimeGridSpacing = 25
-    m.timeGridWasMoved = false
 end function
-
-sub InitTimeGridViewNodes()
-    m.details = m.top.viewContentGroup.CreateChild("ItemDetailsView")
-    m.details.Update({
-        id: "details"
-        translation: [105,0]
-        maxWidth: 666
-    })
-
-    m.poster = m.top.viewContentGroup.CreateChild("StyledPoster")
-    m.poster.Update({
-        id: "poster"
-        translation: [125, 0]
-        maxWidth: 357
-        maxHeight: 201
-    })
-
-    m.view = m.top.findNode("timeGrid")
-    m.view.Reparent(m.top.viewContentGroup, false)
-end sub
 
 sub ShowSpinner(show)
     m.spinner.visible = show
@@ -190,11 +169,11 @@ sub UpdateItemDetails(channelIndex, programIndex)
         bIsInPast = diff > 0 and diff - program.playduration > 0
         bIsInFuture = diff + m.view.duration < 0
 
-        if bIsInPast then ' need to account duration that item might be partly visible
-            ' focused item is in past
+        if bIsInPast then 'need to account duration that item might be partly visible
+            'focused item is in past
             shouldClearMeta = true
         else if bIsInFuture then ' item might be partly visible in future
-            ' focused item is in future
+            'focused item is in future
             shouldClearMeta = true
         end if
 
@@ -209,9 +188,8 @@ sub UpdateItemDetails(channelIndex, programIndex)
 
     if shouldClearMeta
         program = CreateObject("roSGNode", "ContentNode")
-        ' don't set any title here
-        ' in some cases content wouldn't even be loaded in future,
-        ' as there might be no config for channel
+        'don't set any title here
+        'in some cases content wouldn't even be loaded in future, as there might be no config for channel
         program.title = ""
     end if
 
@@ -219,26 +197,8 @@ sub UpdateItemDetails(channelIndex, programIndex)
     m.poster.uri = program.hdposterurl
     if m.poster.uri.Len() > 0 then
         m.details.translation = [m.poster.translation[0] + m.poster.width + 15, m.poster.translation[1]]
-        AlignTimeGrid()
     else
         m.details.translation = m.poster.translation
-    end if
-end sub
-
-sub AlignTimeGrid()
-    if not m.timeGridWasMoved
-        posterHeight = m.poster.maxHeight
-        posterBottomY = m.poster.boundingRect().y + posterHeight
-
-        ' calculate timeBarHeight because translation of TimeGrid component
-        ' somehow is not calculated from the top of TimeBar
-        timeBarHeight = m.view.timeBarHeight
-        if timeBarHeight = 0 then timeBarHeight = 50
-
-        timeGridY = posterBottomY + timeBarHeight + m.detailsTimeGridSpacing
-        m.view.translation = [m.view.translation[0], timeGridY]
-
-        m.timeGridWasMoved = true
     end if
 end sub
 
@@ -343,7 +303,7 @@ Function getPageToLoadInRange(channelNode, startTime, endTime)
         end if
 
         if programNode.PlayStart > startTime then
-            ' Limit end time by next program start time - 1 seconds in order to avoid duplicates'
+            'Limit end time by next program start time - 1 seconds in order to avoid duplicates'
             endTime = programNode.PlayStart - 1
             insertPosition -= 1
             exit for
@@ -362,8 +322,7 @@ End Function
 Sub onTimeGridViewContentChange()
     ShowSpinner(m.view.content = invalid OR m.view.content.GetChildCount() = 0)
 
-    ' This logic will reset focus to current time or to
-    ' first valid item if there are no content for current time
+    ' This logic will reset focus to current time or to first valid item if there are no content for current time'
     if m._isContentFocusResetDone = true then return
 
     content = m.view.content
@@ -408,13 +367,13 @@ Function NewCycleNodeChildrenIterator(node, startIndex, count) as Object
     return {
         _node: node
 
-        _max_index: maxIndex
-        _index: startIndex
+        _max_index : maxIndex
+        _index : startIndex
 
-        _max_count: count
-        _current_count: 0
+        _max_count : count
+        _current_count : 0
 
-        IsNextAvailable: function() as Boolean
+        IsNextAvailable : function() as Boolean
             return m._current_count < m._max_count
         end function
 
@@ -430,7 +389,7 @@ Function NewCycleNodeChildrenIterator(node, startIndex, count) as Object
             return m._index
         end function
 
-        GetIndex: function() as integer
+        GetIndex : function() as integer
             return m._index
         end function
     }

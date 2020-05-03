@@ -47,7 +47,7 @@ end sub
 ' Initializes content loading
 sub StartLoadingContent()
     if m.view <> invalid and m.view.content <> invalid and m.view.content[m.Handler_ConfigField] <> invalid and m.view.content[m.Handler_ConfigField].name <> invalid and m.view.content[m.Handler_ConfigField].name.Len() > 0 then
-        ' we shouldn' t check children count as developer might set new config to refresh View
+        ' we shouldn' t check children count as developer might set new config to refresh View 
         ' OnMainContentLoaded will be called when config finishes
         ' use this function to load content, so we have all tasks in one place and can easily cancel them
         config = m.view.content[m.Handler_ConfigField]
@@ -107,7 +107,7 @@ sub OnRowItemFocused(event as Object)
         end if
     end if
     if row <> invalid
-        ' even if we move vertically we should start horizontal lazy loading first
+        ' even if we move vertically we should start horizontal lazy loading first      
 
         focusindexToSet = currentItemIndex
         if currentItemIndex < 0 then currentItemIndex = 0
@@ -135,7 +135,7 @@ end sub
 ' Lazy loads vertical rows
 ' checks if focused row has content
 ' loads current and next row
-' after that loads other neighbor rows
+' after that loads other neighbor rows 
 sub LazyLoadVerticalRows(rowIndexToLoad as Integer)
     if m.debug then ? "LazyLoadVerticalRows, row Focused:"rowIndexToLoad " previousFocusedRow "m.previousFocusedRow
     extraRows = m.EXTRA_ROWS ' number of previous rows to load
@@ -195,7 +195,7 @@ end function
 
 ' @param row - row that has lazy items that should be loaded
 ' @param itemIndexToLoad [Integer] item index that should be checked and loaded if needed
-' @param  doLookAhead [Boolean] tells if lookahead should be performed, be careful with this field as you can trigger a lot of page loadings, so use only for focused or visible row
+' @param  doLookAhead [Boolean] tells if lookahead should be performed, be careful with this field as you can trigger a lot of page loadings, so use only for focused or visible row 
 function LazyLoadHorizontalRow(row as Object, itemIndexToLoad as Integer, previousItemIndex as Integer, doLookAhead = false as Boolean) as Boolean
     result = false
     if row <> invalid and CheckIfLazyRow(row) then
@@ -219,7 +219,7 @@ function LazyLoadHorizontalRow(row as Object, itemIndexToLoad as Integer, previo
                     "-1": m.top.REWIND_ROW_LOOKAHEAD_NUMBER_OF_ITEMS
                 }
                 totalCount = row.GetChildCount()
-                ' check both left and right sides
+                ' check both left and right sides 
                 for each multiplier in [1, - 1]
                     lookAheadNumber = lookAheadNumberMap[multiplier.Tostr()]
                     ' starting from one as multiply by 0 will load for current item
@@ -255,7 +255,7 @@ function LazyLoadHorizontalRow(row as Object, itemIndexToLoad as Integer, previo
 end function
 
 ' callback for loading non-serial model
-' this function should be called before getting cotnent as it adds itself to pending queue so pages are not called twice
+' this function should be called before getting cotnent as it adds itself to pending queue so pages are not called twice 
 function getHorizontalpaginationCallback(row, HandlerConfigGrid, itemIndexToCheck, page)
     addPageToQueue(row, page)
 
@@ -284,7 +284,7 @@ function getHorizontalpaginationCallback(row, HandlerConfigGrid, itemIndexToChec
         ' we assume that nothing was changed
         ' there is no way to restore page number if developer called replace
         onError: sub(data)
-            ' add page to failed map
+            ' add page to failed map            
             m.AddPageFail()
             ' if we exceed to many fails we don' t do anything here
             ' loading functions check if this page didn' t exceed number of fails
@@ -328,7 +328,7 @@ function getHorizontalpaginationCallback(row, HandlerConfigGrid, itemIndexToChec
             ClearPageFails(m.row, m.page)
         end sub
 
-        ' increment current page fails counter
+        ' increment current page fails counter 
         AddPageFail: sub()
             AddPageFail(m.row, m.page)
         end sub
@@ -349,13 +349,8 @@ end function
 
 sub TryToLoadHorizontalPagination(row, currentItemIndex as Integer, previousItemIndex as Integer)
     if IsPaginationRow(row) and currentItemIndex >= 0 then
-        handlerConfig = row[m.Handler_ConfigField]
         childCount = row.GetChildCount()
-        visibleItems = m.VISIBLE_ITEMS
-        if handlerConfig <> invalid and handlerConfig.nextPageLoadingThreshold <> invalid
-            visibleItems = handlerConfig.nextPageLoadingThreshold
-        end if
-        if (childCount - currentItemIndex) - visibleItems <= 0
+        if (childCount - currentItemIndex) - m.VISIBLE_ITEMS <= 0
             AsyngGrid_LoadContentForRow(row)
         end if
     end if
@@ -368,7 +363,7 @@ sub OnMainContentLoaded(content as Object)
     if m.view <> invalid then
         canSetContent = true
 
-        ' TODO check if this is true for refresh
+        ' TODO check if this is true for refresh  
         content = GetGlobalAA().view.content
         numRows = GetNumRowsToLoad()
         if numRows <> invalid then
@@ -403,9 +398,9 @@ sub OnNoMainContentReceived(content as Object)
             m.config = m.view.content[m.Handler_ConfigField]
             m.view.content[m.Handler_ConfigField] = invalid
         end if
-
+                
         if m.view.showSpinner <> invalid then m.view.showSpinner = true
-
+        
         m.task = GetContentData(m, m.config, m.view.content)
     else if m.view <> invalid
         ' content was not populated with rows, remove the spinner
@@ -429,7 +424,7 @@ sub AsyngGrid_LoadContentForRow(row, isHighPriority = true as Boolean)
                 view: m.view
                 row: row
                 HandlerConfigGrid: HandlerConfigGrid
-
+    
                 onreceive: function(data)
                     'we shouldn' t do anything here as developer should populate all content here
                     m.row.isLoaded = true
@@ -441,18 +436,18 @@ sub AsyngGrid_LoadContentForRow(row, isHighPriority = true as Boolean)
                         LazyLoadHorizontalRow(m.row, getFocusedItem(m.row, 0), - 1, true)
                     end if
                     'RDE-819  GridView does not accurately reflect initial focus
-                    if m.view.hasField("updateFocusedItem") then m.view.updateFocusedItem = true
+                    if m.view.hasField("updateFocusedItem") then m.view.updateFocusedItem = true 
 
                     ' if spinner is running we have to check if this row is enough to close spinner
                     if m.view.showSpinner <> invalid and m.view.showSpinner then m.CheckInitRows()
                 end function
-
+    
                 onError: function(data)
                     ' set these flags so we can load row again
                     m.row.isFailed = true
                     m.row.isLoaded = false
                     m.row.isLoading = false
-
+    
                     ' restore previous CG config if developer didn' t set new one so we can retry later
                     Handler_ConfigField = GetGlobalAA().Handler_ConfigField
                     if m.row[Handler_ConfigField] = invalid then
@@ -461,11 +456,11 @@ sub AsyngGrid_LoadContentForRow(row, isHighPriority = true as Boolean)
                     ' put this row to queue again
                     AddPageFail(m.row, -1)
                     AsyngGrid_LoadContentForRow(m.row)
-
+                    
                     ' if spinner is running we have to check if this row is enough to close spinner
                     if m.view.showSpinner <> invalid and m.view.showSpinner then m.CheckInitRows()
                 end function
-
+    
     '            Checks for minimum rows to be loaded and when they are loaded sets content to actual view
                 checkInitRows: sub()
                     content = m.view.content
@@ -480,14 +475,14 @@ sub AsyngGrid_LoadContentForRow(row, isHighPriority = true as Boolean)
                             end if
                         end for
                         if not isAllMandatoryRowsLoaded then return
-                        ' set content from storage
+                        ' set content from storage 
                         m.view.showSpinner = false
                     end if
                 end sub
             }
             row[m.Handler_ConfigField] = invalid
             QueueGetContentData(callback, HandlerConfigGrid, row, {}, isHighPriority)
-
+        
         else
             ?"SGDEX: failed too many times "row.cm_row_id_index
         end if
@@ -505,7 +500,7 @@ sub onIdleTimerChanged()
 end sub
 
 ' Function for handling idle loading of rows
-'This is called after m.top.IDLE_ROW_LOAD_TIME when developer doesn' t navigate on View
+'This is called after m.top.IDLE_ROW_LOAD_TIME when developer doesn' t navigate on View 
 ' m.top.MAX_SIMULTANEOUS_LOADINGS is used to limit number of task for loading rows
 sub OnIdleLoadExtraContent()
     timer = CreateObject("roTimespan")
@@ -559,24 +554,24 @@ sub OnIdleLoadExtraContent()
                             if currentPageindex >= 0 then
                                 LazyLoadHorizontalRow(row, rowItemIndex, - 1)
                             end if
-
+                            
                             children = row.GetChildren(- 1, 0)
 
                             'don' t allow to many checks as we are checking each row that is slow
                             allowedCount = m.MAX_RADIUS
                             indexesToCheck = []
                             'build array of indexes to check like 0,1,2,3 or 0,20,19,18
-                            ' TODO we can optimize this by knowing page size so we can jump some items < pagesize
-                            children_count = children.count()
+                            ' TODO we can optimize this by knowing page size so we can jump some items < pagesize 
+                            children_count = children.count() 
                             for numChildrenIndex = 0 to allowedCount
                                 tempIndex = rowItemIndex + (numChildrenIndex * multiplier)
-
+                                
                                 if tempIndex < 0 then
                                     tempIndex = children_count + tempIndex
                                 else if tempIndex >= children_count
                                     tempIndex = children_count - tempIndex
                                 end if
-
+                                
                                 if existingIndexes[tempIndex.ToStr()] = invalid then
                                     existingIndexes[tempIndex.ToStr()] = ""
                                     indexesToCheck.Push(tempIndex)
@@ -603,14 +598,12 @@ sub OnIdleLoadExtraContent()
                     end for
                 else if IsRowAlreadyLoading(row)
                     isAnyRowLoading = true
-                else if IsPaginationRow(row) and index < 3
-                    AsyngGrid_LoadContentForRow(row)
                 end if
             end for
         end for
         if not hasNotLoadedData
             'This doesn' t mean that no data has to be loaded
-            ' This might occur due to all data being already loaded on this radius
+            ' This might occur due to all data being already loaded on this radius 
         end if
         if m.debug then ? "radius ="m.currentIdleRadius", idle finished in "timer.TotalMilliseconds()
         m.currentIdleRadius++
@@ -643,17 +636,17 @@ function GetCurrentPage(item)
 end function
 
 sub OnContentLoaded()
-    hasConfig = m.view.content <> invalid and m.view.content[m.Handler_ConfigField] <> invalid and m.view.content[m.Handler_ConfigField].name <> invalid and m.view.content[m.Handler_ConfigField].name.Len() > 0
+    hasConfig = m.view.content <> invalid and m.view.content[m.Handler_ConfigField] <> invalid and m.view.content[m.Handler_ConfigField].name <> invalid and m.view.content[m.Handler_ConfigField].name.Len() > 0 
     canLoad = hasConfig AND not IsPaginationRow(m.view.content)
-
+    
     if m.content = invalid or not m.content.IsSameNode(m.view.content) or canLoad then
         needToStartNewLoading = false
         if m.content <> invalid or hasConfig then
             needToStartNewLoading = true
         end if
-
+        
         m.content = m.view.content
-
+        
         if m.view.content <> invalid
             m.view.content.ObserveFieldScoped("change", "MarkRows")
         end if
@@ -680,7 +673,7 @@ sub doPrioritySort()
         row = rows[rowId]
         if row <> invalid then
             focusedItem = getFocusedItem(row,0)
-
+            
             diffRow = Abs(focusedRow - rowId)
             diffItem = Abs(focusedItem - itemId)
             ' calculate distance from end of row

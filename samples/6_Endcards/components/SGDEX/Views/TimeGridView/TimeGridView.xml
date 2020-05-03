@@ -71,11 +71,26 @@
             color="0x000000EE"
             width="1280"
             height="720"
-        />
+            />
+
+        <StyledPoster
+            id="poster"
+            translation="[125,110]"
+            maxWidth="357"
+            maxHeight="201"
+            />
+
+        <ItemDetailsView
+            id="details"
+            translation="[125,110]"
+            maxWidth="666"
+            />
+
         <CustomTimeGrid
             id="timeGrid"
-            translation="[0.0, 220.0]"
+            translation="[0.0, 390.0]"
             />
+
         <LayoutGroup
             translation="[640,360]"
             horizAlignment="center"

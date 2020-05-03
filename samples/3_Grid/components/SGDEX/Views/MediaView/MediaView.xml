@@ -69,7 +69,7 @@
 
         <!-- @Public -->
         <!-- Media Node state  -->
-        <field id="state" type="string"/>
+        <field id="state" type="string" value="none" />
 
         <!-- @Public -->
         <!-- Playback position in seconds  -->

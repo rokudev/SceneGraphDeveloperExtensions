@@ -208,4 +208,22 @@
     </interface>
 
     <script type="text/brightscript" uri="GridView.brs" />
+
+    <children>
+        <ItemDetailsView
+            id="details"
+            translation="[125,130]"
+            maxWidth="666"
+        />
+
+        <LayoutGroup
+            translation="[640,360]"
+            horizAlignment="center"
+            vertAlignment="center">
+            <BusySpinner
+                id="spinner"
+                visible="false"
+            />
+        </LayoutGroup>
+    </children>
 </component>

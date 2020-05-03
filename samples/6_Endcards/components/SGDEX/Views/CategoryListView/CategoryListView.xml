@@ -177,14 +177,14 @@
             Theme is used to change color of grid view elements
             Note. you can set TextColor and focusRingColor to have generic theme and only change attributes that shouldn't use it.
             Possible fields:
-                TextColor - changes color for all text fields in category list
-                focusRingColor - changes color of focus rings for both category and item list
-                categoryFocusedColor - set focused text color for category
-                categoryUnFocusedColor - set unfocused text color for category
-                itemTitleColor - set item title color
-                itemDescriptionColor - set item description color
-                categoryfocusRingColor - set color for category list focus ring
-                itemsListfocusRingColor - set color for item list focus ring
+                    *TextColor - changes color for all text fields in category list
+                    *focusRingColor - changes color of focus rings for both category and item list
+                    *categoryFocusedColor - set focused text color for category
+                    *categoryUnFocusedColor - set unfocused text color for category
+                    *itemTitleColor - set item title color
+                    *itemDescriptionColor - set item description color
+                    *categoryfocusRingColor - set color for category list focus ring
+                    *itemsListfocusRingColor - set color for item list focus ring
         -->
         <!--
             @Override <field id="content" type="node" />
@@ -217,6 +217,22 @@
             <BusySpinner
                 id="spinner"
                 visible="false"
+            />
+        </LayoutGroup>
+
+        <LayoutGroup layoutDirection="horiz" translation="[90.0, 150.0]" itemSpacings="[20]">
+            <LabelList id="categoryList"
+                itemSpacing="[0,10]"
+                itemSize="[360, 48]"
+            />
+
+            <MarkupListWithRewFF id="itemsList"
+                itemComponentName="StandardCategoryListItemComponent"
+                drawFocusFeedbackIfViewUnfocused="false"
+                drawFocusFeedbackOnTop="true"
+                itemSize="[650, 180]"
+                itemSpacing="[0, 20]"
+                numRows="4"
             />
         </LayoutGroup>
     </children>

@@ -23,7 +23,6 @@ function ShowHomeView() as Object
     m.top.ComponentController.CallFunc("show", {
         view: m.grid
     })
-    m.top.signalBeacon("AppLaunchComplete")
     return m.grid
 end function
 

@@ -65,21 +65,20 @@
         <LayoutGroup
             id="visibleLabels"
             horizAlignment="custom"
-            />
+        />
 
         <LabelList
             id="buttons"
             numRows="3"
             itemSpacing="[0, 10]"
             textHorizAlign="right"
-            />
+        />
 
         <LayoutGroup
-            id="spinnerGroup"
             translation="[640, 360]"
             horizAlignment="center"
             vertAlignment="center"
-            >
+        >
             <BusySpinner
                 id="spinner"
                 visible="false"

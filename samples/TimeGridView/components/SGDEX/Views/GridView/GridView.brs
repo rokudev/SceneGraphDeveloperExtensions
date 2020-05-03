@@ -1,10 +1,12 @@
 ' Copyright (c) 2018 Roku, Inc. All rights reserved.
 
 sub Init()
-    initGridViewNodes()
+    m.spinner = m.top.FindNode("spinner")
+    m.spinner.uri = "pkg:/components/SGDEX/Images/loader.png"
 
     m.Handler_ConfigField = "HandlerConfigGrid"
 
+    m.details = m.top.FindNode("details")
     m.gridNode = invalid
     ' this is to store theme attributes as set theme is called in init o theme should be set after node is created
 
@@ -19,22 +21,6 @@ sub Init()
     ' Set default values
     m.top.style = "standard"
     m.top.posterShape = "16x9"
-end sub
-
-sub initGridViewNodes()
-    m.details = m.top.viewContentGroup.CreateChild("ItemDetailsView")
-    m.details.id = "details"
-    m.details.translation = [125, 0]
-    m.details.maxWidth = 666
-
-    layoutGroup = m.top.CreateChild("LayoutGroup")
-    layoutGroup.translation = [640, 360]
-    layoutGroup.horizAlignment = "center"
-    layoutGroup.vertAlignment = "center"
-
-    m.spinner = layoutGroup.CreateChild("BusySpinner")
-    m.spinner.visible = false
-    m.spinner.uri = "pkg:/components/SGDEX/Images/loader.png"
 end sub
 
 sub OnShowSpinnerChange()
@@ -104,7 +90,7 @@ sub CreateNewOrUpdateGridNode(componentName = "" as String, fields = {} as Objec
 
     ' If node don't created or removed then create new grid node
     if m.gridNode = invalid
-        m.gridNode = m.top.viewContentGroup.CreateChild(componentName)
+        m.gridNode = m.top.CreateChild(componentName)
         m.gridNode.AddField("itemTextColorLine1", "color", true)
         m.gridNode.AddField("itemTextColorLine2", "color", true)
         m.gridNode.AddField("itemTextBackgroundColor", "string", true)
@@ -128,21 +114,21 @@ end sub
 
 sub OnContentSet(event as Object)
     content = m.top.content
-
+    
     if m.gridNode <> invalid
         isNewContent = m.gridNode.content = invalid or content = invalid or not m.gridNode.content.IsSameNode(content)
         if isNewContent then
             ' new content received, completely rebuild gridNode and restore focus if needed
             wasFocused = m.gridNode.HasFocus()
-
-            m.top.viewContentGroup.RemoveChild(m.gridNode)
+            
+            m.top.RemoveChild(m.gridNode)
             m.gridNode = invalid
             RebuildRowList()
-
+            
             if wasFocused
                 m.gridNode.SetFocus(true)
             end if
-
+                        
             if m.gridNode.rowItemFocused = invalid or m.gridNode.rowItemFocused.Count() = 0
                 m.gridNode.rowItemFocused = [0, 0]
             end if
@@ -195,9 +181,9 @@ function GetConfigurationForStyle(style as String) as Object
     ' the developer wants the metadata area displayed
     m.details.visible = m.top.showMetadata
     if m.top.showMetadata
-        rowListTranslation = [xRowTranslation, 145]
+        rowListTranslation = [xRowTranslation, 275]
     else
-        rowListTranslation = [xRowTranslation, 0]
+        rowListTranslation = [xRowTranslation, 130]
     end if
     zoomRowListHeight = 720 - rowListTranslation[1]
 
@@ -376,7 +362,7 @@ sub SGDEX_SetTheme(theme as Object)
         titleColor:          { details: "titleColor" }
         descriptionColor:    { details: "descriptionColor" }
         descriptionMaxLines: { details: "descriptionMaxLines" }
-
+        
         busySpinnerColor: { spinner : { poster: "blendColor"} }
     }
     SGDEX_setThemeFieldstoNode(m, gridThemeAttributes, theme)
@@ -385,7 +371,3 @@ end sub
 function SGDEX_GetViewType() as String
     return "gridView"
 end function
-
-' If need to adjust GridView according to ButtonBar
-sub SGDEX_UpdateViewUI()
-end sub

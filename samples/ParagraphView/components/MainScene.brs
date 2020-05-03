@@ -31,7 +31,6 @@ sub Show(args as Object)
     m.top.componentController.CallFunc("show", {
         view: m.paragraphView
     })
-    m.top.signalBeacon("AppLaunchComplete")
 end sub
 
 ' function: GetButtons()
