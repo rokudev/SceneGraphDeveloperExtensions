@@ -3,9 +3,23 @@
 sub Init()
     ?"SGDEX: create new view: "m.top.subtype()
     m.themeDebug = false
+
+    ' viewOffsetY can be overriden in init of each view
+    ' to change the spacing between overhang and content for specific cases
+    m.viewOffsetY = 25
+    m.defaultOverhangHeight = 115
+
+    ' Minimum Y offset from top edge of the screen to content
+    m.buttonBarSafeZoneYPosition = 36 ' 720 * 0.05
+    m.contentAreaSafeZoneYPosition = 72 ' 720 * 0.10
+
     m.top.overhang = m.top.FindNode("overhang")
     m.top.getScene().ObserveField("theme", "SGDEX_GlobalThemeObserver")
     m.top.getScene().ObserveField("updateTheme", "SGDEX_GlobalUpdateThemeObserver")
+    m.top.getScene().buttonBar.ObserveField("visible", "SGDEX_OnButtonBarVisibleChange")
+    m.top.viewContentGroup = m.top.FindNode("viewContentGroup")
+
+    m.top.ObserveField("wasShown", "OnViewWasShown")
 
     m.backgroundRectangle = m.top.FindNode("backgroundRectangle")
     m.backgroundImage = m.top.FindNode("backgroundImage")
@@ -13,6 +27,59 @@ sub Init()
 
     SGDEX_InternalBuildAndSetTheme(m.top.theme, m.top.getScene().actualThemeParameters)
 end sub
+
+sub OnViewWasShown()
+    SGDEX_OnButtonBarVisibleChange()
+end sub
+
+sub SGDEX_OnButtonBarVisibleChange()
+    buttonBar = m.top.getScene().buttonBar
+    if buttonBar <> invalid and m.top.visible then
+        SGDEX_UpdateBaseViewUI()
+    end if
+end sub
+
+
+' Default logic to adjust place zone with content according to
+' overhang and buttonbar height
+' each view may have specific logic according to button bar presence
+' it may implemented in SGDEX_UpdateViewUI
+sub SGDEX_UpdateBaseViewUI()
+    buttonBar = m.top.getScene().buttonBar
+    isButtonBarVisible = buttonBar.visible
+    buttonBarHeight = buttonBar.findNode("backgroundRectangle").height
+    overhang = m.top.findNode("overhang")
+    overhangHeight = overhang.height
+    if not overhang.visible
+        overhangHeight = 0
+    end if
+
+    viewContentOffsetY = overhangHeight + m.viewOffsetY
+
+    if isButtonBarVisible
+        buttonBar.translation = [0, overhangHeight]
+        viewContentOffsetY += buttonBarHeight
+    end if
+
+    ' if viewContentOffsetY + overhangHeight > m.defaultOverhangHeight
+    '     viewContentOffsetY += overhangHeight - m.defaultOverhangHeight
+    ' end if
+
+    if viewContentOffsetY < m.contentAreaSafeZoneYPosition
+        viewContentOffsetY = m.contentAreaSafeZoneYPosition
+    end if
+
+    m.top.viewContentGroup.translation = [0, viewContentOffsetY]
+
+    SGDEX_UpdateViewUI()
+end sub
+
+
+' Each view may have specific UI adjustments depends on button bar and overhang
+' to implement so, need to override this function
+sub SGDEX_UpdateViewUI()
+end sub
+
 
 'this function will return view key to retrieve it from global theme map
 function SGDEX_GetViewType() as String
@@ -81,8 +148,14 @@ sub SGDEX_InternalBuildAndSetTheme(viewTheme as Object, newTheme as Object, isUp
 
         theme.Append(SGDEX_GetViewSpecificTheme(viewKey, newTheme)) ' Setting specific theme attributes, e.g. for endcard
         if GetInterface(newTheme["global"], "ifAssociativeArray") <> invalid then theme.Append(newTheme["global"])
+        if GetInterface(newTheme[viewKey], "ifAssociativeArray") <> invalid then theme.Append(newTheme[viewKey])
         if GetInterface(viewTheme, "ifAssociativeArray") <> invalid then theme.Append(viewTheme)
         SGDEX_InternalSetTheme(theme, isUpdate)
+
+        buttonBar = m.top.getScene().buttonBar
+        if buttonBar <> invalid then
+            SGDEX_UpdateBaseViewUI()
+        end if
     end if
 end sub
 

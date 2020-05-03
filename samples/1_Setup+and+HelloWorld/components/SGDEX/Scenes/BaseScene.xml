@@ -32,6 +32,11 @@
         <field id="ComponentController" type="node" />
 
         <!-- @Public -->
+        <!-- @ReadOnly -->
+        <!-- reference to ButtonBar node that is created and used inside the library -->
+        <field id="buttonBar" type="node" />
+
+        <!-- @Public -->
         <!-- @WriteOnly -->
         <!-- Exits channel if set to true -->
         <field id="exitChannel" type="bool" alwaysNotify="true" />
@@ -125,6 +130,6 @@
 
     <children>
         <ComponentController
-            id ="ComponentController" />
+            id="ComponentController" />
     </children>
 </component>

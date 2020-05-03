@@ -1,6 +1,49 @@
 # Scene Graph Developer Extensions
 
-> 10.11.19
+> 05.01.20
+
+## v.2.3
+
+### New Features and Enhancements
+
+* The grid ContentManager can now be used with custom grid views
+* GridVIew now supports vertical wrapping
+
+### Bug Fixes
+
+* Fixed an issue in MediaView where audio mode was sometimes not engaged automatically for audio content
+* Fixed an issue in MediaView where d-pad L/R were not handled while content was buffering
+* Fixed an issue where ButtonBar was sometimes not displayed over paused video
+* Fixed an issue where a channel could crash when setting ButtonBar content to invalid
+* Fixed an issue where a channel could crash when setting ButtonBar content to invalid
+
+## v.2.2
+
+### New Components
+
+#### ButtonBar
+
+ButtonBar gives developers an easy way to display a row of buttons in their channel. ButtonBar is a scene level component, so it can be displayed with any view in a channel, saving developers the work of managing it on a per-view basis. When combined with multiple screen stacks, ButtonBar enables powerful new UX paradigms in SGDEX.
+
+#### SlideshowView
+
+SlideshowView allows developers to present a collection of images to the user.
+
+### New Features and Enhancements
+
+* The ComponentController now supports multiple screen stacks
+* RAFHandlers now support Client Side Ad Stitching
+* DetailsView can now display rating data as an image rather than text
+* GridView has a new field nextPageLoadingThreshold that allows developers to control when the next page of data is loaded
+* GridView now loads nearby, off-screen metadata while the user is idle, similar to TimeGridView
+
+### Bug Fixes
+
+* Fixed an issue where the currentItem field in MediaView could change at unexpected times 
+* Fixed an issue where RAFHandlers sometimes printed unexpected warnings to the console
+* Fixed an issue where closing MediaView programmatically while an ad was playing could cause unexpected RAF errors
+* Fixed an issue where MediaView sometimes did not invoke BookmarkHandlers when expected
+* Fixed several issues where Roku's Static Analysis reported erroneous errors for SGDEX channels
 
 ## v.2.1
 

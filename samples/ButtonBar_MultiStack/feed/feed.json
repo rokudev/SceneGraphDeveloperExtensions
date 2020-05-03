@@ -1,0 +1,35 @@
+{
+    "providerName": "Roku Recommends",
+    "language": "en-US",
+    "lastUpdated": "2017-04-20T02:01:00+02:00",
+    "movies": [
+        {
+            "id": "123456789",
+            "title": "Live Gaming",
+            "shortDescription": "With the Twitch channel, you can watch the most popular broadcasts of the day, browse live broadcasts by the games you love and follow your favorite Twitch broadcasters.",
+            "thumbnail": "https://blog.roku.com/developer/files/2016/10/twitch-poster-artwork.png",
+            "url": "http://roku.content.video.llnw.net/smedia/59021fabe3b645968e382ac726cd6c7b/Gb/siCt-V7LOSU08W_Ve1ByJY5N9emKZeXZvnrH2Yb9c/117_segment_2_twitch__nw_060515.mp4"
+        }, {
+            "id": "950609787035",
+            "title": "Roku Recommends",
+            "shortDescription": "Weekly recommendations of the latest and greatest channels, movies, TV shows, games, and more that are available now on your Roku device.",
+            "thumbnail": "https://roku-blog.s3.amazonaws.com/developer/files/2017/04/Roku-Recommends-thumbnail.png",
+            "url": "http://roku.content.video.llnw.net/smedia/59021fabe3b645968e382ac726cd6c7b/Gb/siCt-V7LOSU08W_Ve1ByJY5N9emKZeXZvnrH2Yb9c/117_segment_2_twitch__nw_060515.mp4"
+        }
+    ],
+    "series": [
+        {
+            "id": "6c9d0951d6d74229afe4adf972b278dd",
+            "title": "Let's Get Cookin'",
+            "shortDescription": "The Paula Deen Channel is your instant access to new and hilarious Paula Deen cooking and lifestyle shows. Paula and her sons,  Jamie and Bobby, will cook up their delicious southern recipes and help you with hints and tips that make meal planning simple, affordable and easy.",
+            "thumbnail": "https://blog.roku.com/developer/files/2016/10/paula-deen-poster-artwork.png",
+            "url": "http://roku.content.video.llnw.net/smedia/59021fabe3b645968e382ac726cd6c7b/Gb/siCt-V7LOSU08W_Ve1ByJY5N9emKZeXZvnrH2Yb9c/117_segment_2_twitch__nw_060515.mp4"
+        }, {
+            "id": "7405a8c101ee4c9da312c426e6067044",
+            "title": "Ideas Worth Spreading",
+            "shortDescription": "TED is a nonprofit devoted to Ideas Worth Spreading. On this channel, you will find TEDTalks video to inspire, intrigue and stir the imagination from some of the worldÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s leading thinkers and doers, speaking from the stage at TED conferences, TEDx events and partner events around the world.",
+            "thumbnail": "https://blog.roku.com/developer/files/2016/10/ted-poster-artwork.png",
+            "url": "http://roku.content.video.llnw.net/smedia/59021fabe3b645968e382ac726cd6c7b/Gb/siCt-V7LOSU08W_Ve1ByJY5N9emKZeXZvnrH2Yb9c/117_segment_2_twitch__nw_060515.mp4"
+        }
+    ]
+}

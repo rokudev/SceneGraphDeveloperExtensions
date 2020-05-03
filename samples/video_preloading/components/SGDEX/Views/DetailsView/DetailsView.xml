@@ -93,16 +93,18 @@
 
     <children>
         <LayoutGroup
-            translation="[1166, 154]"
+            id="detailsGroup"
+            translation="[1166, 0]"
             layoutDirection="horiz"
             horizAlignment="right"
             itemSpacings="[40]">
             <LayoutGroup
+                id = "viewLayout"
                 itemSpacings="[14, 10]"
-                layoutDirection="vert">
+                layoutDirection="vert"
+                horizAlignment="right">
                 <Rectangle
                     id="styledPosterArea"
-                    width="357"
                     height="201"
                     color="0xFFFFFF00">
                     <StyledPoster
@@ -111,16 +113,14 @@
                         maxHeight="201"
                     />
                 </Rectangle>
-
                 <Label
-                    id="info1"
+                    id="info2"
                     width="357"
                     wrap="false"
                     horizAlign="right"
                 />
-
                 <Label
-                    id="info2"
+                    id="info3"
                     width="357"
                     wrap="false"
                     horizAlign="right"

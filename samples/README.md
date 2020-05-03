@@ -73,3 +73,6 @@ This guide is composed of the following sections:
 
 10. [**Roku Recommends**](Roku_Recommends)
     Sample channel using Roku Recommends feed to populate content. Feed is in XML format so custom parser is used in ContentHandler.
+
+11. [**Decoupled Grid ContentManager**](Decoupled_Grid_ContentManager)
+    Sample channel using native RSG view to populate content. Feed is stored in API, so custom parser is used in ContentHandler and populate on custom RSG view.

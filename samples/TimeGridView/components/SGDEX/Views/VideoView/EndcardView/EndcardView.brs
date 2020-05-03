@@ -56,9 +56,26 @@ Sub Init()
     ' m.time is used internally to update label
     m.time = 0
 
+    m.buttonBar = m.top.getScene().buttonBar
+    m.isButtonBarVisible = m.buttonBar.visible
+    m.renderOverContent = m.buttonBar.renderOverContent
+    m.isAutoHideMode = m.buttonBar.autoHide
+
+    m.buttonBar.opacity = 1
+    m.bottomRectangle = m.top.findNode("bottomRectangle")
+    m.topRectangle = m.top.findNode("topRectangle")
+
+    m.overhangHeightTheme = invalid
     if m.LastThemeAttributes <> invalid then
         SGDEX_SetTheme(m.LastThemeAttributes)
         SGDEX_SetBackgroundTheme(m.LastThemeAttributes)
+        m.overhangHeightTheme = m.LastThemeAttributes.overhangHeight
+    end if
+
+    ' if overhang height was not set through theme then
+    ' change default overhang height to content area safe zone
+    if m.isButtonBarVisible and m.overhangHeightTheme = invalid
+       m.top.overhang.height = m.contentAreaSafeZoneYPosition
     end if
 End Sub
 
@@ -174,6 +191,7 @@ End Function
 Sub OnContentChanged(event as Object)
     content = event.GetData()
     m.grid.content = content
+    SGDEX_UpdateViewUI()
 End Sub
 
 
@@ -184,6 +202,22 @@ Sub OnEndcardCountdownTimeChange(event as Object)
     endcardCountdownTime = event.GetData()
     m.time = endcardCountdownTime
 End Sub
+
+
+sub SGDEX_UpdateViewUI()
+    m.top.getScene().buttonBar.opacity = 1
+    if m.top.getScene().buttonBar.visible and m.repeatButton <> invalid then
+        newY = m.buttonBar.boundingRect()["y"] + m.buttonBar.boundingRect()["height"] + m.viewOffsetY
+        m.repeatButton.translation= [m.repeatButton.translation[0],newY]
+        if newY + m.repeatButton.itemsize[1] > m.bottomRectangle.boundingRect()["y"] then
+            moveContentOnY = newY + m.repeatButton.itemsize[1] - m.bottomRectangle.boundingRect()["y"] + m.viewOffsetY
+            m.bottomRectangle.translation = [m.bottomRectangle.translation[0], m.bottomRectangle.translation[1] + moveContentOnY]
+            m.timerLabel.translation = [m.timerLabel.translation[0], m.timerLabel.translation[1] + moveContentOnY]
+            m.topRectangle.height = moveContentOnY + m.topRectangle.height
+            m.grid.translation = [m.grid.translation[0], m.grid.translation[1] + moveContentOnY]
+        end if
+    end if
+end sub
 
 ' ***************
 ' Themes support
