@@ -143,12 +143,6 @@
         -->
         <field id="showMetadata" type="boolean" value="true" alwaysNotify="true" onChange="RebuildRowList" />
 
-        <!-- @Public -->
-        <!--
-            Controls the items wrap from bottom to top
-        -->
-        <field id="wrap" type="boolean" value="false" alwaysNotify="true" onChange="RebuildRowList" />
-
         <!-- @Private -->
         <!--
             Used by content manager to notify the view whether content is loading
@@ -179,12 +173,6 @@
             @PossibleValue descriptionColor - sets color of description text
             @PossibleValue descriptionmaxWidth - sets max width for description
             @PossibleValue descriptionMaxLines - sets max lines for description
-
-            @PossibleValue wrapDividerBitmapUri - sets bitmap for separator between last and first line, usually 9-patch image
-            @PossibleValue wrapDividerBitmapBlendColor - set lend the graphic image specified by wrapDivider
-            @PossibleValue wrapDividerHeight - sets the height of the divider
-            @PossibleValue wrapDividerWidth - sets the width of the divider
-            @PossibleValue wrapDividerOffset - sets field that allows the position of the wrap divider to be adjusted relative to its default position
         -->
 
         <!--
@@ -220,4 +208,22 @@
     </interface>
 
     <script type="text/brightscript" uri="GridView.brs" />
+
+    <children>
+        <ItemDetailsView
+            id="details"
+            translation="[125,130]"
+            maxWidth="666"
+        />
+
+        <LayoutGroup
+            translation="[640,360]"
+            horizAlignment="center"
+            vertAlignment="center">
+            <BusySpinner
+                id="spinner"
+                visible="false"
+            />
+        </LayoutGroup>
+    </children>
 </component>

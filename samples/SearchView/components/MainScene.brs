@@ -13,7 +13,6 @@ sub Show(args as Object)
     m.top.ComponentController.CallFunc("show", {
         view: searchView
     })
-    m.top.signalBeacon("AppLaunchComplete")
 end sub
 
 sub OnSearchQuery(event as Object)
@@ -36,5 +35,5 @@ sub OnSearchQuery(event as Object)
 end sub
 
 sub OnSearchItemSelected(event as Object)
-    ? "Item selected = " ; event.GetData()
+    ? "Item selected = " ; event.GetData()    
 end sub

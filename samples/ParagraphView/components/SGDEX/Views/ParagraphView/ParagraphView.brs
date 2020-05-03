@@ -5,6 +5,7 @@ sub init()
     m.debug = false
     m.Handler_ConfigField = "HandlerConfigParagraph"
     m.layoutX = 126
+    m.layoutY = 140
 
     ' here will be stored all labels
     ' needed for theming
@@ -14,7 +15,6 @@ sub init()
 
     m.visibleLabels = m.top.FindNode("visibleLabels")
     m.buttons = m.top.FindNode("buttons")
-    m.spinnerGroup = m.top.FindNode("spinnerGroup")
     m.spinner = m.top.FindNode("spinner")
     m.spinner.uri = "pkg:/components/SGDEX/Images/loader.png"
 
@@ -27,11 +27,6 @@ sub init()
     if m.LastThemeAttributes <> invalid then
         SGDEX_SetTheme(m.LastThemeAttributes)
     end if
-
-    m.top.viewContentGroup.AppendChildren([
-        m.visibleLabels,
-        m.buttons
-    ])
 end sub
 
 sub OnContentChanged()
@@ -97,14 +92,14 @@ sub SetupRenderingRectangles()
     if m.buttons.content <> invalid
         buttonsCount = m.buttons.content.GetChildCount()
         ' maximum 3 buttons are visible
-        if buttonsCount > 2 then buttonsCount = m.buttons.numRows
+        if buttonsCount > 3 then buttonsCount = 3
     end if
 
     bottomPading = 56
     buttonsWidth = GetButtonsWidth()
     m.buttons.itemSize = [buttonsWidth, 38]
     buttonsSize = buttonsCount * m.buttons.itemSize[1] + (buttonsCount - 1) * m.buttons.itemSpacing[1]
-    buttonsY = 720 - buttonsSize - bottomPading - m.top.viewContentGroup.translation[1]
+    buttonsY = 720 - buttonsSize - bottomPading
     ' -20 for extra focus ring padding
     buttonsX = 1280 - buttonsWidth - m.layoutX - 20
     m.buttons.translation = [buttonsX, buttonsY]
@@ -112,8 +107,8 @@ sub SetupRenderingRectangles()
         m.buttons.clippingRect = [-50, -50, buttonsWidth + 100, buttonsSize + 45]
     end if
 
-    m.visibleLabels.translation = [m.layoutX, 0]
-    m.visibleLabels.clippingRect = [0, 0, GetVisibleWidth(), buttonsY - 20]
+    m.visibleLabels.translation = [m.layoutX, m.layoutY]
+    m.visibleLabels.clippingRect = [0, 0, GetVisibleWidth(), buttonsY - m.layoutY - 20]
 end sub
 
 sub PlaceContentOnScreen(content as Object)
@@ -319,20 +314,3 @@ end function
 function SGDEX_GetViewType() as String
     return "paragraphView"
 end function
-
-
-sub SGDEX_UpdateViewUI()
-    contentGroupY = m.top.viewContentGroup.translation[1]
-    isButtonBarVisible = m.top.getScene().buttonBar.visible
-
-    if m.buttons <> invalid
-        if isButtonBarVisible
-            m.buttons.numRows = 2
-        else
-            m.buttons.numRows = 3
-        end if
-
-        SetupRenderingRectangles()
-    end if
-end sub
-

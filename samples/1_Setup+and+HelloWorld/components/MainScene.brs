@@ -2,5 +2,4 @@
 
 sub Show(args as Object)
     print "Hello World!"
-    m.top.signalBeacon("AppLaunchComplete")
 end sub

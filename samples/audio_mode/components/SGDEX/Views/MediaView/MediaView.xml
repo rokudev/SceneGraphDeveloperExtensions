@@ -1,21 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (c) 2019 Roku, Inc. All rights reserved. -->
 
-<!--
-    @Public
-    Media View is a component that provide pre-defined approach to play video or audio
-    It incapsulates different features:
-        - Playback of video or audio
-        - Playback of playlist or one item;
-        - Two different UI modes for audio and video items;
-        - Ability to set mixed content (both video and audio);
-        - Loading of content via HandlerConfigMedia before playback;
-        - Showing Endcards View after playback ends;
-        - Loading of endcard content via HandlerConfigEndcard some time before playback ends to provide smooth user experience;
-        - Handling of RAF - handlerConfigRAF should be set in content node;
-        - State field is aliased to make tracking of states easier;
-        - Themes support
--->
 <component name="MediaView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
     <interface>
         <!-- @Public -->
@@ -69,7 +54,7 @@
 
         <!-- @Public -->
         <!-- Media Node state  -->
-        <field id="state" type="string"/>
+        <field id="state" type="string" value="none" />
 
         <!-- @Public -->
         <!-- Playback position in seconds  -->

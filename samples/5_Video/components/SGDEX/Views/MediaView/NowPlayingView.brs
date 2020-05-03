@@ -4,9 +4,11 @@ sub init()
 end sub
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
-    parent = m.top.GetParent()
-    if parent <> invalid then 
-        parent.setFocus(true)
+    key = LCase(key) ' safety check
+
+    if press and key = "back"
+        m.top.backButtonPressed = true
+        return true
     end if
     return false
 end function

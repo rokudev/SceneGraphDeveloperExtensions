@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--********** Copyright 2020 Roku Corp.  All Rights Reserved. **********-->
-
-<component name="MainScene" extends="BaseScene" >
-    <script type="text/brightscript" uri="MainScene.brs" />
-    <script type="text/brightscript" uri="SearchViewLogic.brs" />
-    <script type="text/brightscript" uri="GridViewLogic.brs" />
-    <script type="text/brightscript" uri="VideoPlayerLogic.brs" />
-</component>

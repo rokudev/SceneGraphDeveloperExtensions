@@ -84,8 +84,6 @@
         <!-- overhang node, this is for customizing overhang, also can be updated through theme mechanism  -->
         <field id="overhang" type="node" />
 
-        <!-- view group node, this field is used as parent for all nodes that are rendering on the view, it represents the view content area  -->
-        <field id="viewContentGroup" type="node" />
 
         <field id="errorCode" type="integer" value="0" />
         <field id="errorMsg" type="string" value="" />
@@ -107,8 +105,6 @@
             animationDuration ="0.5"
             shadeOpacity="0.5"
         />
-
-        <Group id="viewContentGroup" />
 
         <Overhang id="overhang"  showOptions="true" showClock="false" />
     </children>
