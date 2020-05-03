@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) 2020 Roku, Inc. All rights reserved. -->
+<component name="SimpleGridItem" extends="Group">
+    <interface>
+        <field id="width" type="float" alias="itemPoster.width" />
+        <field id="height" type="float" alias="itemPoster.height" />
+        <field id="itemContent" type="node" onChange="itemContentChanged" />
+    </interface>
+
+    <script type="text/brightscript" uri="SimpleGridItem.brs" />
+
+    <children>
+        <Poster
+            id="itemPoster"
+            loadDisplayMode="scaleToFit"
+            loadWidth="242"
+            loadHeight="136"
+            loadingBitmapURI="pkg:/images/loading.png"
+            failedBitmapURI="pkg:/images/fail.png" />
+    </children>
+</component>

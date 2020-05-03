@@ -40,6 +40,8 @@ sub Init()
 
     m.top.ObserveField("disableScreenSaver", "OnDisableScreenSaver")
 
+    m.top.ObserveFieldScoped("focusedChild", "OnFocusedChildChange")
+
     ' AA to pass appropriate states on view top
     m.internalToViewStateAA = {
         ' internalState: MediaView state
@@ -70,8 +72,12 @@ sub Init()
         buffering_contentLoaded: OnContentLoaded
         buffering_endcardClose: OnEndcardCloseTransition
         buffering_completed: OnCompletedPlayback  ' user set content to invalid
+        buffering_playing: OnStartedPlayback
+        buffering_finished: ProcessEndState
         playing_error: OnErrorState
         playing_completed: OnCompletedPlayback ' user set content to invalid
+        playing_paused: OnPausedPlayback
+        paused_playing: OnResumedPlayback
         playing_finished: ProcessEndState
         stopped_error: OnErrorState
         stopped_completed: OnCompletedPlayback ' user set content to invalid
@@ -90,6 +96,8 @@ sub Init()
         StartRAFTask_buffering: OnStartBuffering
         RAFSuccess_RAFClose: OnRAFCloseTransition
         finished_RAFClose: OnRAFCloseTransition
+        StartRAFTask_RAFClose: OnRAFCloseTransition
+        StartRAFTask_RAFExit: OnRAFExitTransition
         RAFClose_finished: ProcessEndState
         RAFplaying_RAFerror: OnErrorState
     }
@@ -99,6 +107,16 @@ sub Init()
     m.spinner = m.top.FindNode("spinner")
     m.spinnerGroup = m.top.FindNode("spinnerGroup")
 
+    m.buttonBar = m.top.getScene().buttonBar
+    m.isButtonBarVisible = m.buttonBar.visible
+    m.renderOverContent = m.buttonBar.renderOverContent
+    m.isAutoHideMode = m.buttonBar.autoHide
+
+    if m.isButtonBarVisible and m.top.overhang.height > 72
+        m.overhangHeight = m.top.overhang.height
+        m.top.overhang.height = 72
+    end if
+
     ' PRIVATE fields for library managers
     m.ContentManager_id = 0
     m.debug = false
@@ -106,8 +124,52 @@ sub Init()
     m.endcardView = invalid
     m.mediaModeSet = false
     m.repeatButtonSelected = false
+    m.trickplayVisible = true
     m.RafTask = invalid
-    m.internalCurrentItem = invalid
+    m.endcardAvailable = false
+end sub
+
+sub OnFocusedChildChange()
+    if m.media <> invalid
+        ' Check if endcard isn't shown to avoid focus losting
+        if m.top.wasShown and not m.endcardAvailable
+            if GetCurrentMode() = "video" and m.isButtonBarVisible
+                if m.renderOverContent    ' renderOverContent = true
+                    if m.isAutoHideMode    ' renderOverContent = true && autoHide = true
+                        if m.trickplayVisible
+                            ' show buttonBar if playback paused || trickplayVisible
+                            m.buttonBar.opacity = 1.0
+                        else
+                            ' hide buttonBar hint of playback is running
+                            m.buttonBar.opacity = 0.0
+                        end if
+                    else    ' renderOverContent = true && autoHide = false
+                        ' show buttonBar over playback
+                        m.buttonBar.opacity = 1.0
+                    end if
+                else    ' renderOverContent = false
+                    if m.trickplayVisible or m.top.state = "paused"
+                        ' show buttonBar if playback paused or trickplay visible
+                        m.buttonBar.opacity = 1.0
+                    else
+                        ' hide buttonBar if playback is running
+                        m.buttonBar.opacity = 0.0
+                    end if
+                end if
+                m.media.setFocus(true)
+            end if
+        else if m.endcardAvailable ' Handle endcardView focuses
+            if m.isButtonBarVisible ' safe restoring buttonBar visibility
+                m.buttonBar.visible = true
+            end if
+            m.endCardView.SetFocus(true)
+            m.buttonBar.opacity = 1.0 ' show buttonBar over endcardView
+        end if
+        if m.buttonBar.IsInFocusChain() and m.isButtonBarVisible and not m.top.IsInFocusChain()
+            ' if m.buttonBar is focused  -  make it visible
+            m.buttonBar.opacity = 1.0
+        end if
+    end if
 end sub
 
 ' ************* Creating and clearing functions *************
@@ -123,16 +185,17 @@ sub CreateMediaNode()
         video.translation = "[0,0]"
         video.enableUI = false
         video.disableScreenSaver = m.top.disableScreenSaver
+        video.ObserveFieldScoped("trickPlayBarVisibilityHint", "OnPlayBarVisibilityHintChanged")
+        video.ObserveFieldScoped("retrievingBarVisibilityHint", "OnPlayBarVisibilityHintChanged")
         m.media = video
     else if mode = "audio"
         m.npn = m.top.createChild("NowPlayingView")
         audio = m.top.createChild("Audio")
         audio.id = "audio"
         m.media = audio
-        m.npn.ObserveFieldScoped("backButtonPressed", "OnNowPlayingViewBackButtonPressed")
     end if
 
-    if m.lastThemeAttributes <> invalid and mode = "video" then
+    if m.lastThemeAttributes <> invalid and mode = "video"
         SGDEX_SetTheme(m.lastThemeAttributes)
     end if
 
@@ -141,8 +204,29 @@ sub CreateMediaNode()
     m.media.ObserveFieldScoped("state", "OnMediaStateChanged") ' to track firmware states
 end sub
 
+sub OnPlayBarVisibilityHintChanged(event as Object)
+    m.trickplayVisible = event.GetData()
+
+    if m.isButtonBarVisible
+        if m.trickplayVisible
+            if (m.renderOverContent and m.isAutoHideMode)
+                m.buttonBar.opacity = 1.0
+            else if not m.renderOverContent
+                m.buttonBar.opacity = 1.0
+            end if
+        else if not m.buttonBar.IsInFocusChain()
+            if (m.renderOverContent and m.isAutoHideMode)
+                m.buttonBar.opacity = 1.0
+            end if
+            if m.top.IsInFocusChain() then m.media.SetFocus(true)
+        end if
+    end if
+end sub
+
 sub ClearMediaNode()
     if m.media <> invalid
+        m.media.UnobserveFieldScoped("retrievingBarVisibilityHint")
+        m.media.UnobserveFieldScoped("trickPlayBarVisibilityHint")
         m.media.UnobserveFieldScoped("state")
         m.media.UnobserveFieldScoped("position")
         m.media.UnobserveFieldScoped("duration")
@@ -153,8 +237,13 @@ sub ClearMediaNode()
             m.npn = invalid
         end if
 
+        'need to keep initial focus
+        wasInFocusChain = m.top.IsInFocusChain()
+
         m.top.removeChild(m.media)
         m.media = invalid
+
+        if wasInFocusChain then m.top.SetFocus(true)
     end if
 end sub
 
@@ -180,7 +269,7 @@ end sub
 ' observer func to track firmware states when node is playing
 sub OnMediaStateChanged(event as Object)
     state = event.GetData()
-    if m.stateNode <> invalid
+    if m.stateNode <> invalid and not isCSASEnabled()
         SetState(state)
     end if
 end sub
@@ -214,39 +303,51 @@ sub OnContentSet()
     isNewContent = content <> invalid and (m.content = invalid or not m.content.isSameNode(content))
     ' save current processing content node
     ' so we can distinguish if new content arrived
-
-    m.content = content
     if content = invalid
         ' clear itself if populated with empty/invalid content
-        m.media.content = invalid
-        m.internalCurrentItem = invalid
+        if m.media <> invalid then m.media.content = invalid
         m.top.currentItem = invalid
         SetState("none")
-    else if isNewContent
+    else if isNewContent and (m.top.control = "play" or m.top.control = "prebuffer")
+        m.content = content
         if IsHandlerConfig(content)
             SetState("contentLoading") ' load content using existing ContentHandler
         else
             SetState("contentLoaded")
         end if
+        if not m.isBookmarkHandlerCreated then CreateBookmarksHandler()
     end if
-    if not m.isBookmarkHandlerCreated then CreateBookmarksHandler()
 end sub
 
 sub OnControlSet(event as Object)
     control = event.GetData()
-    if GetState() = "none"
-        if m.top.content <> invalid then OnContentSet()
-    else if GetState() = "contentLoaded" and (control = "play" or control = "prebuffer")
-        SetState("buffering")
-    else if GetState() = "buffering" and control = "play" ' video is preloaded and already in buffering state, so it is ready to play
-        StartPlayback(control)
+    if (control = "play" or control = "prebuffer")
+        if GetState() = "none" or (GetState() = "none" and isCSASEnabled())
+            if m.top.content <> invalid then OnContentSet()
+        else if GetState() = "contentLoaded" and (control = "play" or control = "prebuffer")
+            SetState("buffering")
+        else if GetState() = "buffering" and control = "play"' video is preloaded and already in buffering state, so it is ready to play
+            StartPlayback(control)
+        else if GetState() = "StartRAFTask" and isCSASEnabled()
+            if m.RafTask <> invalid and m.RafTask.renderNode <> invalid
+                m.RAFTask.renderNode.control = control
+            end if
+        else if GetState() = "stopped" or GetState() = "paused"
+            m.media.control = control
+        end if
+    else 'handling control field when user set control programmatically
+        if isCSASEnabled() and m.RafTask <> invalid and m.RafTask.renderNode <> invalid
+            m.RAFTask.renderNode.control = control
+        else if m.media <> invalid
+            m.media.control = control
+        end if
     end if
 end sub
 
 sub OnMediaWasShown(event as Object)
     wasShown = event.GetData()
 
-    if wasShown = true
+    if wasShown = true and m.top.IsInFocusChain()
         m.media.SetFocus(true)
     end if
 end sub
@@ -256,7 +357,22 @@ sub OnMediaWasClosed(event as Object)
     ClearStateMachineNode()
     if m.RafTask <> Invalid
         m.RafTask.control = "stop"
+        if isCSASEnabled() and (m.RAFTask.renderNode <> invalid and m.RAFTask.renderNode.GetChild(0) <> invalid and m.RAFTask.renderNode.GetChild(0).id = "contentVideo") then
+            m.RAFTask.renderNode.getchild(0).content = invalid ' Force stopping RafContentRenderer's videoNode
+        end if
+
+        'Removing RAF playback if it exist to avoid RAF error on deeplink
+        RAFRenderer = m.top.GetScene().GetChild(m.top.GetScene().GetChildCount()-1)
+        if RAFRenderer <> invalid and LCase(RAFRenderer.id) = "rafrender" then
+            RAFRenderer.getChild(0).content = invalid ' Reseting RAF video node content to kill it
+            RAFRenderer = invalid
+        end if
         m.RafTask = invalid
+    end if
+    m.buttonBar.visible = m.isButtonBarVisible
+    m.buttonBar.opacity = 1.0
+    if m.overhangHeight <> invalid
+        m.top.overhang.height = m.overhangHeight
     end if
 end sub
 
@@ -270,11 +386,14 @@ end sub
 sub OnEndcardTimerFired(event as Object)
     time = event.getData()
     if time = 0
+        m.endcardAvailable = false
         SetState("endcardClose")
     end if
 end sub
 
 sub OnRepeatButtonSelected()
+    m.endcardAvailable = false
+
     CancelCurrentContentHandler()
     if m.top.preloadContent and HasNextItemInPlaylist()
         ' cancel prebuffering of next item in playlist
@@ -287,6 +406,7 @@ sub OnRepeatButtonSelected()
 end sub
 
 sub OnEndcardRowItemSelected(event as Object)
+    m.endcardAvailable = false
     endcardRowItem = event.GetData()
     row = endcardRowItem[0]
     col = endcardRowItem[1]
@@ -325,7 +445,6 @@ sub OnMediaModeChange(event as Object)
         if not GetCurrentMode() = mode
             ClearMediaNode()
             CreateMediaNode()
-            if m.top.content <> invalid then OnContentLoaded()
         end if
     end if
 end sub
@@ -347,13 +466,6 @@ sub OnDisableScreenSaver(event as Object)
         end if
     else
         ? "WARNING: disableScreenSaver only works in video mode"
-    end if
-end sub
-
-sub OnNowPlayingViewBackButtonPressed(event as Object)
-    key = event.GetData()
-    if key = true
-        m.top.close = true
     end if
 end sub
 
@@ -446,12 +558,17 @@ end sub
 
 sub StartRafTask(rafHandlerConfig as Object, video as Object) as Object
     callback = {
+        view : m.top
         onReceive: function(data)
             m.onResult(data)
         end function
 
         onError: function(data)
-            m.onResult(data)
+            if m.view.state = "finished" or GetState() = "RAFSuccess" then
+                m.onResult(data)
+            else
+                SetState("RAFExit")
+            end if
         end function
 
         onResult: function(data)
@@ -473,19 +590,22 @@ sub OnContentLoaded()
         SetState("contentLoading")
     else if currentItem <> invalid ' ready to play
         ShowBusySpinner(false)
-        m.internalCurrentItem = currentItem
         m.handlerConfigRAF = invalid
         ExtractRafConfig()
         ' Set content node that we receive to Media Node
-        content = m.internalCurrentItem
+        content = currentItem
         UpdateMediaModeByContent()
-        m.media.content = m.internalCurrentItem.Clone(false)
-        if m.rafHandlerConfig <> invalid and m.RafTask = invalid and m.top.mode = "video" and m.top.preloadContent = false and m.top.wasShown
-            ShowBusySpinner(true)
-            m.top.currentItem = m.internalCurrentItem
+        m.media.content = content.Clone(false)
+        if isCSASEnabled() then
+            m.top.currentItem = currentItem
             SetState("StartRAFTask")
-        else if m.top.control = "play" or m.top.control = "prebuffer"
-            SetState("buffering")
+        else
+            if m.rafHandlerConfig <> invalid and m.RafTask = invalid and m.top.mode = "video" and m.top.preloadContent = false and m.top.wasShown
+                m.top.currentItem = currentItem
+                SetState("StartRAFTask")
+            else if m.top.control = "play" or m.top.control = "prebuffer"
+                SetState("buffering")
+            end if
         end if
     end if
 end sub
@@ -524,9 +644,11 @@ end sub
 
 sub ProcessEndState()
     ' video successfully finished so then we should handle next actions
+    currentItem = GetCurrentLoadedItem()
     if m.RafTask = invalid and GetState() = "finished"
-        HandlerConfigEndcard = m.internalCurrentItem.HandlerConfigEndcard
-        if HandlerConfigEndcard <> invalid then m.internalCurrentItem.HandlerConfigEndcard = invalid
+        HandlerConfigEndcard = invalid
+        if currentItem <> invalid then HandlerConfigEndcard = currentItem.HandlerConfigEndcard
+        if HandlerConfigEndcard <> invalid then currentItem.HandlerConfigEndcard = invalid
         ClearMediaNode()
         CreateMediaNode()
         m.top.currentIndex++
@@ -548,6 +670,24 @@ sub OnCompletedPlayback()
     end if
 end sub
 
+sub OnStartedPlayback()
+
+end sub
+
+sub OnPausedPlayback()
+    m.trickplayVisible = true
+    if m.isButtonBarVisible then
+        m.buttonBar.opacity = 1.0
+    end if
+end sub
+
+sub OnResumedPlayback()
+    if m.isButtonBarVisible and (not m.renderOverContent) then
+        m.buttonBar.opacity = 0.0
+    end if
+end sub
+
+
 sub OnErrorState()
     if m.media <> invalid
         errorCode = m.media.errorCode or (m.media.errorMsg <> invalid and m.media.errorMsg <> "")
@@ -564,6 +704,7 @@ sub OnFinishedEndcardLoadedTransition()
 end sub
 
 sub OnEndcardVisibleTransition()
+    m.endcardAvailable = true
     if m.spinnerGroup.visible then ShowBusySpinner(false)
 
     if m.endcardView = invalid
@@ -583,13 +724,13 @@ sub OnEndcardVisibleTransition()
             end if
             m.endcardView.updateTheme = endcardTheme
         end if
-        m.endcardView.SetFocus(true)
         m.endcardView.startTimer = true
         m.endcardView.ObserveFieldScoped("rowItemSelected", "OnEndcardRowItemSelected")
         m.endcardView.ObserveFieldScoped("repeatButtonSelectedEvent", "OnRepeatButtonSelected")
         m.endcardView.ObserveFieldScoped("timerFired", "OnEndcardTimerFired")
 
         m.top.appendChild(m.endcardView)
+        m.endcardView.SetFocus(true)
 
         if m.top.preloadContent
             m.top.control = "prebuffer"
@@ -599,6 +740,8 @@ sub OnEndcardVisibleTransition()
 end sub
 
 sub OnEndcardCloseTransition()
+    m.endcardAvailable = false
+
     m.endcardView.visible = false
     m.endcardContent = invalid
 
@@ -606,8 +749,13 @@ sub OnEndcardCloseTransition()
     m.endcardView.UnObserveFieldScoped("repeatButtonSelectedEvent")
     m.endcardView.UnObserveFieldScoped("timerFired")
 
+    'need to keep initial focus
+    wasInFocusChain = m.top.IsInFocusChain()
+
     m.top.RemoveChild(m.endcardView)
     m.endcardView = invalid
+
+    if wasInFocusChain then m.top.SetFocus(true)
     SetState("completed")
 end sub
 
@@ -632,12 +780,28 @@ sub OnEndcardCloseCompletedTransition()
 end sub
 
 sub OnStartRAFTaskTransition()
-    StartRafTask(m.rafHandlerConfig, m.media)
-    if m.RafTask = invalid
-        SetState("buffering")
+    if isCSASEnabled() then
+        ' TODO: remove code duplication
+        StartRafTask(m.rafHandlerConfig, m.media)
+        ' Sharing flag from HandlerConfigRAF to RAFtask
+        m.RafTask.useCSAS = (m.rafHandlerConfig.useCSAS = true)
+        ' Observing renderNode to theme RAFContentRenderer in CSAS mode
+        m.RafTask.ObserveField("renderNode","OnRAFRenderNodeChanged")
+        m.media.content = invalid
+        if m.RafTask = invalid
+            SetState("finished")
+        else
+            ShowBusySpinner(false)
+            m.RafTask.ObserveField("isPlayingAds", "OnRAFPlayingAds")
+        end if
     else
-        ShowBusySpinner(false)
-        m.RafTask.ObserveField("isPlayingAds", "OnRAFPlayingAds")
+        StartRafTask(m.rafHandlerConfig, m.media)
+        if m.RafTask = invalid
+            SetState("buffering")
+        else
+            ShowBusySpinner(false)
+            m.RafTask.ObserveField("isPlayingAds", "OnRAFPlayingAds")
+        end if
     end if
 end sub
 
@@ -656,6 +820,22 @@ sub OnRAFCloseTransition()
         m.RafTask = Invalid
     end if
     SetState("finished")
+end sub
+
+sub OnRAFExitTransition()
+    if m.RafTask <> Invalid
+        m.RafTask.video = Invalid
+        m.RafTask = Invalid
+    end if
+    m.top.close = true
+end sub
+
+sub OnRAFRenderNodeChanged()
+    ' Unobserving node to avoid repetative theme set, caused by updating node
+    m.RafTask.UnobserveField("renderNode")
+    if m.RafTask <> Invalid and isCSASEnabled() and m.lastThemeAttributes <> Invalid then
+        SetThemeToRAFRenderNode()
+    end if
 end sub
 
 ' ************* Utils functions *************
@@ -698,17 +878,23 @@ end function
 
 sub StartPlayback(control as String)
     if m.media <> invalid
-        m.media.SetFocus(true)
+        if m.top.IsInFocusChain() then m.media.SetFocus(true)
         if GetCurrentMode() = "video"
             m.media.visible = true
             m.media.enableUI = true
+        else
+            if control = "stop" or m.renderOverContent then
+                m.buttonBar.opacity = 1.0
+            else if control = "play"
+                m.buttonBar.opacity = 0.0
+            end if
         end if
         if control = "play" and m.rafHandlerConfig <> invalid then
             ' start RAFTask on play control if there is rafConfig
-            ShowBusySpinner(true)
             SetState("StartRAFTask")
-        else
-            m.top.currentItem = m.internalCurrentItem
+        else if not isCSASEnabled()
+            ' set currentItem interface once we start playback
+            m.top.currentItem = GetCurrentLoadedItem()
             m.media.control = control
         end if
     end if
@@ -736,7 +922,7 @@ sub ShowBusySpinner(shouldShow as Boolean)
 end sub
 
 sub ExtractRafConfig()
-    currentItem = m.internalCurrentItem
+    currentItem = GetCurrentLoadedItem()
     topControl = m.top.control
     if (currentItem.handlerConfigRAF <> invalid and currentItem.handlerConfigRAF.name <> "") then
         m.rafHandlerConfig = currentItem.handlerConfigRAF
@@ -749,8 +935,13 @@ sub ExtractRafConfig()
 end sub
 
 sub CreateBookmarksHandler()
-    currentItem = m.internalCurrentItem
+    currentItem = GetCurrentLoadedItem()
     if currentItem <> invalid then
+        ' Setting length to MediaView before bookmark handler created
+        ' to be able to save bookmarks
+        if currentItem.length <> invalid and m.top.duration = 0 then
+            m.top.duration = currentItem.length
+        end if
         handlerConfigBookmarks = currentItem.handlerConfigBookmarks
         ' bookmark config field had name BookmarksHandler till v2.0
         ' to be backward compatible check old field if new wasn`t set
@@ -792,8 +983,9 @@ end function
 
 sub UpdateMediaModeByContent()
     ' if there is item content and the mode was not set explicitly, then get mode by streamformat from the content
-    if m.internalCurrentItem <> invalid and not m.mediaModeSet
-        streamFormat = m.internalCurrentItem.streamFormat
+    currentItem = GetCurrentLoadedItem()
+    if currentItem <> invalid and not m.mediaModeSet
+        streamFormat = currentItem.streamFormat
         isStreamFormatValid = streamFormat <> invalid and streamFormat <> "(null)"
         isAudioStream = streamFormat = "wma" or streamFormat = "mka" or streamFormat = "mp3"
 
@@ -814,6 +1006,10 @@ function GetCurrentMode() as String
     else
         return m.top.mode
     end if
+end function
+
+function isCSASEnabled() as Boolean
+    return (m.rafHandlerConfig <> invalid and m.rafHandlerConfig.useCSAS = true)
 end function
 
 function onKeyEvent(key as String, press as Boolean) as Boolean
@@ -936,6 +1132,84 @@ sub SGDEX_SetTheme(theme as Object)
     SGDEX_setThemeFieldstoNode(m, themeAttributes, theme)
 end sub
 
+sub SetThemeToRAFRenderNode()
+    SGDEX_setThemeFieldstoNode(m.RAFTask, {
+        TextColor: {
+            renderNode: [
+                {
+                    trickPlayBar:  [
+                        "textColor"
+                        "thumbBlendColor"
+                        "trackBlendColor"
+                        "currentTimeMarkerBlendColor"
+                    ]
+                    retrievingBar: [
+                        "trackBlendColor"
+                    ]
+                    bufferingBar: [
+                        "trackBlendColor"
+                    ]
+                }
+                "bufferingTextColor",
+                "retrievingTextColor"
+            ]
+        }
+        progressBarColor: {
+            renderNode: [{
+                trickPlayBar:  [
+                    "filledBarBlendColor"
+                ]
+                retrievingBar: [
+                    "filledBarBlendColor"
+                ]
+                bufferingBar: [
+                    "filledBarBlendColor"
+                ]
+            }]
+        }
+    }, m.lastThemeAttributes)
+
+    themeAttributes = {
+        ' trickplay Bar customization
+        trickPlayBarTextColor:                      { renderNode: { trickPlayBar: "textColor" } }
+        trickPlayBarTrackImageUri:                  { renderNode: { trickPlayBar: "trackImageUri" } }
+        trickPlayBarTrackBlendColor:                { renderNode: { trickPlayBar: "trackBlendColor" } }
+        trickPlayBarThumbBlendColor:                { renderNode: { trickPlayBar: "thumbBlendColor" } }
+        trickPlayBarFilledBarImageUri:              { renderNode: { trickPlayBar: "filledBarImageUri" } }
+        trickPlayBarFilledBarBlendColor:            { renderNode: { trickPlayBar: "filledBarBlendColor" } }
+        trickPlayBarCurrentTimeMarkerBlendColor:    { renderNode: { trickPlayBar: "currentTimeMarkerBlendColor" } }
+
+        ' Buffering Bar customization
+        bufferingTextColor:                         { renderNode: "bufferingTextColor" }
+        bufferingBarEmptyBarImageUri:               { renderNode: { bufferingBar: "emptyBarImageUri" } }
+        bufferingBarFilledBarImageUri:              { renderNode: { bufferingBar: "filledBarImageUri" } }
+        bufferingBarTrackImageUri:                  { renderNode: { bufferingBar: "trackImageUri" } }
+
+        bufferingBarTrackBlendColor:                { renderNode: { bufferingBar: "trackBlendColor" } }
+        bufferingBarEmptyBarBlendColor:             { renderNode: { bufferingBar: "emptyBarBlendColor" } }
+        bufferingBarFilledBarBlendColor:            { renderNode: { bufferingBar: "filledBarBlendColor" } }
+
+        ' Retrieving Bar customization
+        retrievingTextColor:                        { renderNode: "retrievingTextColor" }
+        retrievingBarEmptyBarImageUri:              { renderNode: { retrievingBar: "emptyBarImageUri" } }
+        retrievingBarFilledBarImageUri:             { renderNode: { retrievingBar: "filledBarImageUri" } }
+        retrievingBarTrackImageUri:                 { renderNode: { retrievingBar: "trackImageUri" } }
+
+        retrievingBarTrackBlendColor:               { renderNode: { retrievingBar: "trackBlendColor" } }
+        retrievingBarEmptyBarBlendColor:            { renderNode: { retrievingBar: "emptyBarBlendColor" } }
+        retrievingBarFilledBarBlendColor:           { renderNode: { retrievingBar: "filledBarBlendColor" } }
+
+        ' BIF customization
+        focusRingColor:                             { renderNode: { bifDisplay: "frameBgBlendColor" } }
+    }
+
+    SGDEX_setThemeFieldstoNode(m.RAFTask, themeAttributes, m.lastThemeAttributes)
+end sub
+
 function SGDEX_GetViewType() as String
     return "mediaView"
 end function
+
+sub SGDEX_UpdateViewUI()
+
+end sub

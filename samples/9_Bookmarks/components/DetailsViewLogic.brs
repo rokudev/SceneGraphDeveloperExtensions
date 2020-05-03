@@ -14,7 +14,7 @@ function ShowDetailsView(content as Object, index as Integer) as Object
     m.top.ComponentController.CallFunc("show", {
         view: details
     })
-
+    m.top.signalBeacon("AppLaunchComplete")
     m.details = details
     return details
 end function

@@ -21,6 +21,7 @@ sub Show(args as Object)
     m.top.ComponentController.CallFunc("show", {
         view: grid
     })
+    m.top.signalBeacon("AppLaunchComplete")
 end sub
 
 sub OnGridItemSelected(event as Object)

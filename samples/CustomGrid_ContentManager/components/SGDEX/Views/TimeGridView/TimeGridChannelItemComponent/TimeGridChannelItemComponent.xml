@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2019 Roku, Inc. All rights reserved. -->
+
+<component name="TimeGridChannelItemComponent" extends="Group">
+    <interface>
+      <field id="content" type="node" />
+      <field id="width" type="float" />
+      <field id="height" type="float" />
+    </interface>
+
+    <script type="text/brightscript" uri="TimeGridChannelItemComponent.brs" />
+    <script type="text/brightscript" uri="../../utils/utils.brs" />
+
+    <children>
+        <Label
+            id="title"
+            vertAlign="center"
+            horizAlign="center"
+            opacity="0.9"
+            font="font:SmallSystemFont"
+            />
+
+        <Poster
+            id="poster"
+            loadDisplayMode="scaleToFit"
+        />
+    </children>
+</component>

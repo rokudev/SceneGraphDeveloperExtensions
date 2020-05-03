@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--********** Copyright 2020 Roku Corp.  All Rights Reserved. **********-->
+
+<component name="ButtonBarHandler" extends="ContentHandler" >
+    <script type="text/brightscript" uri="ButtonBarHandler.brs" />
+</component>

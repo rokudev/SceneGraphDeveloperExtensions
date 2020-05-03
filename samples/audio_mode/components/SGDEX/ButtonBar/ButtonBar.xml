@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2020 Roku, Inc. All rights reserved. -->
+<!--
+    @Public
+    ButtonBar provides an easy way to display a collection of buttons over any view
+
+    @Sample:
+    // MainScene.brs
+    m.top.buttonBar.visible = true
+    m.top.buttonBar.renderOverContent = true
+    m.top.buttonBar.autoHide = true
+    m.top.buttonBar.content = retrieveButtonBarContent()
+    m.top.buttonBar.ObserveField("itemSelected", "OnButtonBarItemSelected")
+
+    function retrieveButtonBarContent() as Object
+        buttonBarContent = CreateObject("roSGNode", "ContentNode")
+        buttonBarContent.Update({
+            children: [{
+                title: "Item 1"
+            }, {
+                hdPosterUrl: "https://example.com/icon.jpg"
+            }, {
+                title: "Item 2"
+            }, {
+                title: "Item 3"
+            }, {
+                title: "Item 4"
+            }]
+        }, true)
+
+        return buttonBarContent
+    end function
+
+    sub OnButtonBarItemSelected(event as Object)
+        ' This is where you can handle a selection event
+    end sub
+-->
+<component name="ButtonBar" extends="Group" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <interface>
+        <!-- @Public -->
+        <!-- СontentNode for ButtonBar. This node should have a child for each button to be displayed.
+             You can also populate this node using an SGDEX ContentHandler
+        -->
+        <field id="content" type="node" />
+
+        <!-- @Public -->
+        <!-- @ReadOnly -->
+        <!-- Updated when the focused button changes.
+             Developers can observe this field in their channels to react to the
+             user navigating from button to button
+        -->
+        <field id="itemFocused" type="integer" value="0" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @ReadOnly -->
+        <!-- Updated when a button is selected.
+             Developers can observe this field in their channels to react to the
+             user selecting a button.
+        -->
+        <field id="itemSelected" type="integer" value="0" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- Set this field to force focus to a specific button.
+             This field must be set after setting the content field.
+        -->
+        <field id="jumpToItem" type="integer" onChange="OnJumpToItem" value="0" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- Controls whether the ButtonBar is hidden when it does not have focus.
+             When ButtonBar is hidden, a hint will be displayed in its place.
+        -->
+        <field id="autoHide" type="bool" onChange="OnAutoHideChange" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- Controls the visibility of ButtonBar. -->
+        <!-- <field id="visible" type="bool" value="false" alwaysNotify="true" /> -->
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- Controls whether ButtonBar is displayed over playing content.
+
+             Note, the autoHide hint will not be displayed over playing content
+             when ButtonBar is hidden even if renderOverContent is true.
+        -->
+        <field id="renderOverContent" type="bool" value="false" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- Controls whether the footprint is displayed -->
+        <field id="enableFootprint" type="bool" value="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- Possible values: "focus", "selection".
+             Controls which button gets the footprint, the last focused
+             button or the last selected button.
+        -->
+        <field id="footprintStyle" type="string" value="focus" />
+
+        <!--@Public
+            @Override <field id="theme" type="assocarray" />
+            @PossibleValue buttonColor - controls the color of button backgrounds
+            @PossibleValue buttonTextColor - controls the color of button text
+
+            @PossibleValue focusedButtonColor - controls the color of the focused button's background
+            @PossibleValue focusedButtonTextColor - controls the color of the focused button's text
+
+            @PossibleValue footprintButtonColor - controls the color of the footprint button's background
+            @PossibleValue footprintButtonTextColor - controls the color of the footprint button's text
+        -->
+        <field id="theme" type="assocarray" alwaysNotify="true" />
+
+        <field id="updateTheme" type="assocarray" alwaysNotify="true" />
+    </interface>
+
+    <script type="text/brightscript" uri="ButtonBar.brs" />
+    <script type="text/brightscript" uri="../ContentManager/ContentManagerUtils.brs" />
+    <script type="text/brightscript" uri="../Views/utils/Utils.brs" />
+
+    <children>
+        <Group id="clippingGroup">
+            <Rectangle
+                id="backgroundRectangle"
+                width="1280"
+                height="0"
+                color="0xFFFFFF00">
+
+                <LayoutGroup
+                    id="buttonBarLayout"
+                    layoutDirection="horiz"
+                    vertAlignment="center"
+                    itemSpacings="[5]">
+
+                    <MaskGroup
+                        id="maskGroup"
+                        masksize="[1025, 55]"
+                        maskOffset="[500, 0]">
+
+                        <RowList
+                            id="buttonsRowList"
+                            itemComponentName="ButtonBarItemComponent"
+                            numRows="1"
+                            variableWidthItems="[true]"
+                            rowItemSpacing="[[10, 0]]"
+                            rowFocusAnimationStyle="fixedFocusWrap"
+                            drawFocusFeedback="false"
+                        />
+                    </MaskGroup>
+                    <Poster
+                        id="buttonBarArrow"
+                        height="50"
+                        width="25"
+                        uri="pkg:/components/SGDEX/Images/ButtonBar/ic_arrow_right.png"
+                    />
+                </LayoutGroup>
+            </Rectangle>
+        </Group>
+
+        <LayoutGroup
+            id="autoHideHint"
+            visible="false"
+            layoutDirection="vert"
+            vertAlignment="top"
+            horizAlignment="center"
+            itemSpacings="[5]">
+
+            <Poster
+                id="autoHideArrow"
+                height="12"
+                width="25"
+                uri="pkg:/components/SGDEX/Images/ButtonBar/ic_arrow_up.png"
+            />
+            <Label
+                id="hintTitle"
+                font="font:SmallestSystemFont"
+                height="30"
+                width="200"
+                text="MENU"
+                color="0xffffff"
+                horizAlign="center"
+                vertAlign="center"
+                maxLines="1"
+            />
+        </LayoutGroup>
+
+        <ParallelAnimation id="buttonBarPopUp">
+            <Animation
+                duration="0.25"
+                easeFunction="linear"
+                optional = "true">
+                <FloatFieldInterpolator
+                    key = "[0.0, 0.25]"
+                    keyValue = "[1.0, 0.0]"
+                    fieldToInterp = "autoHideHint.opacity"
+                />
+            </Animation>
+
+            <Animation
+                duration="0.25"
+                easeFunction="linear"
+                optional="true">
+
+                <Vector2DFieldInterpolator
+                    id="popUpInterpolator"
+                    key="[0.0, 0.25]"
+                    fieldToInterp="backgroundRectangle.translation"
+                />
+            </Animation>
+        </ParallelAnimation>
+
+        <ParallelAnimation id="buttonBarFadeOut">
+            <Animation
+                duration="0.25"
+                easeFunction="linear"
+                optional="true">
+
+                <Vector2DFieldInterpolator
+                    id="fadeOutInterpolator"
+                    key="[0.0, 0.25]"
+                    fieldToInterp="backgroundRectangle.translation"
+                />
+            </Animation>
+
+            <Animation
+                duration="0.25"
+                easeFunction="linear"
+                optional="true">
+
+                <FloatFieldInterpolator
+                    key="[0.0, 0.25]"
+                    keyValue="[0.0, 1.0]"
+                    fieldToInterp="autoHideHint.opacity"
+                />
+            </Animation>
+        </ParallelAnimation>
+    </children>
+</component>

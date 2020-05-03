@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--********** Copyright 2020 Roku Corp.  All Rights Reserved. **********-->
+
+<component name="GridHandler" extends="ContentHandler" >
+    <interface>
+        <field id="contentType" type="string" alwaysNotify="true" />
+    </interface>
+
+    <script type="text/brightscript" uri="GridHandler.brs" />
+</component>

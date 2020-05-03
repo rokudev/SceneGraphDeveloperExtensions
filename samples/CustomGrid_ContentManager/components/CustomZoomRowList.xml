@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2020 Roku, Inc. All rights reserved. -->
+<component name="CustomZoomRowList" extends="Group">
+    <script type="text/brightscript" uri="CustomZoomRowList.brs" />
+
+    <interface>
+        <field id="rowItemFocused" type="vector2d" alwaysNotify="true" alias="contentGrid.rowItemFocused" />
+        <field id="content" type="node" />
+        <field id="contentManagerType" type="string" value="grid" />
+        <field id="saveState" type="boolean" value="false" />
+        <field id="wasShown" type="boolean" value="false" />
+        <field id="wasClosed" type="boolean" value="false" />
+    </interface>
+
+    <children>
+        <Overhang/>
+        <ZoomRowList id="contentGrid" />
+    </children>
+</component>

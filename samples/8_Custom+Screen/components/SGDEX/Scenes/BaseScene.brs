@@ -9,6 +9,8 @@ sub Init()
     'm.top.backgroundURI = "pkg:/images/splash_hd.png"
     
     m.top.ComponentController = m.top.findNode("ComponentController")
+    m.top.buttonBar = m.top.ComponentController.findNode("buttonBar")
+    m.top.buttonBar.visible = false
 
     m.top.ObserveField("theme", "SceneSetTheme")
 end sub
@@ -32,7 +34,7 @@ end sub
 ' This function should be overridden
 sub Input(args as Object)
     ?"SGDEX: Please implement 'sub Input(args)' in your scene to handle roInputEvent deep linking"
-end sub 
+end sub
 
 sub SceneSetTheme(event as Object)
     m.top.actualThemeParameters = event.getData()
@@ -47,7 +49,7 @@ function onKeyEvent(key as String, press as Boolean)
         end if
         return true
     end if
-    
+
     return false
 end function
 

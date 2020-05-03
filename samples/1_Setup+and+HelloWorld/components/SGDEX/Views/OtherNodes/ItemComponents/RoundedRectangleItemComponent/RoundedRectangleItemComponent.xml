@@ -1,0 +1,48 @@
+<?xml version = "1.0" encoding = "utf-8" ?>
+<!--********** Copyright 2019 Roku Corp.  All Rights Reserved. **********-->
+
+<component name = "RoundedRectangleItemComponent" extends = "Group" >
+    <interface>
+        <field id="width" type="float" />
+        <field id="height" type="float" />
+        <field id="focusPercent" type="float" alwaysNotify="true"/>
+        <field id="showFootprint" type="bool" alwaysNotify="true" />
+        <field id="backgroundColor" type="color" alias = "background.blendColor, posterLeft.blendColor, posterRight.blendColor" />
+        <field id="backgroundFocusedColor" type="color" alias = "backgroundFocused.blendColor, focusedPosterLeft.blendColor, focusedPosterRight.blendColor" />
+    </interface>
+
+    <script type="text/brightscript" uri="RoundedRectangleItemComponent.brs" />
+
+    <children>
+        <Group>
+            <Group
+                id="backgroundGroup">
+                <Poster
+        			id="background"
+                    blendColor="0x434247"
+                    uri="pkg:/components/SGDEX/Images/ButtonBar/rectangle_background.png"
+                />
+                <Poster
+                   id="backgroundFocused"
+                   opacity="0.0"
+                   uri="pkg:/components/SGDEX/Images/ButtonBar/rectangle_background.png" />
+            </Group>
+            <Poster
+                id="posterLeft"
+                blendColor="0x434247"
+                uri="pkg:/components/SGDEX/Images/ButtonBar/btn_corner_left.png"/>
+            <Poster
+                id="posterRight"
+                blendColor="0x434247"
+                uri="pkg:/components/SGDEX/Images/ButtonBar/btn_corner_right.png"/>
+            <Poster
+                id="focusedPosterLeft"
+                uri="pkg:/components/SGDEX/Images/ButtonBar/btn_corner_left.png"
+                opacity="0.0" />
+            <Poster
+                id="focusedPosterRight"
+                uri="pkg:/components/SGDEX/Images/ButtonBar/btn_corner_right.png"
+                opacity="0.0" />
+        </Group>
+    </children>
+</component>

@@ -12,12 +12,17 @@ sub Init()
 
     m.overhang =         m.top.FindNode("overhang")
     m.poster =           m.top.FindNode("poster")
-    m.info1 =            m.top.FindNode("info1")
+    m.info1Layout =      m.top.FindNode("info1Layout")
     m.info2 =            m.top.FindNode("info2")
+    m.info3 =            m.top.FindNode("info3")
+    m.viewLayout =       m.top.FindNode("viewLayout")
     m.descriptionLabel = m.top.FindNode("description")
     m.actorsLabel =      m.top.FindNode("actors")
     m.buttons =          m.top.FindNode("buttons")
     m.styledPosterArea = m.top.FindNode("styledPosterArea")
+
+    m.detailsGroup = m.top.findNode("detailsGroup")
+    m.top.viewContentGroup.appendChild(m.detailsGroup)
 
     ' Observe SGDEXComnponent fields
     m.top.ObserveField("style", "OnStyleChange")
@@ -28,13 +33,31 @@ sub Init()
     m.top.ObserveField("itemFocused", "OnItemFocusedChanged")
     m.contentObserverIsSet = false
 
-    if m.LastThemeAttributes <> invalid then
-        SGDEX_SetTheme(m.LastThemeAttributes)
-    end if
 
     ' Reference to current ContentNode which populated to DetailsView
     ' To differentiate ContentNode change and ContentNode field change
     m.currentContentNode = invalid
+
+    m.info1 = CreateObject("roSGNode", "Label")
+        m.info1.Update({
+            id :"info1"
+            wrap : "false"
+            horizAlign : "right"
+        })
+    m.info1Layout = CreateObject("roSGNode", "LayoutGroup")
+        m.info1Layout.Update({
+            id :"info1Layout"
+            layoutDirection : "horiz"
+            horizAlignment  :"right"
+            itemSpacings : "[10,0]"
+            children : [m.info1]
+    })
+
+    m.viewLayout.insertChild(m.info1Layout,1)
+
+    if m.LastThemeAttributes <> invalid then
+        SGDEX_SetTheme(m.LastThemeAttributes)
+    end if
 end sub
 
 sub OnFocusedChildChanged()
@@ -138,6 +161,11 @@ sub OnItemFocusedChanged(event as Object)
 
         HandlerConfigDetails = content.HandlerConfigDetails
 
+        ' to prevent stale data being displayed while the CH is running
+        if m.ratingPoster <> invalid
+            m.ratingPoster.uri = ""
+        end if
+
 '        we are setting details to details page even if it' s not loaded, so user can see that something has changed
 '        developer should put some place holders to show user that data is loading
         SetDetailsContent(content, HandlerConfigDetails <> invalid and HandlerConfigDetails.Count() > 0)
@@ -169,8 +197,26 @@ sub SetDetailsContent(content as Object, isLoadinExtrainfo = false as Boolean)
         SetOverhangTitle(content.title)
         m.poster.uri = content.hdposterurl
         contentDurationString = Utils_DurationAsString(content.length)
+
         m.info1.text = ConvertToStringAndJoin([content.ReleaseDate, contentDurationString])
-        m.info2.text = ConvertToStringAndJoin([content.Rating, Content.categories])
+        if isImageURI(content.Rating) then
+            if m.ratingPoster = invalid then
+                m.ratingPoster = CreateObject("roSGNode", "Poster")
+                m.info1Layout.insertChild(m.ratingPoster, 0)
+            end if
+            if m.ratingPoster <> invalid then
+                m.ratingPoster.Update({
+                    id :"ratingPoster"
+                    width : "27"
+                    height : "27"
+                    uri : content.rating
+                })
+            end if
+            m.info2.text = ConvertToStringAndJoin([Content.categories])
+        else
+            m.info2.text = ConvertToStringAndJoin([content.Rating, Content.categories])
+        end if
+        m.info3.text = content.shortDescriptionLine1
         m.descriptionLabel.text = content.description
         m.actorsLabel.text = ConvertToStringAndJoin(content.actors, ", ")
     else ' clear content
@@ -178,6 +224,7 @@ sub SetDetailsContent(content as Object, isLoadinExtrainfo = false as Boolean)
         m.poster.uri = ""
         m.info1.text = ""
         m.info2.text = ""
+        m.info3.text = ""
         m.descriptionLabel.text = ""
         m.actorsLabel.text = ""
     end if
@@ -214,7 +261,7 @@ sub LoadMoreContent(content, HandlerConfig)
 
         setContent: sub(content)
             gThis =  GetGlobalAA()
-            gThis.detailsLoadingMap.Delete(m.detailsLoadingMap_ID.Tostr())
+            gThis.detailsLoadingMap.Delete(content.detailsLoadingMap_ID.Tostr())
             if m.lastFocusedItem = gThis.top.itemFocused
                 gThis.top.currentItem = content
                 gThis.top.itemLoaded = true
@@ -287,7 +334,7 @@ function ConvertToStringAndJoin(dataArray as Object, divider = " | " as String) 
                 if GetInterface(item, "ifToStr") <> invalid
                     strFormat = item.Tostr()
                 else if GetInterface(item, "ifArrayJoin") <> invalid
-                    strFormat = item.Join(", ")
+                    strFormat = item.Join(" | ")
                 end if
                 if strFormat <> invalid then
                     if strFormat.Len() > 0
@@ -321,6 +368,11 @@ function GetNextItemIndex(currentIndex as Integer, maxIndex as Integer, _step as
     return result
 end function
 
+function isImageURI(text as String) as Boolean
+    regex = CreateObject("roRegex", "(?:jpg|gif|png)", text)
+    return regex.isMatch(text)
+end function
+
 sub ShowBusySpinner(shouldShow)
     if shouldShow then
         if not m.spinner.visible then
@@ -344,6 +396,7 @@ sub SGDEX_SetTheme(theme as Object)
 
             info1:            "color"
             info2:            "color"
+            info3:            "color"
             actorsLabel:      "color"
             descriptionLabel: "color"
         }
@@ -361,6 +414,7 @@ sub SGDEX_SetTheme(theme as Object)
         actorsColor:                    { actorsLabel: "color" }
         ReleaseDateColor:               { info1: "color" }
         RatingAndCategoriesColor:       { info2: "color" }
+        shortDescriptionColor:          { info3: "color" }
 
         ' buttons theme
         buttonsFocusedColor:            { buttons: "focusedColor" }
@@ -377,3 +431,18 @@ end sub
 function SGDEX_GetViewType() as String
     return "detailsView"
 end function
+
+
+sub SGDEX_UpdateViewUI()
+    contentGroupY = m.top.viewContentGroup.translation[1]
+    isButtonBarVisible = m.top.getScene().buttonBar.visible
+
+    if m.descriptionLabel <> invalid
+        if contentGroupY > 174
+            m.descriptionLabel.maxLines = 3
+        else
+            m.descriptionLabel.maxLines = 5
+        end if
+    end if
+end sub
+
