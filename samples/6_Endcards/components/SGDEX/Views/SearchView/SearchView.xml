@@ -104,6 +104,14 @@
         -->
         <field id="query" type="string" alwaysNotify="true" />
 
+        <!-- @Public -->
+        <!--
+            Interface to support different poster shapes for grid rows.
+            Value is an array of strings, which set row poster shapes.
+            If the array contains fewer elements than the number of rows, then the shape of rest rows will be set to posterShape field 	    or to the last value in the array.
+        -->
+        <field id="rowPosterShapes" type="stringarray" alwaysNotify="true" onChange="RebuildGridNode" />
+
         <!-- @Private -->
         <!--
             Used by content manager to notify the view whether content is loading
@@ -132,6 +140,9 @@
             @PossibleValue itemTextColorLine1 - sets color for first row in short description
             @PossibleValue itemTextColorLine2 - sets color for second row in short description
             @PossibleValue itemTextBackgroundColor - set a background color for the short description
+            @PossibleValue itemBackgroundColor - set color for background rectangle under the poster
+            @PossibleValue shortDescriptionLine1Align - set horizontal alignment for short description line 1
+            @PossibleValue shortDescriptionLine2Align - set horizontal alignment for short description line 2
         -->
 
         <!--
@@ -180,6 +191,7 @@
                 >
                 <!-- Align keyboard to the center -->
                 <LayoutGroup
+                    id="layoutKeyboard"
                     translation="[640,0]"
                     horizAlignment="center"
                     >

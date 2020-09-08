@@ -17,13 +17,13 @@ sub init()
 end sub
 
 sub OnWidthChange()
-    posterWidth = 8
+    posterWidth = 8.0
     m.posterLeft.width = posterWidth
     m.posterRight.width = posterWidth
     m.focusedPosterLeft.width = posterWidth
     m.focusedPosterRight.width = posterWidth
 
-    backgroundWidth = m.top.width - m.posterLeft.width * 2
+    backgroundWidth = Cdbl(m.top.width) - Cdbl(m.posterLeft.width) * 2.0
     m.background.width = backgroundWidth
     m.backgroundFocused.width = backgroundWidth
 
@@ -41,8 +41,8 @@ sub OnHeightChange()
     m.focusedPosterLeft.height = posterHeight
     m.focusedPosterRight.height = posterHeight
 
-    m.background.height = m.top.height
-    m.backgroundFocused.height = m.top.height
+    m.background.height = posterHeight
+    m.backgroundFocused.height = posterHeight
 end sub
 
 sub OnFocusPercentChange(event as Object)

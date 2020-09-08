@@ -7,6 +7,9 @@ sub Init()
 
     m.title.font.size = 20
     m.description.font.size = 16
+
+    parent = Utils_getParentbyIndex(1, m.top)
+    parent.ObserveField("itemSize", "OnParentItemSizeChanged")
 end sub
 
 sub itemContentChanged()
@@ -34,3 +37,14 @@ sub itemContentChanged()
         m.description.width = width
     end if
 end sub
+
+function OnParentItemSizeChanged(event as Object)
+    ' respect parent item size change to accomodate title and description
+    ' labels accordingly
+    itemSize = event.GetData()
+    if itemSize <> invalid
+        width = itemSize[0] - m.poster.width - 10
+        m.title.width = width
+        m.description.width = width
+    end if
+end function

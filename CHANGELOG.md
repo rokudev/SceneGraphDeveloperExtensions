@@ -1,6 +1,33 @@
 # Scene Graph Developer Extensions
 
-> 05.01.20
+> 08.28.20
+
+## v.2.4
+
+### Features
+
+* The TimeGrid ContentManager can now be used with custom views
+* ButtonBar can now be displayed on the left side of the screen
+* MediaView has a new _seek_ field that can be used to move the playback position
+* MediaView now supports shuffle in video mode
+* MediaView shuffle logic has been improved
+* SlideshowView has a new _closeAfterLastSlide_ field that can be used together with the _loop_ field to force the view to close itself when the slideshow is over
+* CategoryListView has a new _ffrwPageSize_ field that can be used to customize the behavior of the FF and RW buttons on the remote control
+
+### Bug Fixes
+
+* Fixed a crash in DetailsView that could happen when trying to navigate through a playlist before it had loaded fully
+* Fixed a crash that could happen when closing a SearchView
+* Fixed a crash in MediaView that could happen when a channel localized the string "video"
+* Fixed an issue where MediaView could get stuck on a loading screen in audio mode even after playback had started
+* Fixed an issue where a BookmarkHandlerConfig might not be respected when used with MediaView in playlist mode
+* Fixed an issue where the ButtonBar footprint could behave unexpectedly after using it with a MediaVIew in audio mode
+* Fixed an issue where ButtonBar could appear in the wrong place after using it with a MediaVIew in audio mode
+* Fixed an issue where SlideshowView could become unresponsive 
+* Fixed an execution timeout when using SlideshowView with a very large set of images
+* Fixed an issue where EntitlementView would give users the option to buy a non-trial product when they had not already purchased the equivalent trial product
+* Fixed an issue where EntitlementView might not display products in the order specified in the EntitlementHandler
+* Removed RIDA and ad limiting logic from RAFHandler. This is now handled by RAF itself
 
 ## v.2.3
 

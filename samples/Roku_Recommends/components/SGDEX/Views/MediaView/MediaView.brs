@@ -13,6 +13,9 @@
 '   video.control = "play"
 
 sub Init()
+    ' Reset default value to avoid issues with auto-translation of default value specified in xml file
+    m.top.mode = "video"
+
     ' Perform content setting/loading actions when content was set
     m.top.ObserveField("content", "OnContentSet")
 
@@ -41,6 +44,10 @@ sub Init()
     m.top.ObserveField("disableScreenSaver", "OnDisableScreenSaver")
 
     m.top.ObserveFieldScoped("focusedChild", "OnFocusedChildChange")
+
+    m.top.ObserveFieldScoped("seek", "OnSeekChanged")
+
+    m.top.ObserveFieldScoped("shuffle", "OnContentShuffled")
 
     ' AA to pass appropriate states on view top
     m.internalToViewStateAA = {
@@ -74,10 +81,12 @@ sub Init()
         buffering_completed: OnCompletedPlayback  ' user set content to invalid
         buffering_playing: OnStartedPlayback
         buffering_finished: ProcessEndState
+        playing_contentLoaded: OnContentLoaded
         playing_error: OnErrorState
         playing_completed: OnCompletedPlayback ' user set content to invalid
         playing_paused: OnPausedPlayback
         paused_playing: OnResumedPlayback
+        paused_finished: ProcessEndState
         playing_finished: ProcessEndState
         stopped_error: OnErrorState
         stopped_completed: OnCompletedPlayback ' user set content to invalid
@@ -112,9 +121,10 @@ sub Init()
     m.renderOverContent = m.buttonBar.renderOverContent
     m.isAutoHideMode = m.buttonBar.autoHide
 
-    if m.isButtonBarVisible and m.top.overhang.height > 72
+    lastThemeAttributes = m.lastThemeAttributes
+    if lastThemeAttributes = invalid or m.isButtonBarVisible and lastThemeAttributes.overhangHeight = invalid
         m.overhangHeight = m.top.overhang.height
-        m.top.overhang.height = 72
+        m.top.overhang.height = m.contentAreaSafeZoneYPosition
     end if
 
     ' PRIVATE fields for library managers
@@ -127,6 +137,7 @@ sub Init()
     m.trickplayVisible = true
     m.RafTask = invalid
     m.endcardAvailable = false
+    m.unshuffleContent = invalid
 end sub
 
 sub OnFocusedChildChange()
@@ -284,6 +295,17 @@ sub OnDurationChanged(event as Object)
     m.top.duration = event.GetData()
 end sub
 
+' Sets the current position in the video
+sub OnSeekChanged()
+    seekPosition = m.top.seek
+    if seekPosition <> invalid and seekPosition > -1
+        if GetState() <> "none" and GetState() <> "contentLoading"
+            m.media.seek = seekPosition
+            m.top.seek = -1
+        end if
+    end if
+end sub
+
 sub ProcessState()
     newState = m.stateNode.state
     prevState = m.stateNode.prevState
@@ -434,6 +456,48 @@ sub OnJumpToItem()
             OnContentLoaded() ' updating currentItem and content for media node to workaround race condition when content set before jumpToItem and(or) preloadContent
         else if GetState() <> "contentLoading" and GetState() <> "none"
             SetState("contentLoaded")
+        end if
+    end if
+end sub
+
+sub OnContentShuffled()
+    shuffle = m.top.shuffle
+    if m.top.isContentList
+        if shuffle
+            size = m.top.content.GetChildCount() - 1
+            if size > 0
+                'need copy content before shuffling
+                contentTree = m.top.content.clone(true)
+                if m.unshuffleContent = invalid
+                    m.unshuffleContent = contentTree.clone(true)
+                end if
+                shuffledContent = CreateObject("roSGNode", "ContentNode")
+                shuffledContent.Update(contentTree.getFields(), true)
+                content = contentTree.GetChildren(-1,0)
+                if m.top.currentIndex >= 0
+                    shuffledContent.AppendChild(content[m.top.currentIndex])
+                    content.Delete(m.top.currentIndex)
+                end if
+                while content.Count() > 0
+                    rndRange = content.Count() - 1
+                    index = Rnd(rndRange)
+                    shuffledContent.AppendChild(content[index])
+                    content.Delete(index)
+                end while
+                'need to unobserve content field because when we set shuffled content and
+                'audio is playing, playback will be stopped
+                m.top.UnObserveField("content")
+                m.top.content = shuffledContent
+                m.top.currentIndex = 0
+                m.top.ObserveField("content", "OnContentSet")
+            end if
+        else
+            if m.unshuffleContent <> invalid
+                m.top.UnObserveField("content")
+                m.top.content = m.unshuffleContent
+                m.top.ObserveField("content", "OnContentSet")
+                m.unshuffleContent = invalid
+            end if
         end if
     end if
 end sub
@@ -590,12 +654,19 @@ sub OnContentLoaded()
         SetState("contentLoading")
     else if currentItem <> invalid ' ready to play
         ShowBusySpinner(false)
+        if m.unshuffleContent = invalid and m.top.shuffle
+            OnContentShuffled()
+        end if
         m.handlerConfigRAF = invalid
         ExtractRafConfig()
         ' Set content node that we receive to Media Node
-        content = currentItem
+        content = currentItem.clone(false)
         UpdateMediaModeByContent()
-        m.media.content = content.Clone(false)
+        if m.npn <> invalid
+            m.npn.content = content
+        end if
+        m.media.content = content
+        if not m.isBookmarkHandlerCreated then CreateBookmarksHandler()
         if isCSASEnabled() then
             m.top.currentItem = currentItem
             SetState("StartRAFTask")
@@ -651,7 +722,14 @@ sub ProcessEndState()
         if HandlerConfigEndcard <> invalid then currentItem.HandlerConfigEndcard = invalid
         ClearMediaNode()
         CreateMediaNode()
-        m.top.currentIndex++
+        ' skip incrementing currentIndex if repeatOne mode enabled
+        if m.top.mode = "audio"
+            if not m.top.repeatOne
+                m.top.currentIndex++
+            end if
+        else
+            m.top.currentIndex++
+        end if
         if NeedToShowEndcards(HandlerConfigEndcard) and GetCurrentMode() = "video"
             endcardContent = CreateObject("roSGNode", "ContentNode")
             if HandlerConfigEndcard <> invalid then ShowBusySpinner(true)
@@ -664,6 +742,9 @@ end sub
 
 sub OnCompletedPlayback()
     if m.top.isContentList and HasNextItemInPlaylist()
+        SetState("contentLoaded")
+    else if m.top.repeatAll and m.top.isContentList
+        m.top.currentIndex = 0
         SetState("contentLoaded")
     else
         m.top.close = true
@@ -897,6 +978,9 @@ sub StartPlayback(control as String)
             m.top.currentItem = GetCurrentLoadedItem()
             m.media.control = control
         end if
+        if m.top.seek <> invalid and m.top.seek > -1
+            OnSeekChanged()
+        end if
     end if
 end sub
 
@@ -995,7 +1079,6 @@ sub UpdateMediaModeByContent()
             ' To handle case when playing mixed streamFormats in playlist
             if GetCurrentMode() = "audio" then m.top.mode = "video"
         end if
-
         m.mediaModeSet = false
     end if
 end sub
@@ -1024,9 +1107,16 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                 m.media.control = "resume"
             end if
         else if key = "right" and m.top.isContentList
+            if m.top.repeatOne
+                m.top.currentIndex++
+            end if
             SetState("finished")
         else if key = "left" and m.top.isContentList
-            m.top.currentIndex -= 2
+            if m.top.repeatOne
+                m.top.currentIndex--
+            else
+                m.top.currentIndex -= 2
+            end if
             SetState("finished")
         else if key = "fastforward"
             if (m.media.duration - position) > 30
@@ -1212,4 +1302,17 @@ end function
 
 sub SGDEX_UpdateViewUI()
 
+end sub
+
+sub customSuspend()
+    print "Suspend"
+end sub
+
+sub customResume()
+    'On Resume if the player is stopped then close the view
+    'to go back to the previous screen
+    print "Resume state:";GetState()  
+    if GetState() = "stopped"
+        m.top.close = true
+    end if
 end sub

@@ -2,7 +2,7 @@
 <!-- Copyright (c) 2018 Roku, Inc. All rights reserved. -->
 
 <!--
-    @Public
+    @Private
     Video View is a component that provide pre-defined approach to play Video
     It incapsulates different features:
         - Playback of video playlist or one item;

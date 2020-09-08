@@ -7,6 +7,7 @@ sub Init()
     ' viewOffsetY can be overriden in init of each view
     ' to change the spacing between overhang and content for specific cases
     m.viewOffsetY = 25
+    m.viewOffsetX = 20
     m.defaultOverhangHeight = 115
 
     ' Minimum Y offset from top edge of the screen to content
@@ -14,6 +15,7 @@ sub Init()
     m.contentAreaSafeZoneYPosition = 72 ' 720 * 0.10
 
     m.top.overhang = m.top.FindNode("overhang")
+    m.top.overhang.ObserveField("height", "SGDEX_OnOverhangHeightChange")
     m.top.getScene().ObserveField("theme", "SGDEX_GlobalThemeObserver")
     m.top.getScene().ObserveField("updateTheme", "SGDEX_GlobalUpdateThemeObserver")
     m.top.getScene().buttonBar.ObserveField("visible", "SGDEX_OnButtonBarVisibleChange")
@@ -32,6 +34,70 @@ sub OnViewWasShown()
     SGDEX_OnButtonBarVisibleChange()
 end sub
 
+sub SGDEX_OnOverhangHeightChange()
+    fullSizeViews = {
+        "MediaView": "",
+        "SlideShowView": "",
+        "EndcardView": ""
+    }
+    buttonBar = m.top.getScene().buttonBar
+    overhang = m.top.findNode("overhang")
+    autoHideHint = buttonBar.findNode("autohidehint")
+    buttonBarRectangle = buttonBar.findNode("backgroundRectangle")
+    buttonBarList = buttonBar.findNode("buttonBarLayout")
+    buttonsRowList = buttonBar.findNode("buttonsRowList")
+
+    buttonBarListX = buttonBarList.translation[0]
+
+    if buttonBar.alignment = "left" and buttonBar.visible = true
+        ' Calculating visible buttons on buttonBar to switch animation
+        ' The vertical BB uses floating focus when there are not enough buttons to wrap
+        ' and uses fixed focus once the set of buttons gets big enough to wrap.
+        if buttonsRowList.content <> invalid
+            buttonsCount = buttonsRowList.content.getChildCount()
+            itemHeight = buttonsRowList.itemSize[1]
+            if overhang.height = 0
+                safeZone = (720 - m.contentAreaSafeZoneYPosition*2)
+            else
+                safeZone = (720 - overhang.height - m.contentAreaSafeZoneYPosition)
+            end if
+            if buttonsCount > 0 and safeZone > 0
+                visibleNumRows = CInt(safeZone / (itemHeight + 10))
+                if buttonsCount >= visibleNumRows
+                    buttonsRowList.vertFocusAnimationStyle="fixedFocusWrap"
+                else
+                    buttonsRowList.vertFocusAnimationStyle="floatingFocus"
+                end if
+                buttonsRowList.numRows = visibleNumRows
+            end if
+        end if
+        ' Resize ButtonBar to fill gap appeared because of disabled overhang
+        ' ButtonBar will be resized if overhang height is default or equal to 0
+        if fullSizeViews[m.top.subtype()] = "" and (overhang.height = m.contentAreaSafeZoneYPosition or overhang.height = 0) and buttonBar.translation[1] <> 0
+            if m.top.hasField("mode") and m.top.mode = "audio"
+                buttonBar.translation = [0, m.defaultOverhangHeight]
+                buttonBarList.translation = [buttonBarListX, 0]
+                height = (buttonBarRectangle.height/2) - m.defaultOverhangHeight
+                autoHideHint.translation = [autoHideHint.translation[0],height]
+            else
+                buttonBar.translation = [0,0]
+                buttonBarList.translation = [buttonBarListX,m.defaultOverhangHeight]
+                autoHideHint.translation = [autoHideHint.translation[0],buttonBarRectangle.height/2]
+            end if
+        else
+            ' restoring translation
+            buttonBarList.translation = [buttonBarListX,0]
+            ' moving autoHideHint down if overhang height overlap it
+            if overhang.height > (autohideHint.boundingRect()["y"] + (autohideHint.boundingRect()["height"]))
+                autohideHint.translation = [autohideHint.translation[0], autohideHint.boundingRect()["height"]/2]
+            else
+                height = (buttonBarRectangle.height/2) - overhang.height
+                autoHideHint.translation = [autohideHint.translation[0], height]
+            end if
+        end if
+    end if
+end sub
+
 sub SGDEX_OnButtonBarVisibleChange()
     buttonBar = m.top.getScene().buttonBar
     if buttonBar <> invalid and m.top.visible then
@@ -47,7 +113,6 @@ end sub
 sub SGDEX_UpdateBaseViewUI()
     buttonBar = m.top.getScene().buttonBar
     isButtonBarVisible = buttonBar.visible
-    buttonBarHeight = buttonBar.findNode("backgroundRectangle").height
     overhang = m.top.findNode("overhang")
     overhangHeight = overhang.height
     if not overhang.visible
@@ -55,10 +120,16 @@ sub SGDEX_UpdateBaseViewUI()
     end if
 
     viewContentOffsetY = overhangHeight + m.viewOffsetY
+    viewContentOffsetX = 0
 
     if isButtonBarVisible
         buttonBar.translation = [0, overhangHeight]
-        viewContentOffsetY += buttonBarHeight
+        if buttonBar.alignment = "top"
+            viewContentOffsetY += buttonBar.findNode("backgroundRectangle").height
+        else if buttonBar.alignment = "left"
+            viewContentOffsetX += buttonBar.findNode("backgroundRectangle").width + m.viewOffsetX
+        end if
+        SGDEX_OnOverhangHeightChange()
     end if
 
     ' if viewContentOffsetY + overhangHeight > m.defaultOverhangHeight
@@ -69,7 +140,7 @@ sub SGDEX_UpdateBaseViewUI()
         viewContentOffsetY = m.contentAreaSafeZoneYPosition
     end if
 
-    m.top.viewContentGroup.translation = [0, viewContentOffsetY]
+    m.top.viewContentGroup.translation = [viewContentOffsetX, viewContentOffsetY]
 
     SGDEX_UpdateViewUI()
 end sub
@@ -153,7 +224,7 @@ sub SGDEX_InternalBuildAndSetTheme(viewTheme as Object, newTheme as Object, isUp
         SGDEX_InternalSetTheme(theme, isUpdate)
 
         buttonBar = m.top.getScene().buttonBar
-        if buttonBar <> invalid then
+        if buttonBar <> invalid and buttonBar.visible = true then
             SGDEX_UpdateBaseViewUI()
         end if
     end if
@@ -357,3 +428,7 @@ sub SGDEX_SetThemeAttribute(node, field as String, value as Object, defaultValue
     if m.themeDebug then ? "SGDEX_SetThemeAttribute, field="field" , value=["properValue"]"
     node[field] = properValue
 end sub
+
+function GetViewXPadding()
+    return 126
+end function

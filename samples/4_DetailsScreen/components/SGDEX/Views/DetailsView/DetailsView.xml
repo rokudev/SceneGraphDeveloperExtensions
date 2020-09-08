@@ -106,6 +106,7 @@
                 <Rectangle
                     id="styledPosterArea"
                     height="201"
+                    width="357"
                     color="0xFFFFFF00">
                     <StyledPoster
                         id="poster"

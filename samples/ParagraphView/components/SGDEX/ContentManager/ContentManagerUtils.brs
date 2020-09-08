@@ -567,10 +567,11 @@ end sub
 sub MarkRows()
     if m.uniqueRowIndex = invalid then m.uniqueRowIndex = 0
 
-    'try to use m.top.content as alternative source of content is content was not set yet
-    'This will fix priority sorting as unmarked rows are treated as -1
+    ' Try to use m.top.content or m.topView.content as alternative source of content if it wasn't set yet
+    ' This will fix priority sorting as unmarked rows are treated as -1
     content = m.view.content
     if content = invalid then content = m.top.content
+    if content = invalid and m.topview <> invalid then content = m.topview.content
 
     if content <> invalid then
         children = content.Getchildren( - 1, 0)

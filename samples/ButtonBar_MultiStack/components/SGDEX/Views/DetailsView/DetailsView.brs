@@ -58,6 +58,25 @@ sub Init()
     if m.LastThemeAttributes <> invalid then
         SGDEX_SetTheme(m.LastThemeAttributes)
     end if
+    ' used to restore default view UI if user reset style
+    m.defaultUIConfig = {
+        poster: {
+            maxWidth: 357
+            maxHeight: 201
+            shape: "16x9"
+            translation: [0, 0]
+        }
+        info1: {
+            wrap: false
+            horizAlign: "right"
+        }
+        info2: {
+            width: 357
+            wrap: false
+            horizAlign: "right"
+        }
+    }
+    OnStyleChange()
 end sub
 
 sub OnFocusedChildChanged()
@@ -67,8 +86,37 @@ sub OnFocusedChildChanged()
 end sub
 
 sub OnStyleChange()
-    ' TODO implement styles
+    style = m.top.style
+
+    config = GetUIConfigForStyle(style)
+    for each componentName in config
+        if m[componentName] <> invalid
+            m[componentName].Update(config[componentName])
+        end if
+    end for
 end sub
+
+function GetUIConfigForStyle(style as String) as Object
+    uiConfig = m.defaultUIConfig
+
+    if style = "rmp"
+        uiConfig = {
+            info1: {
+                wrap: true
+                width: 357
+                maxLines: 2
+                font: "font:LargeSystemFont"
+            }
+            info2: {
+                wrap: true
+                maxLines: 3
+                font: "font:SmallSystemFont"
+            }
+        }
+    end if
+
+    return uiConfig
+end function
 
 sub OnPosterShapeChange()
     m.poster.shape = m.top.posterShape
@@ -158,26 +206,27 @@ sub OnItemFocusedChanged(event as Object)
     focusedItem = event.GetData()
     if m.top.isContentList
         content = m.top.content.GetChild(focusedItem)
+        if content <> invalid
+            HandlerConfigDetails = content.HandlerConfigDetails
 
-        HandlerConfigDetails = content.HandlerConfigDetails
+            ' to prevent stale data being displayed while the CH is running
+            if m.ratingPoster <> invalid
+                m.ratingPoster.uri = ""
+            end if
 
-        ' to prevent stale data being displayed while the CH is running
-        if m.ratingPoster <> invalid
-            m.ratingPoster.uri = ""
-        end if
+    '        we are setting details to details page even if it' s not loaded, so user can see that something has changed
+    '        developer should put some place holders to show user that data is loading
+            SetDetailsContent(content, HandlerConfigDetails <> invalid and HandlerConfigDetails.Count() > 0)
 
-'        we are setting details to details page even if it' s not loaded, so user can see that something has changed
-'        developer should put some place holders to show user that data is loading
-        SetDetailsContent(content, HandlerConfigDetails <> invalid and HandlerConfigDetails.Count() > 0)
-
-'       if we have details to load then load them, else set item to details
-        if HandlerConfigDetails <> invalid
-            content.HandlerConfigDetails = invalid
-            LoadMoreContent(content, HandlerConfigDetails)
-            m.top.currentItem = invalid
-        else
-            m.top.currentItem = content
-            m.top.itemLoaded = true
+    '       if we have details to load then load them, else set item to details
+            if HandlerConfigDetails <> invalid
+                content.HandlerConfigDetails = invalid
+                LoadMoreContent(content, HandlerConfigDetails)
+                m.top.currentItem = invalid
+            else
+                m.top.currentItem = content
+                m.top.itemLoaded = true
+            end if
         end if
     else
 '        ?"this is not list"
@@ -194,11 +243,9 @@ end sub
 
 sub SetDetailsContent(content as Object, isLoadinExtrainfo = false as Boolean)
     if content <> invalid
-        SetOverhangTitle(content.title)
         m.poster.uri = content.hdposterurl
         contentDurationString = Utils_DurationAsString(content.length)
 
-        m.info1.text = ConvertToStringAndJoin([content.ReleaseDate, contentDurationString])
         if isImageURI(content.Rating) then
             if m.ratingPoster = invalid then
                 m.ratingPoster = CreateObject("roSGNode", "Poster")
@@ -212,11 +259,22 @@ sub SetDetailsContent(content as Object, isLoadinExtrainfo = false as Boolean)
                     uri : content.rating
                 })
             end if
-            m.info2.text = ConvertToStringAndJoin([Content.categories])
+            info2Text = ConvertToStringAndJoin([Content.categories])
         else
-            m.info2.text = ConvertToStringAndJoin([content.Rating, Content.categories])
+            info2Text = ConvertToStringAndJoin([content.Rating, Content.categories])
         end if
-        m.info3.text = content.shortDescriptionLine1
+
+        if m.top.style = "rmp"
+            m.info1.text = content.title
+            info2Text = ConvertToStringAndJoin([content.ReleaseDate, contentDurationString, content.Rating])
+            info2Text = info2Text + chr(13) + chr(10)
+            info2Text = info2Text + ConvertToStringAndJoin([content.categories])
+        else
+            SetOverhangTitle(content.title)
+            m.info1.text = ConvertToStringAndJoin([content.ReleaseDate, contentDurationString])
+            m.info3.text = content.shortDescriptionLine1
+        end if
+        m.info2.text = info2Text
         m.descriptionLabel.text = content.description
         m.actorsLabel.text = ConvertToStringAndJoin(content.actors, ", ")
     else ' clear content
@@ -305,10 +363,15 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
         if steps[key] <> invalid
             handled = true
             content = m.top.content
+            buttonBar = m.top.getScene().buttonBar
             if content <> invalid and m.top.isContentList
                 newIndex = GetNextItemIndex(m.top.itemFocused, content.Getchildcount() - 1, steps[key], m.top.allowWrapContent)
                 if m.top.itemFocused <> newIndex then
                     m.top.jumpToItem = newIndex
+                end if
+            else if buttonBar <> invalid
+                if buttonBar.visible = true and buttonBar.alignment = "left" and key = "left"
+                    buttonBar.SetFocus(true)
                 end if
             end if
         end if
@@ -409,12 +472,13 @@ sub SGDEX_SetTheme(theme as Object)
 
     detailsThemeAttributes = {
         ' labels color
-
         descriptionColor:               { descriptionLabel: "color" }
         actorsColor:                    { actorsLabel: "color" }
         ReleaseDateColor:               { info1: "color" }
         RatingAndCategoriesColor:       { info2: "color" }
         shortDescriptionColor:          { info3: "color" }
+
+        posterBackgroundColor:          { styledPosterArea: "color" }
 
         ' buttons theme
         buttonsFocusedColor:            { buttons: "focusedColor" }
@@ -434,8 +498,35 @@ end function
 
 
 sub SGDEX_UpdateViewUI()
+    buttonBar = m.top.getScene().buttonBar
     contentGroupY = m.top.viewContentGroup.translation[1]
-    isButtonBarVisible = m.top.getScene().buttonBar.visible
+    isButtonBarVisible = buttonBar.visible
+    isAutoHide = buttonBar.autoHide
+    descriptionLabelWidth = 593
+    translation = [1166, 0]
+
+    if buttonBar <> invalid and m.detailsGroup <> invalid
+        if buttonBar.alignment = "left"
+            offset = buttonBar.FindNode("backgroundRectangle").width
+            if not buttonBar.isInFocusChain() and (isAutoHide and isButtonBarVisible)
+                m.top.viewContentGroup.translation = [0,contentGroupY]
+            else if isButtonBarVisible
+                ' Move view content to right to avoid overlaping
+                m.top.viewContentGroup.translation = [offset - GetViewXPadding()*1.5,contentGroupY]
+
+                ' Resize description and buttons if layout shifted
+                if descriptionLabelWidth/2 >= offset - GetViewXPadding()
+                    descriptionLabelWidth -= (offset - GetViewXPadding())
+                else
+                    descriptionLabelWidth = descriptionLabelWidth - m.detailsGroup.boundingRect()["x"] - GetViewXPadding()
+                end if
+            end if
+        end if
+        if m.descriptionLabel <> invalid then m.descriptionLabel.width = descriptionLabelWidth
+        if m.buttons <> invalid
+            m.buttons.itemSize = [descriptionLabelWidth, 48]
+        end if
+    end if
 
     if m.descriptionLabel <> invalid
         if contentGroupY > 174
@@ -445,4 +536,3 @@ sub SGDEX_UpdateViewUI()
         end if
     end if
 end sub
-

@@ -33,32 +33,43 @@ function Show(config as Object)
         ? "Error: Component controller, received wrong config. Field setFocus must be Boolean."
     end if
 
-    subTypesSupported = { GridView: "", SearchView: "" }
-    cmTypesSupported = { grid: "" }
+    subTypesSupported = {
+        GridView: "ContentManager",
+        SearchView: "ContentManager",
+        TimeGridView: "ContentManagerTimeGrid"
+    }
+
+    cmTypesSupported = {
+        grid: {
+            nodeType: "ContentManager"
+            configName: "HandlerConfigGrid"
+        }
+        timegrid: {
+            nodeType: "ContentManagerTimeGrid"
+            configName: "HandlerConfigTimeGrid"
+        }
+    }
 
     subtype = View.subtype()
     parentType = View.parentSubtype(View.subtype())
+    cmType = View.contentManagerType
 
-    createContentManager = false
-    if subtype <> invalid and subTypesSupported[subtype] <> invalid then
-        createContentManager = true
-    else if parentType <> invalid and subTypesSupported[parentType] <> invalid then
-        createContentManager = true
-    else if View.contentManagerType <> invalid
-        cmType = View.contentManagerType
-        createContentManager = (GetInterface(cmType, "ifString") <> invalid and cmTypesSupported[cmType] <> invalid)
-    end if
-
-    if createContentManager then
-        if contentManager = invalid then contentManager = CreateObject("roSgNode", "ContentManager")
-        ' attach this View to this content manager
-        contentManager.Parent = m.top.getparent()
+    ' Create content manager for SGDEX views
+    if subTypesSupported[subtype] <> invalid
+        contentManager = CreateObject("roSgNode", subTypesSupported[subtype])
         if subtype = "SearchView"
             contentManager.configFieldName = "HandlerConfigSearch"
-        else if View.contentManagerType <> invalid
-            contentManager.configFieldName = GetConfigFieldName(View.contentManagerType)
         end if
+    ' else create content manager for custom view if it' supported
+    else if cmType <> invalid and GetInterface(cmType, "ifString") <> invalid and cmTypesSupported[cmType] <> invalid
+        contentManager = CreateObject("roSgNode", cmTypesSupported[cmType]["nodeType"])
+        contentManager.configFieldName = cmTypesSupported[cmType]["configName"]
+    else
+        print "[SGDEX] Content Manager was not created"
+    end if
 
+    if contentManager <> invalid
+        contentManager.Parent = m.top.getparent()
         contentManager.callFunc("setView", View)
         data.contentManager = contentManager
     end if
@@ -80,16 +91,11 @@ function Show(config as Object)
             timer.ObserveField("fire", "OnMediaTimerFired")
         end if
     end if
-
     if contentManager <> invalid then
         contentManager.control = "start"
     end if
 
     'do other stuff for proper registering and unregistering events
-end function
-
-function GetConfigFieldName(cmType = "grid" as String) as String
-    return "HandlerConfig" + UCase(Left(cmType, 1)) + LCase(Mid(cmType, 2))
 end function
 
 sub OnMediaTimerFired()
@@ -131,21 +137,33 @@ function handleButtonBarKeyEvents(buttonBar as Object, key as String) as Boolean
     ' handle switch focus between the ButtonBar and a showed view
     currentView = m.top.currentView
     if currentView <> invalid
-        if (key = "back" or key = "up") and currentView.Subtype() = "MediaView" then
+        if (key = "back" or (key = "up" and buttonBar.alignment = "top")) and currentView.Subtype() = "MediaView" and currentView.mode = "audio" then
             return handleMediaViewBBKeyEvents(currentView, buttonBar, key)
-        else if key = "back" and buttonBar.isInFocusChain()
+        else if key = "back"
+            if buttonBar.isInFocusChain()
                 return closeView()
-        else if  key = "up" and currentView.isInFocusChain()
-            buttonBar.SetFocus(true)
-            return true
-        else if key = "back" and currentView.isInFocusChain()
-            buttonBar.SetFocus(true)
-            return true
-        else if key = "down" and buttonBar.isInFocusChain()
-            currentView.SetFocus(true)
-            return true
-        else if key = "back" and buttonBar.isInFocusChain()
-            return closeView()
+            else if currentView.isInFocusChain()
+                buttonBar.SetFocus(true)
+                return true
+            end if
+        else if buttonBar.alignment = "top"
+            if key = "up" and currentView.isInFocusChain()
+                buttonBar.SetFocus(true)
+                return true
+            else if key = "down" and buttonBar.isInFocusChain()
+                currentView.SetFocus(true)
+                return true
+            end if
+        else if buttonBar.alignment = "left"
+            if key = "left" and currentView.isInFocusChain()
+                if currentView.Subtype() <> "MediaView" and currentView.isContentList <> true
+                    buttonBar.SetFocus(true)
+                    return true
+                end if
+            else if key = "right" and buttonBar.isInFocusChain()
+                currentView.SetFocus(true)
+                return true
+            end if
         end if
     end if
     return false

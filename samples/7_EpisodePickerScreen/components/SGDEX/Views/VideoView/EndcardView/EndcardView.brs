@@ -111,6 +111,7 @@ End Sub
 '
 ' @param event [roSGNodeEvent] - m.top.focusedChild field event
 Sub OnFocusedChildChange(event as Object)
+    buttonBar = m.top.getScene().buttonBar
     if m.top.IsInFocusChain() and m.FocusableGroup.HasFocus() = false and m.repeatButton.HasFocus() = false and m.grid.HasFocus() = false
         if m.grid.content <> invalid and m.grid.content.GetChildCount() > 0
             m.grid.focusable = true
@@ -118,6 +119,10 @@ Sub OnFocusedChildChange(event as Object)
         else if m.repeatButton.IsInFocusChain() = false
             m.repeatButton.SetFocus(true)
         end if
+    else if buttonBar.visible = true and buttonBar.IsInFocusChain() = true
+        m.timerLabel.visible = false
+        m.time = m.top.endcardCountdownTime
+        m.endcardTimer.control = "stop" 
     end if
 End Sub
 
@@ -206,7 +211,10 @@ End Sub
 
 sub SGDEX_UpdateViewUI()
     m.top.getScene().buttonBar.opacity = 1
-    if m.top.getScene().buttonBar.visible and m.repeatButton <> invalid then
+    buttonBar = m.top.getScene().buttonBar
+    buttonBaralignment = buttonBar.alignment
+    isButtonBarVisible = buttonBar.visible
+    if m.top.getScene().buttonBar.visible and buttonBaralignment = "top" and m.repeatButton <> invalid then
         newY = m.buttonBar.boundingRect()["y"] + m.buttonBar.boundingRect()["height"] + m.viewOffsetY
         m.repeatButton.translation= [m.repeatButton.translation[0],newY]
         if newY + m.repeatButton.itemsize[1] > m.bottomRectangle.boundingRect()["y"] then
@@ -215,6 +223,13 @@ sub SGDEX_UpdateViewUI()
             m.timerLabel.translation = [m.timerLabel.translation[0], m.timerLabel.translation[1] + moveContentOnY]
             m.topRectangle.height = moveContentOnY + m.topRectangle.height
             m.grid.translation = [m.grid.translation[0], m.grid.translation[1] + moveContentOnY]
+        end if
+    else if isButtonBarVisible and buttonBaralignment = "left"
+        newX = (buttonBar.findNode("backgroundRectangle").width - GetViewXPadding()) + m.viewOffsetX
+        if m.bottomRectangle <> invalid and m.timerLabel <> invalid and m.grid <> invalid
+            m.bottomRectangle.translation = [m.bottomRectangle.translation[0] + newX, m.bottomRectangle.translation[1]]
+            m.timerLabel.translation = [100 + newX, m.timerLabel.translation[1]]    
+            m.grid.translation = [100 + newX, m.grid.translation[1]]
         end if
     end if
 end sub

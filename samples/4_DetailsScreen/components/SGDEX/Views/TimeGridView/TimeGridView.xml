@@ -42,14 +42,14 @@
             Alias to the TimeGrid contentStartTime field
             The earliest time that the TimeGrid can be moved to
         -->
-        <field id="contentStartTime" type="integer" alias="timeGrid.contentStartTime" />
+        <field id="contentStartTime" type="integer" alias="contentTimeGrid.contentStartTime" />
 
         <!-- @Public -->
         <!--
             Alias to the TimeGrid maxDays field
             Specifies the total width of the TimeGrid in days
         -->
-        <field id="maxDays" type="integer" alias="timeGrid.maxDays" />
+        <field id="maxDays" type="integer" alias="contentTimeGrid.maxDays" />
 
         <!-- @Public -->
         <!--
@@ -61,8 +61,6 @@
     </interface>
 
     <script type="text/brightscript" uri="TimeGridView.brs" />
-    <script type="text/brightscript" uri="ContentManager.brs" />
-    <script type="text/brightscript" uri="../../ContentManager/ContentManagerUtils.brs" />
 
     <children>
         <Rectangle
@@ -73,8 +71,8 @@
             height="720"
         />
         <CustomTimeGrid
-            id="timeGrid"
-            translation="[0.0, 100.0]"
+            id="contentTimeGrid"
+            translation="[0.0, 220.0]"
             />
         <LayoutGroup
             translation="[640,360]"

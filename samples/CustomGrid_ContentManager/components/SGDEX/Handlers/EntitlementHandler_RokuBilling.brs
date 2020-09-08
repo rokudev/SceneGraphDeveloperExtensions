@@ -9,6 +9,14 @@ sub RokuBilling__Init()
     
     ' trial usage flag
     m.hasTrialAlreadyUsed = false
+
+    ' flags to be overridden in RokuBilling__GetProductsByCodeAA
+    ' - flag indicating that there are only non-trial products configured;
+    ' - assuming true by default
+    m.hasOnlyNonTrialProducts = true
+    ' - flag indicating that there are only trial products configured;
+    ' - assuming true by default
+    m.hasOnlyTrialProducts = true
 end sub
 
 ' Helper function - constructs AA from array of products mapping them by code
@@ -23,6 +31,14 @@ function RokuBilling__GetProductsByCodeAA() as Object
                 if product <> invalid and product.code <> invalid
                     hasTrial = (product.hasTrial <> invalid and product.hasTrial = true)
                     m.productsByCodeAA[product.code] = hasTrial
+
+                    if hasTrial and m.hasOnlyNonTrialProducts
+                        ' faced trial product - override the flag
+                        m.hasOnlyNonTrialProducts = false
+                    else if not hasTrial and m.hasOnlyTrialProducts
+                        ' faced non-trial product - override the flag
+                        m.hasOnlyTrialProducts = false
+                    end if
                 end if
             end for
         end if
@@ -81,23 +97,44 @@ end function
 ' @return [Array] like [{code:"", name:"", description:"", cost:"", ...}]
 function RokuBilling__GetProductsAllowedForPurchase() as Object
     result = []
-
-    port = CreateObject("roMessagePort")
-    m.channelStore.SetMessagePort(port)
-
-    m.channelStore.GetCatalog()
-    msg = Wait(0, port)
-    if msg.IsRequestSucceeded()
-        catalogProductList = msg.GetResponse()
-        productsByCodeAA = RokuBilling__GetProductsByCodeAA()
-
-        for each catalogProduct in catalogProductList
-            ' have such product in the map? also check trial logic
-            hasTrial = productsByCodeAA[catalogProduct.code]
-            if hasTrial <> invalid and (not hasTrial or not m.hasTrialAlreadyUsed)
-                result.Push(catalogProduct)
-            end if
-        end for
+    
+    if m.config.products <> invalid
+        port = CreateObject("roMessagePort")
+        m.channelStore.SetMessagePort(port)
+    
+        m.channelStore.GetCatalog()
+        msg = Wait(0, port)
+        if msg.IsRequestSucceeded()
+            ' convert catalog products to AA by product code
+            catalogProductList = msg.GetResponse()
+            catalogAA = {}
+            for each catalogProduct in catalogProductList
+                catalogAA[catalogProduct.code] = catalogProduct
+            end for
+            
+            ' iterate through the products specified by developer
+            ' to keep their original order in the list
+            for each product in m.config.products
+                if product <> invalid and product.code <> invalid
+                    ' have this product in the Channel Store catalog?
+                    catalogProduct = catalogAA[product.code]
+                    if catalogProduct <> invalid
+                        ' check trial logic
+                        hasTrial = product.hasTrial
+                        if hasTrial <> invalid
+                            ' add product only in case it's
+                            ' - a trial product and either trial hasn't been used
+                            ' or there are only trial products configured;
+                            ' - a non-trial product and either trial has been used
+                            ' or there are only non-trial products configured
+                            if hasTrial and (not m.hasTrialAlreadyUsed or m.hasOnlyTrialProducts) or not hasTrial and (m.hasTrialAlreadyUsed or m.hasOnlyNonTrialProducts)
+                                result.Push(catalogProduct)
+                            end if
+                        end if
+                    end if
+                end if
+            end for
+        end if
     end if
 
     return result

@@ -4,7 +4,8 @@ sub init()
     InitContentGetterValues()
     m.debug = false
     m.Handler_ConfigField = "HandlerConfigParagraph"
-    m.layoutX = 126
+    m.layoutX = GetViewXPadding()
+    m.visibleWidth = 1280 - (m.layoutX * 2)
 
     ' here will be stored all labels
     ' needed for theming
@@ -105,15 +106,23 @@ sub SetupRenderingRectangles()
     m.buttons.itemSize = [buttonsWidth, 38]
     buttonsSize = buttonsCount * m.buttons.itemSize[1] + (buttonsCount - 1) * m.buttons.itemSpacing[1]
     buttonsY = 720 - buttonsSize - bottomPading - m.top.viewContentGroup.translation[1]
-    ' -20 for extra focus ring padding
-    buttonsX = 1280 - buttonsWidth - m.layoutX - 20
+    
+    buttonBar = m.top.getScene().buttonBar
+    alignment = buttonBar.alignment
+
+    if alignment = "left" and buttonBar.visible
+        buttonsX = m.visibleWidth - buttonsWidth
+    else
+        ' -20 for extra focus ring padding
+        buttonsX = 1280 - buttonsWidth - m.layoutX - 20
+    end if
+
     m.buttons.translation = [buttonsX, buttonsY]
     if buttonsCount > 1
         m.buttons.clippingRect = [-50, -50, buttonsWidth + 100, buttonsSize + 45]
     end if
-
     m.visibleLabels.translation = [m.layoutX, 0]
-    m.visibleLabels.clippingRect = [0, 0, GetVisibleWidth(), buttonsY - 20]
+    m.visibleLabels.clippingRect = [0, 0, m.visibleWidth, buttonsY - 20]
 end sub
 
 sub PlaceContentOnScreen(content as Object)
@@ -172,7 +181,7 @@ sub AddImage(node as Object)
     if node.HDPosterUrl <> invalid and node.HDPosterUrl.Len() > 0
         layout = CreateObject("roSGNode", "LayoutGroup")
         layout.horizAlignment = "center"
-        layout.translation = [GetVisibleWidth() / 2, 0]
+        layout.translation = [m.visibleWidth / 2, 0]
         poster = layout.CreateChild("Poster")
         poster.loadDisplayMode = "scaleToFit"
         poster.uri = node.HDPosterUrl
@@ -222,7 +231,7 @@ function CreateLabelNode(text as String, font = "font:MediumSystemFont" as Strin
     label.horizAlign = horizAlign
     label.font = font
     label.wrap = true
-    label.width = GetVisibleWidth()
+    label.width = m.visibleWidth
     label.text = text
     return label
 end function
@@ -257,11 +266,7 @@ sub HideBusySpinner()
 end sub
 
 function GetButtonsWidth() as Integer
-    return GetVisibleWidth() - 200
-end function
-
-function GetVisibleWidth() as Integer
-    return 1280 - (m.layoutX * 2)
+    return m.visibleWidth - 200
 end function
 
 sub SGDEX_SetTheme(theme as Object)
@@ -323,16 +328,32 @@ end function
 
 sub SGDEX_UpdateViewUI()
     contentGroupY = m.top.viewContentGroup.translation[1]
-    isButtonBarVisible = m.top.getScene().buttonBar.visible
+    buttonBar = m.top.getScene().buttonBar
 
     if m.buttons <> invalid
-        if isButtonBarVisible
-            m.buttons.numRows = 2
+        if buttonBar.visible = true
+            if buttonBar.alignment = "top"
+                m.layoutX = GetViewXPadding()
+                m.visibleWidth = 1280 - (m.layoutX * 2)
+            else if buttonBar.alignment = "left"
+                m.visibleWidth = ( 1280 - buttonBar.findNode("backgroundRectangle").width - GetViewXPadding())
+                m.layoutX = 0
+            end if
+            if buttonBar.alignment = "top"
+                m.buttons.numRows = 2
+            end if
         else
+            if buttonBar.alignment = "left"
+                m.layoutX = GetViewXPadding()
+                m.visibleWidth = 1280 - (m.layoutX * 2)
+            end if
             m.buttons.numRows = 3
         end if
-
+        
+        'need to recreate content for update label width
+        if m.top.content <> invalid and m.top.content.GetChildCount() > 0
+            PlaceContentOnScreen(m.top.content)
+        end if
         SetupRenderingRectangles()
     end if
 end sub
-

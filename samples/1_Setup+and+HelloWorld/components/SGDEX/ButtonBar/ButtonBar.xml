@@ -44,6 +44,12 @@
         <field id="content" type="node" />
 
         <!-- @Public -->
+        <!-- Possible values: "top", "left".
+             Controls the position of ButtonBar
+        -->
+        <field id="alignment" type="string" value="top" onChange="OnAlignmentChanged" />
+
+        <!-- @Public -->
         <!-- @ReadOnly -->
         <!-- Updated when the focused button changes.
              Developers can observe this field in their channels to react to the
@@ -143,10 +149,15 @@
                             id="buttonsRowList"
                             itemComponentName="ButtonBarItemComponent"
                             numRows="1"
+                            numColumns="1"
                             variableWidthItems="[true]"
+                            itemSpacing="[0, 10]"
                             rowItemSpacing="[[10, 0]]"
                             rowFocusAnimationStyle="fixedFocusWrap"
+                            vertFocusAnimationStyle="fixedFocusWrap"
                             drawFocusFeedback="false"
+                            wrapDividerBitmapUri=""
+                            wrapDividerHeight="0"
                         />
                     </MaskGroup>
                     <Poster

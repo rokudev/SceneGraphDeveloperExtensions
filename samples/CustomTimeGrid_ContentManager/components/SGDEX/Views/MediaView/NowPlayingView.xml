@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component name="NowPlayingView" extends="NowPlayingNode" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+
+    <script type="text/brightscript" uri="NowPlayingView.brs" />
+    <script type="text/brightscript" uri="../utils/utils.brs" />
+</component>

@@ -4,8 +4,11 @@ sub init()
     m.visibleArea = m.top.FindNode("visibleArea")
     m.layout = m.top.FindNode("layout")
     m.keyboard = m.top.FindNode("keyboard")
+    m.layoutKeyboard = m.top.FindNode("layoutKeyboard")
     m.noResultsLabel = m.top.FindNode("noResultsLabel")
+    m.noResultsLabelGroup = m.top.FindNode("noResultsLabelGroup")
     m.spinner = m.top.FindNode("spinner")
+    m.spinnerGroup = m.top.FindNode("spinnerGroup")
     m.spinner.uri = "pkg:/components/SGDEX/Images/loader.png"
 
     m.slidingAnimation = m.top.FindNode("slidingAnimation")
@@ -18,7 +21,7 @@ sub init()
 
     ' limit the render zone so keyboard won't overlap the overhang
     ' when user navigates to grid
-    m.visibleArea.clippingRect = [0, -15, 1280, 720]
+    m.visibleArea.clippingRect = [-15, -15, 1280, 720]
     ' set constants for sliding the layout up and down
     m.layoutBaseY = -10
     ' move SearchView layout under the overhang
@@ -119,6 +122,9 @@ sub CreateNewOrUpdateGridNode(componentName = "" as String, fields = {} as Objec
         m.gridNode = m.layout.CreateChild(componentName)
         m.gridNode.AddField("itemTextColorLine1", "color", true)
         m.gridNode.AddField("itemTextColorLine2", "color", true)
+        m.gridNode.AddField("itemBackgroundColor", "string", true)
+        m.gridNode.AddField("shortDescriptionLine1Align", "string", false)
+        m.gridNode.AddField("shortDescriptionLine2Align", "string", false)
         m.gridNode.AddField("itemTextBackgroundColor", "string", true)
 
         if m.LastThemeAttributes <> invalid then
@@ -138,10 +144,17 @@ sub CreateNewOrUpdateGridNode(componentName = "" as String, fields = {} as Objec
 end sub
 
 function GetGridConfiguration() as Object
+    buttonBar = m.top.GetScene().buttonBar
     ' Base row list configuration fields
     rowItemAspectRatio = GetRowsAspectRatio()
-    rowListRowHeight = GetDefaultRowHeight()
+    rowListRowsHeight = GetRowsHeight()
     xRowTranslation = 125
+    'need to adjust grid translation when we have left aligned button bar
+    if buttonBar <> invalid
+        if buttonBar.visible = true and buttonBar.alignment = "left"
+            xRowTranslation = 0
+        end if
+    end if
 
     rowListTranslation = [xRowTranslation, 0]
     zoomRowListHeight = 720 - rowListTranslation[1]
@@ -159,6 +172,12 @@ function GetGridConfiguration() as Object
     itemComponentName = "StandardGridItemComponent"
     rowTitleComponentName = "DefaultRowTitleComponent"
 
+    if buttonBar <> invalid and buttonBar.visible = true and buttonBar.alignment = "left"
+        if rowListRowWidth >= 1000
+            rowListRowWidth = 1280 - (buttonBar.findNode("backgroundRectangle").width + 125 + m.viewOffsetX)
+        end if
+    end if
+
     config = {
         node: "ZoomRowList"
         fields: {
@@ -167,14 +186,14 @@ function GetGridConfiguration() as Object
             rowWidth: rowListRowWidth
             translation: rowListTranslation
 
-            rowZoomHeight: rowListRowHeight
-            rowItemZoomHeight: rowListRowHeight
-            rowHeight: rowListRowHeight
-            rowItemHeight: rowListRowHeight
+            rowZoomHeight: rowListRowsHeight
+            rowItemZoomHeight: rowListRowsHeight
+            rowHeight: rowListRowsHeight
+            rowItemHeight: rowListRowsHeight
 
             ' focusLimit is a special field to specify the height of the
             ' zoomRowList area where the focus can be
-            focusLimit: rowListRowHeight - 1
+            focusLimit: rowListRowsHeight[0] - 1
 
             spacingAfterRow: defaultItemSpacing[1]
             spacingAfterRowItem: defaultItemSpacing[0]
@@ -194,14 +213,35 @@ function GetGridConfiguration() as Object
     return config
 end function
 
-function GetDefaultRowHeight() as Float
-    defaultItemHeight = 100
+function GetRowsHeight() as Object
+    landscapeItemHeight = 92
+    squareItemHeight = 146
+    portraitItemHeight = 150
     topMargin = 45 ' label height + spacing
-    if m.top.posterShape = "portrait" then
-        defaultItemHeight = defaultItemHeight * 1.5
+
+    ' set specific height for each row if developer set rowPosterShapes
+    rowPosterShapes = m.top.rowPosterShapes
+    if rowPosterShapes <> invalid and rowPosterShapes.Count() > 0
+        rowHeights = []
+        for each shape in rowPosterShapes
+            if shape = "square"
+                rowHeights.Push(squareItemHeight + topMargin)
+            else if shape = "portrait"
+                rowHeights.Push(portraitItemHeight + topMargin)
+            else
+                rowHeights.Push(landscapeItemHeight + topMargin)
+            end if
+        end for
+        ' set default height for all not specified rows
+        rowHeights.Push(landscapeItemHeight + topMargin)
+        return rowHeights
     end if
 
-    return defaultItemHeight + topMargin
+    if m.top.posterShape = "portrait" then
+        return [portraitItemHeight + topMargin]
+    else
+        return [landscapeItemHeight + topMargin]
+    end if
 end function
 
 function GetRowsAspectRatio() as Object
@@ -213,6 +253,21 @@ function GetRowsAspectRatio() as Object
     }
     posterShape = m.top.posterShape
     if styles[posterShape] = invalid then posterShape = "16x9"
+
+    ' if rowPosterShapes was set then set appropriate aspect ratio to rows
+    rowPosterShapes = m.top.rowPosterShapes
+    if rowPosterShapes <> invalid and rowPosterShapes.Count() > 0
+        rowsAspectRatio = []
+        for each shape in rowPosterShapes
+            if styles[shape] <> invalid
+                rowsAspectRatio.Push(styles[shape])
+            else
+                rowsAspectRatio.Push(styles[posterShape])
+            end if
+        end for
+        rowsAspectRatio.Push(styles[posterShape]) ' set rest of rows to posterShape
+        return rowsAspectRatio
+    end if
 
     return [styles[posterShape]]
 end function
@@ -295,7 +350,10 @@ sub SGDEX_SetTheme(theme as Object)
         focusFootprintColor: { gridNode: "focusFootprintBlendColor" }
         itemTextColorLine1:  { gridNode: "itemTextColorLine1" }
         itemTextColorLine2:  { gridNode: "itemTextColorLine2" }
+        itemBackgroundColor:  { gridNode: "itemBackgroundColor" }
         itemTextBackgroundColor: { gridNode : "itemTextBackgroundColor"}
+        shortDescriptionLine1Align:  { gridNode: "shortDescriptionLine1Align" }
+        shortDescriptionLine2Align:  { gridNode: "shortDescriptionLine2Align" }
     }
     SGDEX_setThemeFieldsToNode(m, gridThemeAttributes, theme)
 end sub
@@ -332,8 +390,64 @@ function OnKeyEvent(key as String, press as Boolean) as Boolean
 end function
 
 sub SGDEX_UpdateViewUI()
-    buttonBarHeight = m.top.GetScene().buttonBar.findNode("backgroundRectangle").height
-    overhangHeight = m.top.overhang.height
-    m.layoutTopY = (0-(buttonBarHeight+buttonBarHeight))
+    buttonBar = m.top.GetScene().buttonBar
+    if buttonBar <> invalid
+        bbBackgroundRectangle = buttonBar.findNode("backgroundRectangle")
+        buttonBarHeight = bbBackgroundRectangle.height
+        buttonBarWidth = bbBackgroundRectangle.width
+
+        overhangHeight = m.top.overhang.height
+        m.layoutTopY = (0-(buttonBarHeight+buttonBarHeight))
+        
+        if m.layoutKeyboard <> invalid then m.layoutKeyboard.translation = [640, 0]            
+        if m.gridNode <> invalid then RebuildGridNode()
+        if m.noResultsLabelGroup <> invalid then m.noResultsLabelGroup.translation = [640, 430]
+        if m.spinnerGroup <> invalid then m.spinnerGroup.translation = [640, 430]
+
+        if buttonBar.visible = true
+            if buttonBar.alignment = "left" and m.layoutKeyboard <> invalid
+                bbPadding = 30
+                if buttonBar.autoHide = true and buttonBar.IsInFocusChain() = false
+                    bbPadding = 41
+                end if
+                
+                spinnerWidth = 100
+                safeZoneWidth = GetViewXPadding()
+                keyboardWidth = 1280 - 2*safeZoneWidth
+                ' this is width of area between button bar and right safe zone
+                centeredAreaWidth = 1280 - buttonBarWidth - safeZoneWidth
+                offset = (centeredAreaWidth - spinnerWidth) / 2 + bbPadding
+
+                m.layoutKeyboard.translation = [offset, 0]
+                m.layoutTopY = 0 - overhangHeight
+                m.noResultsLabelGroup.translation = [offset, 430]
+                m.spinnerGroup.translation = [offset, 430]
+                
+                if keyboardWidth > centeredAreaWidth
+                    ' try to shrink keyboard to keep it in a safe zone
+                    scaleRatio = centeredAreaWidth / keyboardWidth
+                    if scaleRatio < 0.7
+                        ' keep minimum scaling and disable centered alignment due to very wide button bar
+                        scaleRatio = 0.7
+                        m.layoutKeyboard.translation = [0, 0]
+                        m.layoutKeyboard.horizAlignment = "left"
+                    end if
+                    if m.keyboard <> invalid
+                        m.keyboard.scale = [scaleRatio, scaleRatio]
+                    end if
+                end if
+            end if
+        else
+            m.layoutTopY = 0 - overhangHeight
+            if m.keyboard <> invalid
+                ' scale keyboard up to normal size
+                m.keyboard.scale = [1.0, 1.0]
+            end if
+            if m.layoutKeyboard <> invalid
+                ' restore original alignment
+                m.layoutKeyboard.horizAlignment = "center"
+            end if
+        end if
+    end if
 end sub
 

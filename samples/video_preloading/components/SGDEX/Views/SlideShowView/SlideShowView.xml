@@ -28,7 +28,9 @@
 
 -->
 <component name="SlideShowView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
-
+    <customization suspend="customSuspend" />
+    <customization resume="customResume" />
+    
     <interface>
         <!-- @Public -->
         <!-- Tells SlideShowView how your content is structured
@@ -66,6 +68,10 @@
         <!-- @Public -->
         <!-- Controls whether SlideshowVIew loops through content repeatedly. -->
         <field id="loop" type="bool" value="true" alwaysNotify="true" />
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- If set to true and loop is false, the SlideShowView will close after last slide is shown. -->
+        <field id="closeAfterLastSlide" type="bool" value="false" />
         <!-- @Public -->
         <!-- Field for setting control. Possible values: play, pause.-->
         <field id="control" type="string" value="none" alwaysNotify="true" />

@@ -12,10 +12,12 @@ sub init()
     m.footprintStyle = m.buttonBar.footprintStyle
     m.buttonBar.ObserveFieldScoped("theme", "SaveColors")
     SaveColors()
+    m.buttonBar.ObserveFieldScoped("footprintStyle", "OnFootprintStyleChange")
     m.buttonBar.ObserveFieldScoped("enableFootprint", "OnEnableFootprintChange")
 
     m.top.ObserveFieldScoped("focusPercent", "HandleFocus")
     m.top.ObserveFieldScoped("itemHasFocus", "HandleFocus")
+    m.top.ObserveFieldScoped("rowFocusPercent", "HandleFocus")
     m.top.ObserveFieldScoped("rowListHasFocus", "HandleFocus")
 
     m.isItemSelected = false ' catch press interaction
@@ -26,6 +28,7 @@ end sub
 sub OnContentSet()
     content = m.top.itemContent
     if content <> invalid
+        m.isItemSelected = false
         m.poster.uri = content.hdPosterUrl
         m.label.text = content.title
         alignPosterLabelSizes(m.poster.uri, m.label.text)
@@ -143,13 +146,20 @@ sub OnEnableFootprintChange(event as Object)
     HandleFocus()
 end sub
 
-sub HandleFocus()
-    focusPercent = m.top.focusPercent
+sub OnFootprintStyleChange(event as Object)
+    m.footprintStyle = event.GetData()
+    HandleFocus()
+end sub
 
+sub HandleFocus()
     rowListHasFocus = m.top.rowListHasFocus
-    itemHasFocus = m.top.itemHasFocus
-    itemFocused = focusPercent > 0.9
+    focusPercent = m.top.focusPercent
+    if m.buttonBar.alignment = "left"
+        focusPercent = m.top.rowFocusPercent
+    end if
     if rowListHasFocus ' when navigating withing button bar
+        itemFocused = focusPercent > 0.7
+
         if itemFocused
             FocusButton(focusPercent)
         else
@@ -186,6 +196,7 @@ end sub
 
 sub UnfocusButton(focusPercent as Float)
     m.roundedRectangle.focusPercent = focusPercent
+    m.roundedRectangle.backgroundFocusedColor = m.buttonColor
     m.roundedRectangle.backgroundColor = m.buttonColor
     m.label.color = m.buttonTextColor
 end sub

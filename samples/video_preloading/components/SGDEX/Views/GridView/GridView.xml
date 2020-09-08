@@ -175,6 +175,10 @@
             @PossibleValue itemTextColorLine2 - set color for second row in short description
             @PossibleValue itemTextBackgroundColor - set a background color for the short description
 
+            @PossibleValue itemBackgroundColor - set color for background rectangle under the poster
+            @PossibleValue shortDescriptionLine1Align - set horizontal alignment for short description line 1
+            @PossibleValue shortDescriptionLine2Align - set horizontal alignment for short description line 2
+
             @PossibleValue titleColor - sets color of title
             @PossibleValue descriptionColor - sets color of description text
             @PossibleValue descriptionmaxWidth - sets max width for description

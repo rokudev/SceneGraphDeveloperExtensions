@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2020 Roku, Inc. All rights reserved. -->
+
+<component name="NarrowCategoryListItemComponent" extends="Group" >
+    <interface>
+        <field id="width" type="float" onChange="updateLayout" />
+        <field id="height" type="float" onChange="updateLayout" />
+        <field id="focusPercent" type="float" alias="focus.opacity" onChange="onItemFocusChanged" />
+        <field id="listHasFocus" type="float" onChange="onItemFocusChanged" />
+        <field id="itemContent" type="node" onChange="itemContentChanged" />
+    </interface>
+
+    <script type="text/brightscript" uri="NarrowCategoryListItemComponent.brs" />
+    <script type="text/brightscript" uri="../../../utils/utils.brs"/>
+
+    <children>
+        <Poster
+            id="focus"
+            uri="pkg:/components/SGDEX/Images/list_focus.9.png"
+        />
+
+        <LayoutGroup id="layout" layoutDirection="horiz" vertAlignment="center">
+            <StyledPoster
+                id="poster"
+                maxWidth="0"
+            />
+            <ScrollingLabel
+                id="title"
+                font="font:SmallBoldSystemFont"
+            />
+            <Label
+                id="sizeLabel"
+                font="font:SmallSystemFont"
+                horizAlign="right"
+            />
+        </LayoutGroup>
+    </children>
+</component>

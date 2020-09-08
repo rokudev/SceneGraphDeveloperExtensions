@@ -17,6 +17,9 @@
         - Themes support
 -->
 <component name="MediaView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <customization suspend="customSuspend" />
+    <customization resume="customResume" />
+    
     <interface>
         <!-- @Public -->
         <!-- Defines view mode to properly display media content on the view  -->
@@ -80,6 +83,11 @@
         <field id="duration" type="int" value="0" />
 
         <!-- @Public -->
+        <!-- @WriteOnly Sets the current position in the video. -->
+        <!-- The value is the number seconds from the beginning of the stream  -->
+        <field id="seek" type="int" value="-1" alwaysNotify="true" />
+
+        <!-- @Public -->
         <!-- @ReadOnly Content node of item that is currently played. -->
         <!-- If change this field manually, unexpected behaviour can occur.  -->
         <field id="currentItem" type="node" alwaysNotify="true" />
@@ -87,6 +95,22 @@
         <!-- @Public -->
         <!-- Content node of endcard item what was selected  -->
         <field id="endcardItemSelected" type="node" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Repeat only one track -->
+        <!-- Working only for audio mode -->
+        <field id="repeatOne" type="bool" value="false" />
+
+        <!-- @Public -->
+        <!-- Repeat all content in playlist  -->
+        <!-- Working only in playlist mode -->
+        <field id="repeatAll" type="bool" value="false" />
+
+        <!-- @Public -->
+        <!-- If set to true shuffling ready content -->
+        <!-- Else content has been shuffled ,unshuffle content to previous state -->
+        <!-- Working only in playlist mode -->
+        <field id="shuffle" type="bool" value="false" alwaysNotify="true" />
 
         <!--
           @Public

@@ -73,7 +73,7 @@ sub Init()
     ' if overhang height was not set through theme then
     ' change default overhang height to content area safe zone
     if m.isButtonBarVisible and overhangHeightTheme = invalid
-       m.top.overhang.height = m.contentAreaSafeZoneYPosition
+        m.top.overhang.height = m.contentAreaSafeZoneYPosition
     end if
 end sub
 
@@ -106,10 +106,10 @@ sub OnContentSet()
                                 m.config = gthis.top.content.HandlerConfigDetails
                                 gthis.top.content.HandlerConfigDetails = invalid
                             end if
-                            GetContentData(m, m.config, gthis.top.content)
+                            m.contentHandler = GetContentData(m, m.config, gthis.top.content)
                         end sub
                     }
-                    GetContentData(callback, handlerConfig, m.top.content)
+                    m.contentHandler = GetContentData(callback, handlerConfig, m.top.content)
                 else
                     m.top.jumpToItem = m.top.currentIndex
                 end if
@@ -133,20 +133,19 @@ sub OnWasShown()
         end if
         m.top.jumpToItem = m.top.currentIndex
 
-        if m.isButtonBarVisible
-            ' hide button bar because
-            ' it will be shown only on key press to it when renderOverContent and autoHide
-            ' or button bar will shown only in the trickplay when renderOverContent = false
-            if (m.renderOverContent and m.isAutoHideMode) or (not m.renderOverContent)
-                m.buttonBar.visible = false
-            end if
+        if m.isButtonBarVisible and m.renderOverContent
+            m.buttonBar.visible = true
+        else
+            m.buttonBar.visible = false
         end if
     end if
 end sub
 
 sub OnImageLoadStatusChanged(event as Object)
     status = event.GetData()
-    if status = "ready"
+    if status = "loading"
+        RunShadeAnimation(true)
+    else if status = "ready"
         SetSizeForImage()
         m.hudTitle.text = m.hudTitleText
         m.hudText.text = m.hudDescriptionText
@@ -168,7 +167,9 @@ sub OnControlChanged(event as Object)
             m.fadeIconPlayInterpolator.keyValue = [m.iconPlay.opacity, 1.0]
             m.fadeIconAnimation.control = "start"
             m.iconTimer.control = "start"
-            m.slideTimer.control = "start"
+            if IsContentLoaded()
+                m.slideTimer.control = "start"
+            end if
         else if control = "pause"
             m.fadeIconPlayInterpolator.keyValue = [m.iconPlay.opacity, 0.0]
             m.fadeIconPauseInterpolator.keyValue = [m.iconPause.opacity, 1.0]
@@ -184,7 +185,7 @@ sub OnJumpToItemChanged(event as Object)
     if content <> invalid and m.top.isContentList
         jump = event.GetData()
         isJumpValid = jump >= 0 and content.GetChildCount() > jump
-        if isJumpValid
+        if isJumpValid or not IsContentLoaded()
             m.top.currentIndex = jump
         else if m.top.loop
             if jump < 0
@@ -192,6 +193,8 @@ sub OnJumpToItemChanged(event as Object)
             else
                 m.top.currentIndex = 0
             end if
+        else if m.top.closeAfterLastSlide
+            m.top.close = true
         end if
     end if
     UpdateContentToDisplay()
@@ -199,6 +202,12 @@ end sub
 
 sub OnSlideTimerFireChanged(event as Object)
     index = m.top.currentIndex
+    isLastItem = (m.top.content.GetChildCount() - 1 = index)
+    needToClose = m.top.closeAfterLastSlide and (m.top.loop = false) and isLastItem
+    if needToClose
+        m.top.close = true
+        return
+    end if
     if m.top.isContentList
         m.top.jumpToItem = index + 1
     end if
@@ -208,7 +217,10 @@ sub OnHudTimerFireChanged(event as Object)
     m.hudTimer.control = "stop"
     m.fadeInterpolator.keyValue = [m.hud.opacity, 0.0]
     m.fadeAnimation.control = "start"
-    HandleTrickPlayMode("stop")
+
+    if not m.renderOverContent and m.top.control = "play" and not m.buttonBar.IsInFocusChain()
+        m.buttonBar.visible = false
+    end if
 end sub
 
 sub OnIconTimerFireChanged()
@@ -265,28 +277,19 @@ sub UpdateContentToDisplay()
 end sub
 
 sub RunShadeAnimation(control as Boolean)
-    if m.backgroundImg <> invalid
-        m.backgroundImg.uri = m.mainImage.uri
-        m.backgroundImg.visible = true
-    end if
-
     if control = true
-        if m.shadeRectangle.opacity < 0.5
-            m.shadeAnimationInterp.keyValue = [m.shadeRectangle.opacity, 0.5]
-            m.shadeAnimation.control = "start"
-        end if
+        m.shadeAnimationInterp.keyValue = [m.shadeRectangle.opacity, 0.5]
+        m.shadeAnimation.control = "start"
     else
-        if m.shadeRectangle.opacity > 0
-            m.shadeAnimationInterp.keyValue = [m.shadeRectangle.opacity, 0.0]
-            m.shadeAnimation.control = "start"
-        end if
+        m.shadeAnimationInterp.keyValue = [m.shadeRectangle.opacity, 0.0]
+        m.shadeAnimation.control = "start"
     end if
 end sub
 
 sub RunTimer()
+    if m.top.control = "play" then m.slideTimer.control = "start"
     hasNext = m.top.content.GetChildCount() - 1 > m.top.currentIndex
     if hasNext or m.top.loop
-        if m.top.control = "play" then m.slideTimer.control = "start"
         if m.top.textOverlayVisible and m.hudTimer.duration > 0
             m.hudTimer.control = "start"
             if m.hud.opacity < 1 ' if the HUD isn't visible, show it
@@ -383,10 +386,10 @@ sub LoadMoreContent(content as Object, handlerConfig as Object)
 
             onError: function(data)
                 gthis = GetGlobalAA()
-                GetContentData(m, m.config, m.content)
+                m.contentHandler = GetContentData(m, m.config, m.content)
             end function
         }
-        GetContentData(callback, handlerConfig, content)
+        m.contentHandler = GetContentData(callback, handlerConfig, content)
     end if
 end sub
 
@@ -430,6 +433,8 @@ sub SetPreloadImage(contentNode as Object)
             m.backgroundImg.loadWidth=1280
             m.backgroundImg.loadHeight=720
             m.backgroundImg.uri = contentNode.hdPosterUrl
+        else
+            m.backgroundImg.uri = contentNode.hdPosterUrl
         end if
     end if
 end sub
@@ -444,12 +449,10 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
                     m.hudTimer.control = "stop"
                     m.fadeInterpolator.keyValue = [m.hud.opacity, 0.0]
                     m.fadeAnimation.control = "start"
-                    HandleTrickPlayMode("stop")
                 else
                     m.hudTimer.control = "start"
                     m.fadeInterpolator.keyValue = [m.hud.opacity, 1.0]
                     m.fadeAnimation.control = "start"
-                    HandleTrickPlayMode("play")
                 end if
             end if
             handled = true
@@ -457,7 +460,7 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
             ' this field is to check for case when BB is hidden but should be
             ' displayed if it is focused
             isButtonBarAvailable = m.renderOverContent and m.isAutoHideMode
-            if m.isButtonBarVisible and isButtonBarAvailable
+            if m.isButtonBarVisible and isButtonBarAvailable and m.buttonBar.alignment = "top"
                 m.buttonBar.visible = true
             end if
         else if key = "back"
@@ -471,14 +474,12 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
             index = m.top.currentIndex + 1
             if m.top.currentIndex <> index and m.top.isContentList
                 m.top.jumpToItem = index
-                HandleTrickPlayMode("play")
             end if
             handled = true
         else if key = "left"
             index = m.top.currentIndex - 1
             if m.top.currentIndex <> index and m.top.isContentList
                 m.top.jumpToItem = index
-                HandleTrickPlayMode("play")
             end if
             handled = true
         else if key = "play"
@@ -494,9 +495,9 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
             ' if top control paused then we in trick play mode
             ' otherwise we are not
             if m.top.control = "pause"
-                HandleTrickPlayMode("play")
-            else if m.top.control = "play"
                 HandleTrickPlayMode("stop")
+            else if m.top.control = "play"
+                HandleTrickPlayMode("play")
             end if
             handled = true
         end if
@@ -508,36 +509,33 @@ end function
 ' It shows and hides when needed and when BB is in not in renderOverContent mode.
 ' Also we track if BB is focused to keep it on the screen while we still have BB interactions.
 sub HandleTrickPlayMode(control as String)
-    isTrickPlayMode = (control = "play")
-    isFocused = m.buttonBar.IsInFocusChain()
-    if not m.renderOverContent and m.isButtonBarVisible and not isFocused
-        if isTrickPlayMode
+    if not m.renderOverContent and m.isButtonBarVisible
+        if control = "stop"
             m.buttonBar.visible = true
-        else
+        else if m.hud.opacity = 0.0
             m.buttonBar.visible = false
         end if
     end if
 end sub
 
-sub OnFocusedChildChange()
-    ' this field is to check for case when BB is hidden but should be
-    ' displayed if it is focused
-    isButtonBarAvailable = m.renderOverContent and m.isAutoHideMode
-    ' checks if BB is always shown over the content
-    isButtonBarPersistent = m.renderOverContent and not m.isAutoHideMode
+' Return false if content handler is running
+' Return true otherwise
+function IsContentLoaded()
+    isLoaded = true
+    if m.contentHandler <> invalid and m.contentHandler.state = "run"
+        ' if content handler is running the content is not loaded yet
+        isLoaded = false
+    end if
+    return isLoaded
+end function
 
-    if m.top.wasShown and isButtonBarAvailable
-        if m.top.IsInFocusChain()
+sub OnFocusedChildChange()
+    if m.top.wasShown and m.isButtonBarVisible
+        if not m.renderOverContent and m.top.isInFocusChain() and m.top.control = "play"
             ' to hide auto hide hint from the screen
             m.buttonBar.visible = false
         else
             m.buttonBar.visible = true
-        end if
-    else if not m.renderOverContent
-        if m.top.IsInFocusChain() and m.hud.opacity = 0
-            ' when BB lose its focus and it shouldn't be
-            ' rendered over the content then hide it
-            m.buttonBar.visible = false
         end if
     end if
 end sub
@@ -590,3 +588,14 @@ end sub
 function SGDEX_GetViewType() as String
     return "slideShowView"
 end function
+
+sub customSuspend()
+    print "Suspend"
+    'On Suspend close the slideshow view
+    'to go back to the previous screen
+    m.top.close = true
+end sub
+
+sub customResume()
+    print "Resume"
+end sub

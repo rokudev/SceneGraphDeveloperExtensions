@@ -6,6 +6,7 @@ sub Init()
     m.line1 = m.top.findNode("line1")
     m.line2 = m.top.findNode("line2")
     
+    m.posterRect = m.top.findNode("posterRect")
     m.poster = m.top.findNode("poster")
     m.durationBar = m.top.findNode("durationBar")
     m.durationBar.height = 6
@@ -49,6 +50,15 @@ sub updateLabelsLayout()
             end if
             if parent.itemTextColorLine2 <> invalid
                 m.line2.color = parent.itemTextColorLine2
+            end if
+            if parent.itemBackgroundColor <> invalid and parent.itemBackgroundColor <> ""
+                m.posterRect.color = parent.itemBackgroundColor
+            end if
+            if parent.shortDescriptionLine1Align <> invalid and parent.shortDescriptionLine1Align <> ""
+                m.line1.horizAlign = parent.shortDescriptionLine1Align
+            end if
+            if parent.shortDescriptionLine2Align <> invalid and parent.shortDescriptionLine2Align <> ""
+                m.line2.horizAlign = parent.shortDescriptionLine2Align
             end if
 
             itemTextBgColor = parent.itemTextBackgroundColor

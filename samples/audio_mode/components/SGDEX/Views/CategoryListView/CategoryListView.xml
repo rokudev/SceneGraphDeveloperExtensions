@@ -138,6 +138,14 @@
         <field id="focusedCategory" type="int" alwaysNotify="true" />
 
         <!-- @Public -->
+        <!--
+             This value defines page size for scrolling with ff/rw buttons.
+             If value is 0 (default), FF/RW buttons will switch to next/prev section.
+             If value is > 0, FF/RW buttons will scroll ffrwPageSize items down/up through sections borders.
+         -->
+        <field id="ffrwPageSize" type="int" value="0" />
+
+        <!-- @Public -->
         <!-- @WriteOnly  -->
         <!--
           Jumps to item in items list (within all categories).

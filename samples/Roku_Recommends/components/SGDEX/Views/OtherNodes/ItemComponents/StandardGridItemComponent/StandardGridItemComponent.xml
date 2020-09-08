@@ -13,9 +13,8 @@
 
     <children>
         <Rectangle 
-            id="posterRect" 
-            opacity="0.4" 
-            color="#000000"
+            id="posterRect"
+            color="#00000066"
         />
         <Poster
             id="poster"

@@ -2,7 +2,7 @@
 <!-- Copyright (c) 2018 Roku, Inc. All rights reserved. -->
 
 <!-- @Public
-    developer should extend BaseScene and work in it's context.
+    Developer should extend BaseScene and work in it's context.
     Function show(args) should be overrided in channel.
 
     @Sample:
@@ -28,12 +28,12 @@
     <interface>
         <!-- @Public -->
         <!-- @ReadOnly -->
-        <!-- reference to ComponentController node that is created and used inside library -->
+        <!-- Reference to ComponentController node that is created and used inside library -->
         <field id="ComponentController" type="node" />
 
         <!-- @Public -->
         <!-- @ReadOnly -->
-        <!-- reference to ButtonBar node that is created and used inside the library -->
+        <!-- Reference to ButtonBar node that is created and used inside the library -->
         <field id="buttonBar" type="node" />
 
         <!-- @Public -->
@@ -50,12 +50,7 @@
         <!-- @Public -->
         <!-- Theme is used to customize the appearance of all SGDEX views.
         For common fields see [SGDEXComponent](#sgdexcomponent)
-        For view specific views see view documentation
-
-        [GridView](#gridview)
-        [DetailsView](#detailsview)
-        [VideoView](#videoview)
-        [CategoryListView](#categorylistview)
+        For view specific theming, see each view's documentation
 
         <b>Theme can be set to several levels</b>
         <b>Any view:</b>

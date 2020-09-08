@@ -33,6 +33,7 @@ sub initGridViewNodes()
     layoutGroup.vertAlignment = "center"
 
     m.spinner = layoutGroup.CreateChild("BusySpinner")
+    m.spinner.id = "spinner"
     m.spinner.visible = false
     m.spinner.uri = "pkg:/components/SGDEX/Images/loader.png"
 end sub
@@ -107,6 +108,9 @@ sub CreateNewOrUpdateGridNode(componentName = "" as String, fields = {} as Objec
         m.gridNode = m.top.viewContentGroup.CreateChild(componentName)
         m.gridNode.AddField("itemTextColorLine1", "color", true)
         m.gridNode.AddField("itemTextColorLine2", "color", true)
+        m.gridNode.AddField("shortDescriptionLine1Align", "string", false)
+        m.gridNode.AddField("shortDescriptionLine2Align", "string", false)
+        m.gridNode.AddField("itemBackgroundColor", "string", true)
         m.gridNode.AddField("itemTextBackgroundColor", "string", true)
 
         if m.LastThemeAttributes <> invalid then
@@ -186,10 +190,23 @@ sub SetAliasData(field as String, data as Object)
 end sub
 
 function GetConfigurationForStyle(style as String) as Object
+    buttonBar = m.top.getScene().buttonBar
     ' Base row list configuration fields
     rowItemAspectRatio = GetRowsAspectRatio()
-    rowListRowHeight = GetDefaultRowHeight()
+    rowListRowsHeight = GetRowsHeight()
     xRowTranslation = 125
+    
+    'need to adjust grid translation when we have left aligned button bar
+    if buttonBar <> invalid
+        if buttonBar.visible = true and buttonBar.alignment = "left"
+            xRowTranslation = 0
+        end if
+    end if
+
+    if m.details <> invalid
+        translation = [xRowTranslation, 0]
+        m.details.translation = translation
+    end if
 
     ' adjust the position of the grid depending on whether
     ' the developer wants the metadata area displayed
@@ -203,16 +220,30 @@ function GetConfigurationForStyle(style as String) as Object
 
     rowListRowWidth = 1280 - xRowTranslation * 2
     rowListHeroRowHeight = 280
+    rowListRMPHeroRowHeight = 245
+    heroRowHeights = [rowListHeroRowHeight]
+    heroRowHeights.Append(rowListRowsHeight)
+    rmpHeroRowHeight = [rowListRMPHeroRowHeight]
+    rmpHeroRowHeight.Append(rowListRowsHeight)
+
     rowTitleHeight = 30
     defaultItemSpacing = [20, 35 + rowTitleHeight]
 
     showRowCounter = true
     showRowLabel = true
-    
+
     wrapDividerHeight = 0
 
     if m.LastThemeAttributes <> invalid and m.LastThemeAttributes["wrapdividerheight"] <> invalid
         wrapDividerHeight = m.LastThemeAttributes["wrapdividerheight"]
+    end if
+
+    're-calculation row width when we have left aligned buttonBar 
+    'for moving row counter to the right place
+    if buttonBar <> invalid 
+        if buttonBar.visible = true and buttonBar.alignment = "left" and rowListRowWidth = 1280
+            rowListRowWidth = 1280 - (buttonBar.findNode("backgroundRectangle").width + 125 + m.viewOffsetX)
+        end if
     end if
 
     ' Custom UI components
@@ -223,7 +254,7 @@ function GetConfigurationForStyle(style as String) as Object
     baseZoomRowListConfig = {
         itemComponentName: itemComponentName
         wrap: m.top.wrap
-        
+
         wrapDividerHeight : wrapDividerHeight
 
         rowWidth : rowListRowWidth
@@ -231,7 +262,7 @@ function GetConfigurationForStyle(style as String) as Object
 
         ' focusLimit is a special field to specify the height of the
         ' zoomRowList area where the focus can be
-        focusLimit : rowListRowHeight - 1
+        focusLimit : rowListRowsHeight[0] - 1
 
         spacingAfterRow: defaultItemSpacing[1]
         spacingAfterRowItem: defaultItemSpacing[0]
@@ -251,19 +282,20 @@ function GetConfigurationForStyle(style as String) as Object
         "standard": {
             node : "ZoomRowList"
             fields: {
-                rowZoomHeight: rowListRowHeight
-                rowItemZoomHeight: rowListRowHeight
-                rowHeight: rowListRowHeight
-                rowItemHeight: rowListRowHeight
+                rowZoomHeight: rowListRowsHeight
+                rowItemZoomHeight: rowListRowsHeight
+                rowHeight: rowListRowsHeight
+                rowItemHeight: rowListRowsHeight
             }
         }
         "hero": {
             node : "ZoomRowList"
             fields: {
-                rowZoomHeight: [rowListHeroRowHeight, rowListRowHeight]
-                rowItemZoomHeight: [rowListHeroRowHeight, rowListRowHeight]
-                rowHeight: rowListRowHeight
-                rowItemHeight: rowListRowHeight
+                rowZoomHeight: heroRowHeights
+                rowItemZoomHeight: heroRowHeights
+                rowHeight: rowListRowsHeight
+                rowItemHeight: rowListRowsHeight
+                spacingAfterRowItem: [10, defaultItemSpacing[0]]
             }
         }
         "zoom": {
@@ -271,8 +303,18 @@ function GetConfigurationForStyle(style as String) as Object
             fields: {
                 rowZoomHeight: [rowListHeroRowHeight]
                 rowItemZoomHeight: [rowListHeroRowHeight]
-                rowHeight: rowListRowHeight
-                rowItemHeight: rowListRowHeight
+                rowHeight: rowListRowsHeight
+                rowItemHeight: rowListRowsHeight
+            }
+        }
+        "rmp": {
+            node : "ZoomRowList"
+            fields: {
+                rowZoomHeight: rmpHeroRowHeight
+                rowItemZoomHeight: rmpHeroRowHeight
+                rowHeight: rowListRowsHeight
+                rowItemHeight: rowListRowsHeight
+                spacingAfterRowItem: [10, defaultItemSpacing[0]]
             }
         }
     }
@@ -316,14 +358,35 @@ function GetRowsAspectRatio() as Object
     return [styles[posterShape]]
 end function
 
-function GetDefaultRowHeight() as Float
-    defaultItemHeight = 100
+function GetRowsHeight() as Object
+    landscapeItemHeight = 92
+    squareItemHeight = 146
+    portraitItemHeight = 150
     topMargin = 45 ' label height + spacing
-    if m.top.posterShape = "portrait" then
-        defaultItemHeight = defaultItemHeight * 1.5
+
+    ' set specific height for each row if developer set rowPosterShapes
+    rowPosterShapes = m.top.rowPosterShapes
+    if rowPosterShapes <> invalid and rowPosterShapes.Count() > 0
+        rowHeights = []
+        for each shape in rowPosterShapes
+            if shape = "square"
+                rowHeights.Push(squareItemHeight + topMargin)
+            else if shape = "portrait"
+                rowHeights.Push(portraitItemHeight + topMargin)
+            else
+                rowHeights.Push(landscapeItemHeight + topMargin)
+            end if
+        end for
+        ' set default height for all not specified rows
+        rowHeights.Push(landscapeItemHeight + topMargin)
+        return rowHeights
     end if
 
-    return defaultItemHeight + topMargin
+    if m.top.posterShape = "portrait" then
+        return [portraitItemHeight + topMargin]
+    else
+        return [landscapeItemHeight + topMargin]
+    end if
 end function
 
 function GetRowItemSizeForPosterShape(style as String, rowHeight as Integer) as Object
@@ -359,11 +422,6 @@ sub SGDEX_SetTheme(theme as Object)
                 "rowCounterColor"
                 "itemTextColorLine1"
                 "itemTextColorLine2"
-                "wrapDividerBitmapUri"
-                "wrapDividerBitmapBlendColor"
-                "wrapDividerHeight"
-                "wrapDividerWidth"
-                "wrapDividerOffset"
             ]
             details: [
                 "titleColor"
@@ -384,6 +442,9 @@ sub SGDEX_SetTheme(theme as Object)
         itemTextColorLine1:        { gridNode: "itemTextColorLine1" }
         itemTextColorLine2:        { gridNode: "itemTextColorLine2" }
         itemTextBackgroundColor:   { gridNode: "itemTextBackgroundColor"}
+        itemBackgroundColor:       { gridNode: "itemBackgroundColor" }
+        shortDescriptionLine1Align:  { gridNode: "shortDescriptionLine1Align" }
+        shortDescriptionLine2Align:  { gridNode: "shortDescriptionLine2Align" }
 
         ' wrap divider attributes
         wrapDividerBitmapUri:           { gridNode: "wrapDividerBitmapUri"}
@@ -410,4 +471,8 @@ end function
 
 ' If need to adjust GridView according to ButtonBar
 sub SGDEX_UpdateViewUI()
+    buttonBar = m.top.getScene().buttonBar
+    if buttonBar <> invalid and m.gridNode <> invalid
+        RebuildRowList()
+    end if 
 end sub

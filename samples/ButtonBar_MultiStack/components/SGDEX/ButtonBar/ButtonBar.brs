@@ -10,6 +10,7 @@ sub init()
 
     ' autohide nodes
     m.autoHideHint = m.top.findNode("autoHideHint")
+    m.autoHideArrow = m.top.findNode("autoHideArrow")
     m.hintTitle = m.top.findNode("hintTitle")
     m.backgroundRectangle = m.top.findNode("backgroundRectangle")
 
@@ -27,10 +28,12 @@ sub init()
     m.buttonsRowList.ObserveField("rowItemSelected", "OnItemSelected")
 
     ' button bar constants
+    m.backgroundWidth = 110
     m.defaultWidth = 55
     m.buttonHeight = 55
     m.backgroundMargin = 20
     m.autoHideVertTransl = 15
+    m.defaultOverhangHeight = 115
     m.backgroundRectangle.height = m.buttonHeight + m.backgroundMargin*2
 
     ' button bar internal fields
@@ -85,16 +88,31 @@ sub SetButtonBarContent(content as Object)
     m.top.GetScene().ObserveField("updateTheme", "OnGlobalUpdateThemeChange")
     OnGlobalThemeChange()
     ' adjust content to show appropriate button sizes based on passed content
-    newContent = AdjustButtonBar(content)
+    newContent = AdjustButtonBarContent(content)
     if newContent <> invalid
+        AlignButtonBar()
         buttonsCount = newContent.GetChildCount()
-        m.buttonsRowList.numColumns = buttonsCount
+        if m.top.alignment = "top"
+            m.buttonsRowList.numRows = 1
+            m.buttonsRowList.numColumns = buttonsCount
+        else if m.top.alignment = "left"
+            ' Calculating visible buttons on buttonBar to switch animation
+            ' The vertical BB uses floating focus when there are not enough buttons to wrap  
+            ' and uses fixed focus once the set of buttons gets big enough to wrap.
+            safeZone = (720 - m.defaultOverhangHeight - 72)
+            numRows = Cint(safeZone / m.buttonHeight)
+            if buttonsCount >= numRows
+                m.buttonsRowList.vertFocusAnimationStyle="fixedFocusWrap"
+            else
+                m.buttonsRowList.vertFocusAnimationStyle="floatingFocus"
+            end if
+            m.buttonsRowList.numRows = numRows
+            m.buttonsRowList.numColumns = 1
+        end if
         ' retrieve autohide title hint
         m.hintTitle.text = newContent.title
         ' content model should be aligned with RowList's one
-        rowContent = CreateObject("roSGNode", "ContentNode")
-        rowContent.AppendChild(newContent)
-        m.buttonsRowList.content = rowContent
+        m.buttonsRowList.content = newContent
 
         if m.top.jumpToItem > 0 then OnJumpToItem() ' to be able set jumpToItem before setting content
     end if
@@ -103,7 +121,11 @@ end sub
 ' Retrieve index from the RowList's 2-element array
 sub OnItemFocused(event as Object)
     rowItemFocused = event.GetData()
-    m.top.itemFocused = rowItemFocused[1]
+    if m.top.alignment = "top"
+        m.top.itemFocused = rowItemFocused[1]
+    else if m.top.alignment = "left"
+        m.top.itemFocused = rowItemFocused[0]
+    end if
 
     isSelectionFootprint = m.top.enableFootprint = true and m.top.footprintStyle = "selection"
     isFirstFocus = m.lastPressedButton = invalid and m.top.itemFocused >= 0
@@ -119,7 +141,11 @@ end sub
 ' Retrieve index from the RowList's 2-element array
 sub OnItemSelected(event as Object)
     rowItemSelected = event.GetData()
-    itemSelected = rowItemSelected[1]
+    if m.top.alignment = "top"
+        itemSelected = rowItemSelected[1]
+    else if m.top.alignment = "left"
+        itemSelected = rowItemSelected[0]
+    end if
     isSelectionFootprint = m.top.enableFootprint = true and m.top.footprintStyle = "selection"
     if isSelectionFootprint then HandleFootprintSelection(itemSelected)
     m.top.itemSelected = itemSelected
@@ -129,39 +155,60 @@ end sub
 ' adding itemSelected field to RowList content node.
 ' It gives us opportunity to notify ButtonBarItemComponent about selection.
 sub HandleFootprintSelection(itemSelected as Integer)
-    rowListContent = m.buttonsRowList.content
-    if rowListContent <> invalid
-        ' to remove footprint from prev button when new one is selected
-        if m.lastPressedButton <> invalid and m.lastPressedButton <> itemSelected
-            lastPressedContentNode = rowListContent.GetChild(0).GetChild(m.lastPressedButton)
+    ' to remove footprint from prev button when new one is selected
+    if m.lastPressedButton <> invalid and m.lastPressedButton <> itemSelected
+        lastPressedContentNode = GetButtonByIndex(m.lastPressedButton)
+        if lastPressedContentNode <> invalid
             lastPressedContentNode.Update({
                 itemSelected: false
             }, true)
         end if
+    end if
 
-        contentNode = rowListContent.GetChild(0).GetChild(itemSelected)
-        if contentNode <> invalid
-            contentNode.Update({
-                itemSelected: true
-            }, true)
-            m.lastPressedButton = itemSelected
-        end if
+    contentNode = GetButtonByIndex(itemSelected)
+    if contentNode <> invalid
+        contentNode.Update({
+            itemSelected: true
+        }, true)
+        m.lastPressedButton = itemSelected
     end if
 end sub
 
+' helper function to get content node specified by the index in the list
+' will return correct item based on alignment
+function GetButtonByIndex(index as Integer) as Object
+    item = invalid
+    rowListContent = m.buttonsRowList.content
+    if rowListContent <> invalid
+        if m.top.alignment = "top"
+            item = rowListContent.GetChild(0).GetChild(index)
+        else if m.top.alignment = "left"
+            item = rowListContent.GetChild(index).GetChild(0)
+        end if
+    end if
+    return item
+end function
+
 sub OnJumpToItem()
     itemIndex = m.top.jumpToItem
-    m.buttonsRowList.jumpToRowItem = [0, itemIndex]
+    m.lastPressedButton = invalid
+    if m.top.alignment = "top"
+        m.buttonsRowList.jumpToRowItem = [0, itemIndex]
+    else if m.top.alignment = "left"
+        m.buttonsRowList.jumpToRowItem = [itemIndex, 0]
+    end if
 end sub
 
 ' define button bar size based on content
-function AdjustButtonBar(content as Object)
+function AdjustButtonBarContent(content as Object)
     ' wait until task will be finished
     if m.fontResolver.oneCharWidth = 0 then return invalid
 
+    maxButtonWidth = 0
     m.buttonBarWidth = 0
-    newContent = content.clone(true)
-    for each buttonContent in newContent.GetChildren(-1, 0)
+    m.buttonBarHeight = 0
+    contentCopy = content.clone(true)
+    for each buttonContent in contentCopy.GetChildren(-1, 0)
         isPoster = isnonemptystr(buttonContent.hdPosterUrl)
         isTitle = isnonemptystr(buttonContent.title)
 
@@ -176,7 +223,7 @@ function AdjustButtonBar(content as Object)
                 }, true)
             end if
         else if not isPoster and not isTitle ' empty button
-            newContent.removeChild(buttonContent)
+            contentCopy.removeChild(buttonContent)
             buttonContent.Update({
                 HDItemWidth: 0
             }, true)
@@ -194,12 +241,26 @@ function AdjustButtonBar(content as Object)
             }, true)
         end if
 
+        if buttonContent.HDItemWidth > maxButtonWidth then maxButtonWidth = buttonContent.HDItemWidth
         m.buttonBarWidth += buttonContent.HDItemWidth
+        m.buttonBarHeight += m.buttonHeight
     end for
 
-    ' set button bar width with item spacings
-    m.buttonBarWidth += (content.GetChildCount() * m.buttonsRowList.rowItemSpacing[0][0]) + 1
-    AlignButtonBar(m.buttonBarWidth, m.buttonHeight)
+    ' copy metadata to root content node
+    newContent = contentCopy.clone(false)
+    if m.top.alignment = "top"
+        ' set button bar width with item spacings
+        m.buttonBarWidth += (content.GetChildCount() * m.buttonsRowList.rowItemSpacing[0][0]) + 1
+        ' adjust content tree to set to RowList
+        rowContent = newContent.CreateChild("ContentNode")
+        rowContent.AppendChildren(contentCopy.GetChildren(-1, 0))
+    else if m.top.alignment = "left"
+        m.buttonBarWidth = maxButtonWidth
+        for each buttonContent in contentCopy.GetChildren(-1, 0)
+            rowContent = newContent.CreateChild("ContentNode")
+            rowContent.AppendChild(buttonContent)
+        end for
+    end if
 
     return newContent
 end function
@@ -211,48 +272,113 @@ sub OnOneCharWidthSet(event as Object)
     end if
 end sub
 
-sub AlignButtonBar(width as Float, height as Float)
-    ' adjust animation to the type of buttonBar (few items or more items)
-    popUpInterpolator = m.top.findNode("popUpInterpolator")
-    fadeOutInterpolator = m.top.findNode("fadeOutInterpolator")
+sub AlignButtonBar()
+    buttonBarX = 107
+    if m.top.alignment = "top"
+        ' adjust animation to the type of buttonBar (few items or more items)
+        popUpInterpolator = m.top.findNode("popUpInterpolator")
+        fadeOutInterpolator = m.top.findNode("fadeOutInterpolator")
+        m.buttonBarLayout.layoutDirection="horiz"
+        m.backgroundRectangle.height = m.buttonHeight + m.backgroundMargin*2
+        m.backgroundRectangle.width = 1280
+        buttonBarY = CInt(m.buttonHeight/2 + m.backgroundMargin)
+        centerX = m.backgroundRectangle.width / 2
+        m.buttonBarLayout.vertAlignment = "center"
+        if m.buttonBarWidth > 980
+            ' handle design when buttonBar is bigger than allowed
+            m.buttonBarWidth = 980
+            m.maskGroup.maskuri = "pkg:/components/SGDEX/Images/ButtonBar/gradient_black-transparent.png"
+            m.buttonBarLayout.horizAlignment = "left"
+            m.buttonBarLayout.translation = [buttonBarX, buttonBarY]
+            m.buttonBarArrow.visible = true
+        else
+            m.maskGroup.maskuri = ""
+            m.buttonBarLayout.horizAlignment = "center"
+            arrowWidth = m.buttonBarArrow.width
+            m.buttonBarLayout.translation = [centerX + arrowWidth, buttonBarY]
+            m.buttonBarArrow.visible = false
+        end if
+        m.autoHideArrow.uri="pkg:/components/SGDEX/Images/ButtonBar/ic_arrow_up.png"
+        m.autoHideArrow.height = 12
+        m.autoHideArrow.width = 25
+        m.autoHideHint.translation = [centerX, m.autoHideVertTransl]
+        m.autoHideHint.rotation = 0
 
-    buttonBarY = CInt(m.buttonHeight/2 + m.backgroundMargin)
-    centerX = m.backgroundRectangle.width / 2
-
-    if width > 980
-        ' handle design when buttonBar is bigger than allowed
-        width = 980
-        m.maskGroup.maskuri = "pkg:/components/SGDEX/Images/ButtonBar/gradient_black-transparent.png"
+        m.clippingGroup.clippingRect = [0, 0, m.backgroundRectangle.width, m.backgroundRectangle.height]
+        popUpInterpolator.keyValue = [[0, -m.backgroundRectangle.height], [0, 0]]
+        fadeOutInterpolator.keyValue = [[0, 0], [0, -m.backgroundRectangle.height]]
+    else if m.top.alignment = "left"
+        popUpInterpolator = m.top.findNode("popUpInterpolator")
+        fadeOutInterpolator = m.top.findNode("fadeOutInterpolator")
+        m.buttonBarLayout.layoutDirection = "vert"
+        m.buttonBarLayout.vertAlignment = "top"
         m.buttonBarLayout.horizAlignment = "left"
-        m.buttonBarLayout.translation = [107, buttonBarY]
-        m.buttonBarArrow.visible = true
-    else
-        m.maskGroup.maskuri = ""
-        m.buttonBarLayout.horizAlignment = "center"
-        arrowWidth = m.buttonBarArrow.width
-        m.buttonBarLayout.translation = [centerX + arrowWidth, buttonBarY]
+        m.backgroundWidth = m.buttonBarWidth + m.backgroundMargin*2 + buttonBarX
+        if m.top.autoHide
+            m.backgroundRectangle.width = 107
+        else
+            m.backgroundRectangle.width = m.backgroundWidth
+        end if
+        m.backgroundRectangle.height = 720
         m.buttonBarArrow.visible = false
+
+        if m.buttonBarHeight > 430
+            m.maskGroup.maskuri = "pkg:/components/SGDEX/Images/ButtonBar/gradient_black-transparent-vertical.png"
+            m.maskGroup.maskOffset = [50, 0]
+            m.maskGroup.masksize=[0, 1400]
+        else
+            m.maskGroup.maskuri = ""
+        end if
+
+        m.autoHideArrow.uri="pkg:/components/SGDEX/Images/ButtonBar/ic_arrow_up.png"
+        m.autoHideArrow.height = 12
+        m.autoHideArrow.width = 25
+        ' initial position set
+        height = ((m.backgroundRectangle.height/2) - m.defaultOverhangHeight)
+        m.autoHideHint.translation = [buttonBarX/2,height]
+        ' rotate autoHideHint 90 degrees clockwise
+        m.autoHideHint.rotation = 1.570796
+
+        m.buttonBarLayout.translation = [buttonBarX, 0]
+        m.clippingGroup.clippingRect = [0, 0, m.backgroundWidth, m.backgroundRectangle.height]
+        popUpInterpolator.keyValue = [[-m.backgroundWidth, 0], [0, 0]]
+        fadeOutInterpolator.keyValue = [[0, 0], [-m.backgroundWidth, 0]]
     end if
 
-    m.autoHideHint.translation = [centerX, m.autoHideVertTransl]
+    m.buttonsRowList.itemSize = [m.buttonBarWidth, m.buttonHeight]
+    m.buttonsRowList.rowItemSize = [m.buttonBarWidth, m.buttonHeight]
 
-    m.clippingGroup.clippingRect = [0, 0, m.backgroundRectangle.width, m.backgroundRectangle.height]
-    popUpInterpolator.keyValue = [[0, -m.backgroundRectangle.height], [0, 0]]
-    fadeOutInterpolator.keyValue = [[0, 0], [0, -m.backgroundRectangle.height]]
-
-    m.buttonsRowList.itemSize = [width, height]
-    m.buttonsRowList.rowItemSize = [m.defaultWidth, height]
+    'need to forced SGDEX_OnButtonBarVisibleChange() function for update current view with current alignment
+    visible = m.top.visible
+    m.top.visible = false
+    m.top.visible = visible
 end sub
 
 sub OnAutoHideChange(event as Object)
     autoHide = event.GetData()
+    buttonBarPopUp = m.top.findNode("buttonBarPopUp")
+    buttonBarFadeOut = m.top.findNode("buttonBarFadeOut")
+    if m.top.content <> invalid and m.top.content.GetChildCount() > 0
+        AlignButtonBar()
+    end if
     if autoHide
         m.top.visible = true
         m.autoHideHint.visible = true
         m.backgroundRectangle.visible = false
+        buttonBarFadeOut.control = "start"
+        buttonBarPopUp.control = "stop"
     else
         m.autoHideHint.visible = false
         m.backgroundRectangle.visible = true
+        buttonBarFadeOut.control = "stop"
+        buttonBarPopUp.control = "start"
+    end if
+end sub
+
+sub OnAlignmentChanged(event as Object)
+    if m.top.content <> invalid
+        SetButtonBarContent(m.top.content)
+        OnFocusChange()
     end if
 end sub
 
@@ -264,20 +390,40 @@ sub OnFocusChange()
 
     if m.buttonsRowList <> invalid
         if m.top.footprintStyle = "selection" and m.lastPressedButton <> invalid
-            m.top.jumpToItem = m.lastPressedButton
+            if m.top.alignment = "top"
+                m.top.jumpToItem = m.lastPressedButton
+            else if m.top.alignment = "left" and not m.top.isInFocusChain()
+                m.top.jumpToItem = m.lastPressedButton
+            end if
         end if
 
-        if m.top.isInFocusChain()
+        if m.top.isInFocusChain() and m.top.hasFocus()
             m.buttonsRowList.SetFocus(true)
             if m.top.autoHide
                 translation = m.backgroundRectangle.translation
-                translation[1] = -m.backgroundRectangle.height
+                if m.top.alignment = "top"
+                    translation[1] = -m.backgroundRectangle.height
+                else if m.top.alignment = "left"
+                    if m.backgroundRectangle.width <> m.backgroundWidth
+                        m.backgroundRectangle.width = m.backgroundWidth
+                        visible = m.top.visible
+                        m.top.visible = false
+                        m.top.visible = visible
+                    end if
+                    translation[0] = -m.backgroundRectangle.width
+                end if
                 m.backgroundRectangle.translation = translation
                 m.backgroundRectangle.visible = true
                 buttonBarFadeOut.control = "stop"
                 buttonBarPopUp.control = "start"
             end if
         else if not m.top.isInFocusChain() and m.top.autoHide
+            if m.top.alignment = "left" and m.backgroundRectangle.width = m.backgroundWidth
+                m.backgroundRectangle.width = 107
+                visible = m.top.visible
+                m.top.visible = false
+                m.top.visible = visible
+            end if
             buttonBarPopUp.control = "stop"
             buttonBarFadeOut.control = "start"
         end if

@@ -7,6 +7,7 @@
         <field id="width" type="float" onChange="OnWidthChange" />
         <field id="height" type="float" onChange="OnHeightChange" />
         <field id="focusPercent" type="float" />
+        <field id="rowFocusPercent" type="float" />
         <field id="rowListHasFocus" type="bool" />
         <field id="itemHasFocus" type="bool" />
     </interface>

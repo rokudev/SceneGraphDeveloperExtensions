@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--********** Copyright 2020 Roku Corp.  All Rights Reserved. **********-->
+
+<!-- 
+    Extend basic RSG component (Group, etc.) 
+-->
+<component name="MyTimeGrid" extends="Group">
+    <!-- 
+        Required interfaces:
+        1. "contentManagerType" provides type of the content manager to be used 
+            for this custom view (suffix of the handlerConfig*)
+        2. "content" is handled by content manager behind the scenes
+        3. "wasShown" should just exist
+        4. "wasClosed" should just exist
+    -->
+    <interface>
+        <field id="contentManagerType" type="string" value="timegrid" />
+        <field id="content" type="node" />
+        <field id="wasShown" type="node" alwaysNotify="true" />
+        <field id="wasClosed" type="boolean" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="MyTimeGrid.brs" />
+    <!-- 
+        Custom time grid view should contain RSG time grid component 
+        as its child that will hold the actual content of the custom view
+    -->
+    <children>
+        <!-- 
+            UI specification of custom view 
+        -->
+        <Poster
+            uri="pkg:/images/background.jpg">
+            <LayoutGroup
+                translation="[128, 72]"
+                itemSpacings="[50]"
+                layoutDirection="horiz">
+                <Poster
+                    id="poster"
+                    height="128"
+                    width="128"
+                    uri="pkg:/images/placeholder.png"
+                />
+                <LayoutGroup>
+                    <Label
+                        id="title"
+                        font="font:LargeBoldSystemFont" 
+                        height="50"
+                        width="800"
+                        maxLines="1"
+                    />
+                    <Label
+                        id="description"
+                        width="800"
+                        wrap="true"
+                        maxLines="7"
+                    />
+                </LayoutGroup>
+            </LayoutGroup>
+            <!-- 
+                Id of time grid component should be "contentTimeGrid" 
+                
+                Program grid settings:
+                    - programTitleFocusedColor
+                    - programTitleColor             
+            -->
+            <TimeGrid id="contentTimeGrid" 
+                translation="[0, 407]"
+                
+                programTitleFocusedColor="#5A189A"
+                programTitleColor="#5A189A"
+            />
+        </Poster>
+    </children>
+</component>

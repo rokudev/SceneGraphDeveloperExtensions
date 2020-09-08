@@ -74,6 +74,8 @@ end sub
 
 sub StopLoadingContent()
     m.CanLoadContent = false
+    ' stop the task (if any) when the view is closed
+    if m.task <> invalid then m.task.control = "stop"
     m.content = invalid
 end sub
 

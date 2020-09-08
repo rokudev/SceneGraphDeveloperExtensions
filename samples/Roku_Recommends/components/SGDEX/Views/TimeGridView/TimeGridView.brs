@@ -6,11 +6,7 @@ function Init()
     m.spinner.uri = "pkg:/components/SGDEX/Images/loader.png"
     ShowSpinner(true)
 
-    InitContentGetterValues()
-    m.MAX_RADIUS = 45
     m.debug = false
-    m.Handler_ConfigField = "HandlerConfigTimeGrid"
-    m.SectionKeyField = "CM_row_ID_Index"
 
     m.top.ObserveField("focusedChild", "OnFocusedChild")
     m.top.ObserveField("wasShown", "OnWasShown")
@@ -28,14 +24,7 @@ function Init()
 
     m.view.observeField("channelFocused", "channelFocused")
     m.view.observeField("programFocused", "programFocused")
-    m.view.observeField("leftEdgeTargetTime", "onLeftEdgeTimeChanged")
-    m.view.observeField("isScrolling", "onLeftEdgeTimeChanged")
     m.view.observeField("programSelected", "OnProgramSelected")
-
-    m.lazyLoadingTimer = CreateObject("roSGNode", "Timer")
-    m.lazyLoadingTimer.repeat = false
-    m.lazyLoadingTimer.duration = 3
-    m.lazyLoadingTimer.observeField("fire", "StartContentLoading")
 
     currentTime =  CreateObject("roDateTime") ' roDateTime is initialized
     ' to the current time
@@ -72,7 +61,7 @@ sub InitTimeGridViewNodes()
         maxHeight: 201
     })
 
-    m.view = m.top.findNode("timeGrid")
+    m.view = m.top.findNode("contentTimeGrid")
     m.view.Reparent(m.top.viewContentGroup, false)
 end sub
 
@@ -85,52 +74,6 @@ sub ShowSpinner(show)
     end if
 end sub
 
-Sub onLeftEdgeTimeChanged()
-    RestartLazyLoadingTimer()
-    if not m.view.isScrolling
-        StartContentLoading(true)
-    end if
-End Sub
-
-sub OnFocusedChild()
-    if m.top.isInFocusChain() and not m.view.hasFocus() then
-        m.view.setFocus(true)
-    end if
-end sub
-
-sub OnContentChange()
-    if m.top.content <> invalid
-        if not m.top.content.IsSameNode(m.view.content) and not m.top.content.IsSameNode(m.content) then
-            m.content = m.top.content
-            PopulateLoadingFlags(m.top.content)
-            if m.top.content[m.Handler_ConfigField] <> invalid and m.top.content.GetChildCount() = 0
-                config = m.top.content[m.Handler_ConfigField]
-                callback = {
-                    config: config
-                    content: m.top.content
-                    onReceive: sub(data)
-                        OnRootContentLoaded()
-                    end sub
-
-                    onError: sub(data)
-                        config = m.config
-                        gthis = GetGlobalAA()
-                        if m.content[gthis.Handler_ConfigField] <> invalid then
-                            config = m.content[gthis.Handler_ConfigField]
-                        end if
-
-                        GetContentData(m, config, m.content)
-                    end sub
-                }
-                GetContentData(callback, config, m.top.content)
-            else if m.top.content.GetChildCount() > 0
-                OnRootContentLoaded()
-            end if
-        end if
-    end if
-end sub
-
-
 ' OnProgramSelected triggered when timeGrid.programSelected updated on user
 ' selection. Updating rowItemSelected interface to have similar behavior
 ' with GridView
@@ -140,14 +83,12 @@ sub OnProgramSelected(event as Object)
 end sub
 
 function channelFocused(event as Object)
-    RestartLazyLoadingTimer()
     if m.view <> invalid
         ChannelProgramFocused(m.view.channelFocused, m.view.programFocused)
     end if
 end function
 
 function programFocused(event as Object)
-    RestartLazyLoadingTimer()
     if m.view <> invalid
         ChannelProgramFocused(m.view.channelFocused, m.view.programFocused)
     end if
@@ -166,9 +107,6 @@ sub ChannelProgramFocused(currentRowIndex as Integer, currentItemIndex as Intege
         if currentItemIndex < 0 then currentItemIndex = 0
         UpdateItemDetails(currentRowIndex, currentItemIndex)
 
-        if m.previousFocusedRow <> currentRowIndex
-            StartContentLoading(true)
-        end if
     end if
     m.previousFocusedRow = currentRowIndex
     m.previousFocusedItemIndex = currentItemIndex
@@ -249,116 +187,6 @@ function OnPosterShapeChange() as Object
     end if
 end function
 
-Sub RestartLazyLoadingTimer()
-    m.lazyLoadingTimer.control = "stop"
-    m.lazyLoadingTimer.control = "start"
-End Sub
-
-Sub StartContentLoading(populateOnlyVisibleChannels = false as Boolean, leftEdgeTargetTimePriority = true as Boolean)
-    channelIndex = m.view.channelFocused
-    programIndex = m.view.programFocused
-    content = m.view.content
-    if content = invalid then return
-    channel = content.GetChild(channelIndex)
-    if channel = invalid then return 'invalid focus event'
-    program = channel.GetChild(programIndex)
-    if program = invalid OR leftEdgeTargetTimePriority then
-        startTime = m.view.leftEdgeTargetTime
-    else
-        startTime = program.playstart
-    end if
-
-    visibleChannelsToLoad = m.view.numRows - 1
-    outOfScreenChannelsToLoad = m.view.numRows
-    outOfScreenCacheTimeToLoad = 3600 * 3
-    if populateOnlyVisibleChannels then outOfScreenChannelsToLoad = 0
-    startChannelIndex = channelIndex - outOfScreenChannelsToLoad
-    totalChannelsToLoad = visibleChannelsToLoad + outOfScreenChannelsToLoad*2
-    channelIndexIterator = NewCycleNodeChildrenIterator(content, startChannelIndex, totalChannelsToLoad)
-
-    if IsInsertionMode(channel[m.Handler_ConfigField]) then
-        CACHE_TIME = channel[m.Handler_ConfigField].pageSize * 3600
-        if not populateOnlyVisibleChannels then
-            startTime -= outOfScreenCacheTimeToLoad
-            if startTime < m.view.contentStartTime then
-                startTime = m.view.contentStartTime
-            end if
-            CACHE_TIME += outOfScreenCacheTimeToLoad * 2
-        else
-            startTime -= 3600
-        end if
-    else
-        CACHE_TIME = 0
-        startTime = m.view.contentStartTime
-    end if
-
-    channelsProcessed = 0
-
-    while true
-        i = channelIndexIterator.GetIndex()
-        if not isPageAlreadyInQueue(i, 0) then
-            channelNode = content.GetChild(i)
-            pageToLoad = getPageToLoadInRange(channelNode, startTime, startTime + CACHE_TIME)
-            if pageToLoad <> invalid then
-                LoadInsertionContent(pageToLoad, channelNode)
-            end if
-        end if
-        channelsProcessed++
-        if not channelIndexIterator.IsNextAvailable() then exit while
-        channelIndexIterator.Next()
-    end while
-
-    RestartLazyLoadingTimer()
-End Sub
-
-Function getPageToLoadInRange(channelNode, startTime, endTime)
-    if not IsInsertionMode(channelNode[m.Handler_ConfigField]) then
-        ' will be executed only once
-        if channelNode.getChildCount() > 0 then return invalid
-
-        ' request only start without limitation of end
-        return {
-            pageNum: startTime
-            index: 0
-            endTime: 0
-        }
-    end if
-
-    insertPosition = 0
-
-    for i = 0 to channelNode.GetChildCount() - 1
-        insertPosition = i
-        programNode = channelNode.GetChild(i)
-
-        if programNode.PlayStart >= endTime then
-            ' we should insert content before this item
-            ' fixes issue with inserting content when scrolling backward
-            ' and there is no content on very beginning of the row
-            insertPosition -= 1
-            exit for
-        end if
-
-        if programNode.PlayStart <= startTime AND (programNode.PlayStart + programNode.PlayDuration) > startTime then
-            startTime = programNode.PlayStart + programNode.playduration
-        end if
-
-        if programNode.PlayStart > startTime then
-            ' Limit end time by next program start time - 1 seconds in order to avoid duplicates'
-            endTime = programNode.PlayStart - 1
-            insertPosition -= 1
-            exit for
-        end if
-    end for
-
-    if startTime >= endTime then return invalid
-
-    return {
-        pageNum: startTime
-        index: insertPosition
-        endTime: endTime
-    }
-End Function
-
 Sub onTimeGridViewContentChange()
     ShowSpinner(m.view.content = invalid OR m.view.content.GetChildCount() = 0)
 
@@ -393,7 +221,6 @@ End Sub
 Function AlignTimeToHours(timestamp as Integer) as Integer
     return timestamp - timestamp MOD 3600
 End Function
-
 Function NewCycleNodeChildrenIterator(node, startIndex, count) as Object
     maxIndex = node.GetChildCount() - 1
 
@@ -435,3 +262,24 @@ Function NewCycleNodeChildrenIterator(node, startIndex, count) as Object
         end function
     }
 End Function
+
+sub SGDEX_UpdateViewUI()
+    buttonBar = m.top.getScene().buttonBar
+    isButtonBarVisible = buttonBar.visible
+    descriptionLabelWidth = 666
+
+    if buttonBar <> invalid
+        if buttonBar.alignment = "left"
+            offset = buttonBar.FindNode("backgroundRectangle").width
+            if isButtonBarVisible
+                ' Resize description if layout shifted
+                if descriptionLabelWidth/2 >= offset - GetViewXPadding()
+                    descriptionLabelWidth -= (offset - GetViewXPadding())
+                else
+                    descriptionLabelWidth = descriptionLabelWidth - m.details.boundingRect()["x"] - GetViewXPadding()
+                end if
+            end if
+        end if
+        if m.details <> invalid then m.details.maxWidth = descriptionLabelWidth
+    end if
+end sub
