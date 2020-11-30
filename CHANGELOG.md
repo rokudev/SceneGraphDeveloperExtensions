@@ -1,6 +1,22 @@
 # Scene Graph Developer Extensions
 
-> 08.28.20
+> 11.30.20
+
+## v.2.5
+
+### Features
+
+* EntitlementView now supports upgrade/downgrade functionality for RokuPay
+* All new audio UX in MediaView
+* Improved performance of MediaView in audio mode
+* Developers can now add buttons to MediaView in audio mode
+* The system screensaver will now work with MediaView in audio mode
+* Added new theming options for MediaView in audio mode
+* Added a new field enableTrickplay on MediaView
+
+### Bug Fixes
+
+* Fixed an issue in MediaView where bookmarks might be deleted unexpectedly when using the seek field
 
 ## v.2.4
 

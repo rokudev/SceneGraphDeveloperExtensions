@@ -12,6 +12,8 @@ Manager with config data to drive that view's Content Getter(s).
 
 # Content Handlers
 
+## Concept
+
 Content Handlers (CH) are responsible for all content loading tasks in
 SGDEX. Channels typically extend ContentHandler to implement specific
 content or data loading tasks. ContentHandlers should implement a
@@ -19,10 +21,17 @@ function called GetContent(). This function is called by SGDEX, allowing
 the handler to make application specific API calls or perform other
 operations to load the content associated with the handler.
 
-CHs modify the Content Node referenced by m.top.content to get the
+CHs modify the ContentNode referenced by m.top.content to get the
 content.
 
-A Content Handler is made up of two components; Markup, and
+## Limitations
+
+- It is important to remember that SGDEX will **not** invoke any CHs while the
+screensaver is active.
+
+## Structure 
+
+A ContentHandler is made up of two pieces; Markup, and
 BrightScript. A very simple CH might look like the following:
 
 **Markup** (SimpleContentGetter.xml)

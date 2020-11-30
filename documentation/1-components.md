@@ -355,7 +355,10 @@ It incapsulates different features:
 - Loading of endcard content via HandlerConfigEndcard some time before playback ends to provide smooth user experience;  
 - Handling of RAF - handlerConfigRAF should be set in content node;  
 - State field is aliased to make tracking of states easier;  
-- Themes support
+- Themes support  
+### Limitations  
+- When using MediaView in audio mode with a list of content, you must populate the *url* field  
+  of **all** items in the playlist before starting playback.
 
 ### <a id="mediaview#interface"></a>Interface
 #### <a id="mediaview#fields"></a>Fields
@@ -424,6 +427,10 @@ if any other control - set it directly to video node
 * <a id="mediaview#fields#currentitem"></a>**currentItem** (node)
     * If change this field manually, unexpected behaviour can occur.  
     * Read Only  
+* <a id="mediaview#fields#enabletrickplay"></a>**enableTrickPlay** (boolean)
+    * Default value: true
+    * Enables/Disables trick play  
+  
 * <a id="mediaview#fields#endcarditemselected"></a>**endcardItemSelected** (node)
     * Content node of endcard item what was selected  
   
@@ -437,14 +444,21 @@ if any other control - set it directly to video node
   
 * <a id="mediaview#fields#shuffle"></a>**shuffle** (bool)
     * Default value: false
-    * Working only in playlist mode  
+    * Working only for audio mode in playlist mode  
   
 * <a id="mediaview#fields#disablescreensaver"></a>**disableScreenSaver** (boolean)
     * Default value: false
     * This is an alias of the video node's field of the same name  
   https://sdkdocs.roku.com/display/sdkdoc/Video#Video-MiscellaneousFields  
-  This field only works in video mode  
   
+* <a id="mediaview#fields#buttons"></a>**buttons** (node)
+    * Only appies to audio mode.  
+  Content node for buttons node. Has childrens with id and title that will be shown on View.  
+  
+* <a id="mediaview#fields#buttonselected"></a>**buttonSelected** (int)
+    * Default value: -1
+    * Is set when button is selected by user. Should be observed in channel.  
+    * Read Only  
 * <a id="mediaview#fields#theme"></a>**theme** (assocarray)
     * Theme is used to change color of grid view elements  
 <b>Note.</b> you can set TextColor and focusRingColor to have generic theme and only change attributes that shouldn't use it.  
@@ -483,17 +497,22 @@ if any other control - set it directly to video node
      * retrievingBarFilledBarBlendColor - Same as bufferingBarFilledBarBlendColor but for retrieving bar  
 <b>BIF customization</b>
      * focusRingColor - a color to be blended with the image displayed behind individual BIF images displayed on the screen  
-<b>Endcard view theme attributes</b>
-     * buttonsFocusedColor - repeat button focused text color
-     * buttonsUnFocusedColor - repeat button unfocused text color
-     * buttonsfocusRingColor - repeat button background color  
+<b>Endcard & Nowplaying view theme attributes</b>
+     * buttonsFocusedColor - button focused text color
+     * buttonsUnFocusedColor - button unfocused text color
+     * buttonsfocusRingColor - button background color  
 <b>grid attributes</b>
      * rowLabelColor - grid row title color
      * focusRingColor - grid focus ring color
      * focusFootprintBlendColor - grid unfocused focus ring color
      * itemTextColorLine1 - text color for 1st row on endcard item
      * itemTextColorLine2 - text color for 2nd row on endcard item
-     * timerLabelColor - Color of remaining timer
+     * timerLabelColor - Color of remaining timer  
+<b> Audio mode text attributes</b>
+     * albumColor - set color for albom name
+     * titleColor - set color for title
+     * artistColor - set color for artist
+     * releaseDateColor - set color for release date
 
 
 ___
@@ -501,11 +520,19 @@ ___
 ## <a id="entitlementview"></a>EntitlementView
 ### <a id="entitlementview#extends"></a>Extends: [SGDEXComponent](#sgdexcomponent)
 ### <a id="entitlementview#description"></a>Description
-EntitlementView is a view that allows SGDEX developer to make subscription easy.  
-There are two basic behaviours:  
-1) Silen check of available subscription  
-2) Checking with show Entitlement view/flow  
-To pass configs to View, developer should implement handler that extends EntitlementHandler
+EntitlementView provides developers with easier way of handling entitlements in their apps.  
+  
+EntitlementView can work in one of two modes which is driven by EntitlementView.mode:  
+- RokuPay subscription check/purchase/upgrade/downgrade (mode = "RokuBilling")  
+- username/password authentication handling/check (mode = "UserPass")  
+  
+EntitlementView.mode should be specifically set by developer.  
+   
+Developer is able to implement their entitlement related business logic in EntitlementHandler.  
+The handler is specified by handlerConfigEntitlement field of the content node assigned to the view.  
+  
+"RokuBilling" mode now supports not only regular RokuPay purchase but also [on-device upgrade/downgrade](https://developer.roku.com/docs/developer-program/roku-pay/implementation/on-device-upgrade-downgrade.md).  
+Please see EntitlementHandler documentation for more details.
 
 ### <a id="entitlementview#interface"></a>Interface
 #### <a id="entitlementview#fields"></a>Fields
@@ -549,21 +576,190 @@ custom UI for collecting the credentials.
 
 
 ### <a id="entitlementview#sample"></a>Sample of usage:
-    // [In channel]
-    // contentItem - content node with handlerConfigEntitlement: {name : "HandlerEntitlement"}
-
-    // To make just silent check if developer subscribed
+    ' ====== Use case 1: silent RokuPay subscription check ======
+    
+    ' ... Scene scope:
+    
+    ' In order to do silent subscription check, you need to:
+    ' - create the view
+    ' - specify "RokuBilling" mode
+    ' - observe its isSubscribed interface that will be populated with subscription check result
+    ' - assign content node with the handler config
+    ' - trigger silentCheckEntitlement without showing the view
     ent = CreateObject("roSGNode", "EntitlementView")
-    ent.ObserveField("isSubscribed", "OnSubscriptionChecked")
-    ent.content = contentItem
+    ent.mode = "RokuBilling"
+    ent.ObserveField("isSubscribed", "OnIsSubscriptionChecked")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "mySubscriptionCheckHandler"
+        }
+    }, true)
+    ent.content = content
     ent.silentCheckEntitlement = true
-
-    // To show billing flow:
-    ent = CreateObject("roSGNode","EntitlementView")
-    ent.ObserveField("isSubscribed", "OnIsSubscribedToPlay")
-    ent.content = contentItem
+    
+    ' ... mySubscriptionCheckHandler scope:
+    
+    sub ConfigureEntitlements(config as Object)
+        ' Here you should implement the business logic to check subsciption status.
+        '
+        ' You may use config.purchases and config.catalogProducts that will be
+        ' prepopulated by SGDEX per Roku Channel Store data for your channel.
+        '
+        ' You need to set config.isSubscribed to true or false in order to indicate
+        ' whether user is subscribed or not.
+    end sub
+    
+    
+    ' ====== Use case 2: RokuPay subscription flow ======
+    
+    ' ... Scene scope:
+    
+    ' In order to initiate RokuPay subscription flow, you need to:
+    ' - create the view
+    ' - specify "RokuBilling" mode
+    ' - observe its isSubscribed interface that will be populated with subscription flow result
+    ' - assign content node with the handler config
+    ' - show the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "RokuBilling"
+    ent.ObserveField("isSubscribed", "OnIsSubscribed")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "mySubscriptionHandler"
+        }
+    }, true)
+    ent.content = content
     m.top.ComponentController.callFunc("show", {view: ent})
- 
+    
+    ' ... mySubscriptionHandler scope:
+    
+    sub ConfigureEntitlements(config as Object)
+        ' Here you should implement the business logic to determine which subscription 
+        ' products to show to the user.
+
+        ' You may use config.purchases and config.catalogProducts that will be
+        ' prepopulated by SGDEX per Roku Channel Store data for your channel.
+
+        ' You need to populate config.displayProducts with the list of products
+        ' to be displayed to the user and be available for selection.
+
+        ' Each item in config.displayProducts should be an AA containing 
+        ' product _code_ per Channel Store data and, optionally, _name_ and _action_,
+        ' for instance:
+        
+        config.displayProducts = [
+            ' a subscription purchase product (no action field)
+            {name: "Subscription 1", code: "mytestsub1"},
+            
+            ' a subscription upgrade product, it should belong to a product group
+            ' configured in the Roku Developer dashboard
+            {name: "Subscription 2 (upgrade)", code: "mytestsub2", action: "upgrade"},
+            
+            ' a subscription downgrade product, it should belong to a product group
+            ' configured in the Roku Developer dashboard
+            {name: "Subscription 3 (downgrade)", code: "mytestsub3", action: "downgrade"}
+        ]
+    end sub
+    
+    
+    ' ====== Use case 3: silent authentication check ======
+    
+    ' ... Scene scope:
+    
+    ' In order to do silent authentication check, you need to:
+    ' - create the view
+    ' - specify "UserPass" mode
+    ' - observe its isAuthenticated interface that will be populated with auth check result
+    ' - assign content node with the handler config
+    ' - trigger silentCheckAuthentication without showing the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "UserPass"
+    ent.ObserveField("isAuthenticated", "OnIsAuthChecked")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "myAuthHandler"
+        }
+    }, true)
+    ent.content = content
+    ent.silentCheckAuthentication = true
+    
+    ' ... myAuthHandler scope:
+    
+    function CheckAuthentication() as Boolean
+        ' Here you should implement the business logic to validate user auth status
+        ' and return true if user is authenticated, false if not
+    end function
+    
+    
+    ' ====== Use case 4: silent de-authentication ======
+    
+    ' ... Scene scope:
+    
+    ' In order to do silent de-authentication, you need to:
+    ' - create the view
+    ' - specify "UserPass" mode
+    ' - observe its isAuthenticated interface that will be populated with auth status result
+    ' - assign content node with the handler config
+    ' - trigger silentDeAuthenticate without showing the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "UserPass"
+    ent.ObserveField("isAuthenticated", "OnIsAuth")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "myAuthHandler"
+        }
+    }, true)
+    ent.content = content
+    ent.silentDeAuthenticate = true
+    
+    ' ... myAuthHandler scope:
+    
+    function DeAuthenticate() as Boolean
+        ' Here you should implement the business logic to de-authenticate user
+        ' (API calls etc) and return result of the operation:
+        ' - true if successfully de-authenticated
+        ' - false if not de-authenticated
+        ' EntitlementView.isAuthenticated will be populated with the value opposite to
+        ' this return value
+    end function
+    
+    
+    ' ====== Use case 5: user/password authentication flow ======
+    
+    ' ... Scene scope:
+    
+    ' In order to initiate user/password authentication flow, you need to:
+    ' - create the view
+    ' - specify "UserPass" mode
+    ' - observe its isAuthenticated interface that will be populated with auth flow result
+    ' - assign content node with the handler config
+    ' - show the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "UserPass"
+    ent.ObserveField("isSubscribed", "OnIsSubscribed")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "myAuthHandler"
+        }
+    }, true)
+    ent.content = content
+    m.top.ComponentController.callFunc("show", {view: ent})
+    
+    ' ... myAuthHandler scope:
+    
+    function Authenticate(username as String, password as String) as Boolean
+        ' Here you should implement the business logic for authentication based on username
+        ' and password (API calls etc) and return result of the operation:
+        ' - true if successfully authenticated
+        ' - false if not authenticated
+        ' EntitlementView.isAuthenticated will be populated with this return value
+    end function
+
 
 ___
 
@@ -1313,22 +1509,64 @@ ___
 ## <a id="entitlementhandler"></a>EntitlementHandler
 ### <a id="entitlementhandler#extends"></a>Extends: Task
 ### <a id="entitlementhandler#description"></a>Description
-developer should implement own Handler in channel that extends EntitlementHandler  
-In this handler developer can override 2 function:  
-- ConfigureEntitlements(config) [Required]  
-- OnPurchaseSuccess(transactionData) [Optional]  
-In ConfigureEntitlements developer can update config with his own params:  
-config should contain fields:  
-config.mode [String] the desired mode. If mode isn't specified then it defaults to "RokuBilling" for backward compatibility.   
-Supported values are:  
-"RokuBilling" – SVOD Roku Billing;  
-"UserPass" – username/password authentication.  
-When config.mode = "RokuBilling" or not specified:  
-config.products [Array] product configuration as an array of AAs:   
-config.products[i].code [String] product code in ChannelStore  
-config.products[i].hasTrial [Boolean] true if product has trial period  
-OnPurchaseSuccess is a callback that allows end developer to inject some suctom logic on purchase success  
-by overriding this subroutine. Default implementation does nothing.
+In order to use EntitlementView in the channel app, you need to implement your handler extended from EntitlementHandler.  
+  
+EntitlementHandler allows developer to implement their business logic for  
+- handling RokuPay subscription (Roku Billing)  
+- handling username/password authentication  
+  
+depending on EntitlementView.mode.  
+  
+In EntitlementView.mode = "RokuBilling", developer is able to override the following functions:  
+- sub ConfigureEntitlements(config as Object)  [Required]  
+- sub OnPurchaseSuccess(transactionData as Object)  [Optional]  
+  
+"RokuBilling" mode now supports not only regular RokuPay purchase but also [on-device upgrade/downgrade](https://developer.roku.com/docs/developer-program/roku-pay/implementation/on-device-upgrade-downgrade.md).  
+Developer must populate config.catalogProducts in their ConfigureEntitlements(config) implementation to specify products to be offered to the user for purchase or upgrade/downgrade.  
+  
+sub ConfigureEntitlements(config as Object)  
+- provides config object prepopulated with config.catalogProducts and config.purchases  
+- you must override this function in your handler extended from EntitlementHandler  
+- config.catalogProducts - contains array of catalog products per roChannelStore.GetCatalog()  
+- config.purchases - contains array of purchases per roChannelStore.GetPurchases()  
+- for silentCheckEntitlement flow you must specify config.isSubscribed: true if user has active subscription, false otherwise  
+- for subscription purchase/upgrade/downgrade flow you must populate config.displayProducts with the list of products to be displayed to the user  
+  
+Each item in config.displayProducts should be AA containing the following fields  
+- code [String] product code  
+- name [String] optional, product display name; if not specified, SGDEX will use the Channel Store data  
+- action [String] optional, allows to specify product action for on-device upgrade/downgrade; supported values are "upgrade" and "downgrade", case insensitive  
+  
+If _action_ is set to "upgrade" or "downgrade" then  
+- SGDEX assumes this is a product for upgrade or downgrade operation, respectively, not for a regular purchase  
+- if user selects this product then SGDEX initiates upgrade/downgrade operation, essentially subscription change to this product instead of a regular purchase  
+- on the Channel Store side, developer must add products to be used for upgrade/downgrade [to a product group](https://developer.roku.com/docs/developer-program/roku-pay/quickstart/in-channel-products.md#adding-product-groups) in order to indicate that these are mutually exclusive  
+  
+if _action_ is not specified or set to some unsupported value then SGDEX treats this as a regular purchase product, not for upgrade/downgrade.  
+  
+sub OnPurchaseSuccess(transactionData as Object)  
+- if overridden, allows developer to implement some business logic on subscription purchase success  
+- transactionData - AA containing RokuPay transaction data per Channel Store response  
+- default implementation does nothing  
+  
+In EntitlementView.mode = "UserPass", developer is able to override the following functions  
+- function CheckAuthentication() as Boolean  
+- function Authenticate(username as String, password as String) as Boolean  
+- function DeAuthenticate() as Boolean   
+  
+CheckAuthentication()  
+- here you should implement the business logic to validate user authentication state (silentCheckAuthentication)  
+- return value should be true if user is authenticated, false otherwise  
+  
+Authenticate(username, password)  
+- here you should implement the business logic for authentication by username and password  
+- return value should be true if successfully authenticated, false otherwise  
+  
+DeAuthenticate()  
+ - here you should implement the business logic to de-authenticate user (silentDeAuthenticate)  
+ - return value should indicate result of the operation and be true if successfully de-authenticated, false otherwise  
+  
+See EntitlementView documentation for usage samples.
 
 ### <a id="entitlementhandler#interface"></a>Interface
 #### <a id="entitlementhandler#fields"></a>Fields
@@ -1338,16 +1576,6 @@ by overriding this subroutine. Default implementation does nothing.
   
 * <a id="entitlementhandler#fields#view"></a>**view** (node)
     * View is a reference to EntitlementView where this Handler is created.  
-
-
-### <a id="entitlementhandler#sample"></a>Sample of usage:
-    // [In <component name="HandlerEntitlement" extends="EntitlementHandler"> in channel]
-    sub ConfigureEntitlements(config as Object)
-        config.products = [
-            '{code: "PROD1", hasTrial: false}
-            {code: "PROD2", hasTrial: false}
-        ]
-    end sub
 
 
 ___

@@ -1,0 +1,38 @@
+{
+    "rows": [
+        {
+            "title": "ROW 1",
+            "items": [
+                {
+                    "hdPosterUrl": "https://placehold.it/600x400/770000/ffffff.png&text=Item+1.1"
+                },
+                {
+                    "hdPosterUrl": "https://placehold.it/600x400/007700/ffffff.png&text=Item+1.2"
+                },
+                {
+                    "hdPosterUrl": "https://placehold.it/600x400/000077/ffffff.png&text=Item+1.3"
+                },
+                {
+                    "hdPosterUrl": "https://placehold.it/600x400/007777/ffffff.png&text=Item+1.4"
+                }
+            ]
+        },
+        {
+            "title": "ROW 2",
+            "items": [
+                {
+                    "hdPosterUrl": "https://placehold.it/600x400/330000/ffffff.png&text=Item+2.1"
+                },
+                {
+                    "hdPosterUrl": "https://placehold.it/600x400/003300/ffffff.png&text=Item+2.2"
+                },
+                {
+                    "hdPosterUrl": "https://placehold.it/600x400/000033/ffffff.png&text=Item+2.3"
+                },
+                {
+                    "hdPosterUrl": "https://placehold.it/600x400/003333/ffffff.png&text=Item+2.4"
+                }
+            ]
+        }
+    ]
+}

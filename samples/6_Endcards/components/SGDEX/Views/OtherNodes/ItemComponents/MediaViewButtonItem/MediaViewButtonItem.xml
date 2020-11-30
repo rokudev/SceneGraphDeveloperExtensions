@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2020 Roku, Inc. All rights reserved. -->
+
+<component name="MediaViewButtonItem" extends="Group" >
+    <interface>
+        <field id="width" type="float" />
+        <field id="height" type="float"  />
+        <field id="rowFocusPercent" type="float"/>
+        <field id="itemContent" type="node" onChange="itemContentChanged" />
+    </interface>
+
+    <script type="text/brightscript" uri="MediaViewButtonItem.brs" />
+    <script type="text/brightscript" uri="../../../utils/Utils.brs" />
+
+    <children>
+        <Poster
+            id="poster"
+            opacity="0.0"
+            uri="pkg:/components/SGDEX/Images/Progress bar.9.png"
+        />
+
+        <Label
+            id="title"
+            translation="[20,15]"
+            horizAlign="left"
+            font="font:SmallSystemFont"
+        />
+    </children>
+</component>

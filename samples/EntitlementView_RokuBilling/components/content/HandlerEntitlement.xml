@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="HandlerEntitlement" extends="EntitlementHandler" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+
+<script type="text/brightscript" uri="HandlerEntitlement.brs" />
+
+</component>

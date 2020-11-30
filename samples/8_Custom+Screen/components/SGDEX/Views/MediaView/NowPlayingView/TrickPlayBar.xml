@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="TrickPlayBar" extends="Group">
+    <interface>
+        <field id="duration" type="integer" alwaysnotify="true" />
+        <field id="position" type="integer" alwaysnotify="true" />
+
+        <field id="emptyBarBlendColor" alias="progressWell.blendColor"/>
+        <field id="filledBarBlendColor" alias="progress.blendColor"/>
+    </interface>
+
+    <script type="text/brightscript" uri="TrickPlayBar.brs" />
+
+    <children>
+        <Group id="playBar">
+            <Poster
+                id="progressWell"
+                width="300"
+                height="20"
+                blendColor="0xc0c0c015"
+                uri="pkg:/components/SGDEX/Images/Progress bar.9.png" />
+            <Poster
+                id="progress"
+                width="2"
+                height="20"
+                blendColor="0xc0c0c0ff"
+                uri="pkg:/components/SGDEX/Images/Progress bar.9.png" />
+        </Group>
+    </children>
+</component>

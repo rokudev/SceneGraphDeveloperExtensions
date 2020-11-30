@@ -4,10 +4,10 @@
 sub Init()
     ' Developer should store proper splash in this location as we can't read manifest here
     ' This is to avoid View blinking
-    
+
     'TODO write proper handling
     'm.top.backgroundURI = "pkg:/images/splash_hd.png"
-    
+
     m.top.ComponentController = m.top.findNode("ComponentController")
     m.top.buttonBar = m.top.ComponentController.findNode("buttonBar")
     m.top.buttonBar.visible = false
@@ -40,7 +40,7 @@ sub SceneSetTheme(event as Object)
     m.top.actualThemeParameters = event.getData()
 end sub
 
-function onKeyEvent(key as String, press as Boolean)
+function onKeyEvent(key as String, press as Boolean) as Boolean
     ' if back button is passed here View stack is done with Views operaion
     ' developer can override onKeyEvent to prevent closing channel and show exit dialog for example
     if press and key = "back"

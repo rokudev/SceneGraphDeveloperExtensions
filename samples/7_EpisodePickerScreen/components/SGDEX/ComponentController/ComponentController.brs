@@ -64,6 +64,8 @@ function Show(config as Object)
     else if cmType <> invalid and GetInterface(cmType, "ifString") <> invalid and cmTypesSupported[cmType] <> invalid
         contentManager = CreateObject("roSgNode", cmTypesSupported[cmType]["nodeType"])
         contentManager.configFieldName = cmTypesSupported[cmType]["configName"]
+    else if cmType <> invalid and cmTypesSupported[cmType] = invalid
+        print "[SGDEX] Content Manager was not created. Please specify correct value for contentManagerType view interface."
     else
         print "[SGDEX] Content Manager was not created"
     end if

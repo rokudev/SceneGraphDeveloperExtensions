@@ -68,7 +68,7 @@ This guide is composed of the following sections:
 9. [**SGDEX Guide: Bookmarks**](9_Bookmarks)
 
     The section describes how to:
-    -  modify details view logic in order to add and correctly refresh bookmarks
+    - modify details view logic in order to add and correctly refresh bookmarks
     - save bookmarks in run-time on user navigation, using timed interval and between sessions
 
 10. [**Roku Recommends**](Roku_Recommends)
@@ -79,3 +79,11 @@ This guide is composed of the following sections:
 
 12. [**Decoupled TimeGrid ContentManager**](CustomTimeGrid_ContentManager)
     Sample channel using custom TimeGrid based native RSG view with the SGDEX ContentManager. Feed is stored in API, so custom parser is used in ContentHandler and populate on custom RSG view.
+
+13. [**Roku Billing Sample**](EntitlementView_RokuBilling)
+
+    The section describes how to:
+    - create and configure entitelment view component 
+    - set up products and group for using on-device upgrade and downgrade
+    - create and configure entitelment content handler
+    - implemnt functionality to display entitelment view

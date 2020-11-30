@@ -49,6 +49,12 @@ sub Init()
 
     m.top.ObserveFieldScoped("shuffle", "OnContentShuffled")
 
+    m.top.ObserveFieldScoped("buttons", "OnAudioButtonContentChanged")
+
+    m.top.ObserveFieldScoped("repeatAll", "OnRepeatAllChanged")
+
+    m.top.ObserveFieldScoped("enableTrickPlay", "OnTrickPlayModeChanged")
+
     ' AA to pass appropriate states on view top
     m.internalToViewStateAA = {
         ' internalState: MediaView state
@@ -111,20 +117,15 @@ sub Init()
         RAFplaying_RAFerror: OnErrorState
     }
 
-    CreateStateMachineNode() ' node to handle processing all states and their transitions
-    CreateMediaNode()
-    m.spinner = m.top.FindNode("spinner")
-    m.spinnerGroup = m.top.FindNode("spinnerGroup")
-
     m.buttonBar = m.top.getScene().buttonBar
     m.isButtonBarVisible = m.buttonBar.visible
     m.renderOverContent = m.buttonBar.renderOverContent
     m.isAutoHideMode = m.buttonBar.autoHide
 
-    if m.isButtonBarVisible and m.top.overhang.height > 72
-        m.overhangHeight = m.top.overhang.height
-        m.top.overhang.height = 72
-    end if
+    CreateStateMachineNode() ' node to handle processing all states and their transitions
+    CreateMediaNode()
+    m.spinner = m.top.FindNode("spinner")
+    m.spinnerGroup = m.top.FindNode("spinnerGroup")
 
     ' PRIVATE fields for library managers
     m.ContentManager_id = 0
@@ -136,7 +137,7 @@ sub Init()
     m.trickplayVisible = true
     m.RafTask = invalid
     m.endcardAvailable = false
-    m.unshuffleContent = invalid
+    m.NPNButtonFocused = 0
 end sub
 
 sub OnFocusedChildChange()
@@ -179,6 +180,9 @@ sub OnFocusedChildChange()
             ' if m.buttonBar is focused  -  make it visible
             m.buttonBar.opacity = 1.0
         end if
+        if GetCurrentMode() = "audio" and m.isButtonBarVisible
+            m.media.setFocus(true)
+        end if
     end if
 end sub
 
@@ -200,14 +204,40 @@ sub CreateMediaNode()
         m.media = video
     else if mode = "audio"
         m.npn = m.top.createChild("NowPlayingView")
-        audio = m.top.createChild("Audio")
+        m.top.viewContentGroup.appendChild(m.npn)
+        audio = m.top.createChild("CustomAudioNode")
+
         audio.id = "audio"
+        audio.enableUI = true
+        if m.top.isContentList
+            audio.contentIsPlaylist = true
+            audio.ObserveFieldScoped("contentIndex","OnAudioContentIndexChanged")
+        end if
+        audio.ObserveFieldScoped("keyPressed", "OnAudioKeyPressed")
+        audio.ObserveFieldScoped("trickPlayBarVisibilityHint", "OnPlayBarVisibilityHintChanged")
+        audio.ObserveFieldScoped("retrievingBarVisibilityHint", "OnPlayBarVisibilityHintChanged")
         m.media = audio
+        m.top.FindNode("background").visible = false
     end if
 
-    if m.lastThemeAttributes <> invalid and mode = "video"
+    ' if overhang height was not set through theme then
+    ' change default overhang height to content area safe zone
+    if m.lastThemeAttributes <> invalid and m.isButtonBarVisible
+        if m.lastThemeAttributes.overhangHeight = invalid
+            m.overhangHeight = m.top.overhang.height
+            if mode = "audio"
+                m.top.overhang.height = m.defaultOverhangHeight
+            else
+                m.top.overhang.height = m.contentAreaSafeZoneYPosition
+            end if
+        end if
+    end if
+
+    if m.lastThemeAttributes <> invalid
         SGDEX_SetTheme(m.lastThemeAttributes)
     end if
+
+    SGDEX_UpdateViewUI()
 
     m.media.ObserveFieldScoped("position", "OnPositionChanged")
     m.media.ObserveFieldScoped("duration", "OnDurationChanged")
@@ -217,7 +247,17 @@ end sub
 sub OnPlayBarVisibilityHintChanged(event as Object)
     m.trickplayVisible = event.GetData()
 
-    if m.isButtonBarVisible
+    if GetCurrentMode() = "audio"
+        if m.npn <> invalid
+            if m.trickplayVisible
+                m.npn.playBarVisible = false
+                m.media.clippingRect = [0, 600, 1280, 120]
+            else
+                m.npn.playBarVisible = true
+                m.media.clippingRect = [0, 720, 1280, 720]
+            end if
+        end if
+    else if m.isButtonBarVisible
         if m.trickplayVisible
             if (m.renderOverContent and m.isAutoHideMode)
                 m.buttonBar.opacity = 1.0
@@ -240,10 +280,16 @@ sub ClearMediaNode()
         m.media.UnobserveFieldScoped("state")
         m.media.UnobserveFieldScoped("position")
         m.media.UnobserveFieldScoped("duration")
-        m.media.control = "stop"
+
+        if m.top.mode = "video"
+            m.media.control = "stop" 'for backward compatibility
+        end if
+
         m.media.content = invalid
         if m.npn <> invalid
-            m.top.removeChild(m.npn)
+            m.NPNButtonFocused = m.npn.jumpToItem
+            m.top.FindNode("background").visible = true
+            m.top.RemoveChild(m.npn)
             m.npn = invalid
         end if
 
@@ -286,6 +332,9 @@ end sub
 
 ' Updates position in interface
 sub OnPositionChanged(event as Object)
+    if m.npn <> invalid
+        m.npn.position = event.getData()
+    end if
     m.top.position = event.GetData()
 end sub
 
@@ -302,6 +351,12 @@ sub OnSeekChanged()
             m.media.seek = seekPosition
             m.top.seek = -1
         end if
+    end if
+end sub
+
+sub OnTrickPlayModeChanged()
+    if m.media <> invalid
+        m.media.enableTrickPlay = m.top.enableTrickPlay
     end if
 end sub
 
@@ -466,35 +521,45 @@ sub OnContentShuffled()
             size = m.top.content.GetChildCount() - 1
             if size > 0
                 'need copy content before shuffling
-                contentTree = m.top.content.clone(true)
                 if m.unshuffleContent = invalid
-                    m.unshuffleContent = contentTree.clone(true)
+                    m.unshuffleContent = m.top.content
                 end if
                 shuffledContent = CreateObject("roSGNode", "ContentNode")
-                shuffledContent.Update(contentTree.getFields(), true)
-                content = contentTree.GetChildren(-1,0)
+                content = m.top.content.clone(true).GetChildren(-1,0)
                 if m.top.currentIndex >= 0
                     shuffledContent.AppendChild(content[m.top.currentIndex])
                     content.Delete(m.top.currentIndex)
                 end if
+
                 while content.Count() > 0
                     rndRange = content.Count() - 1
                     index = Rnd(rndRange)
                     shuffledContent.AppendChild(content[index])
                     content.Delete(index)
                 end while
-                'need to unobserve content field because when we set shuffled content and
-                'audio is playing, playback will be stopped
-                m.top.UnObserveField("content")
-                m.top.content = shuffledContent
-                m.top.currentIndex = 0
-                m.top.ObserveField("content", "OnContentSet")
+                if GetCurrentMode() = "audio"
+                    m.newContent = shuffledContent
+					m.top.currentIndex = 0
+                    m.IsShuffleTrig = true
+                else
+                   'need to unobserve content field because when we set shuffled content and
+                   'audio is playing, playback will be stopped
+                    m.top.UnObserveField("content")
+                    m.top.content = shuffledContent
+                    m.top.currentIndex = 0
+                    m.top.ObserveField("content", "OnContentSet")
+                end if
             end if
         else
             if m.unshuffleContent <> invalid
-                m.top.UnObserveField("content")
-                m.top.content = m.unshuffleContent
-                m.top.ObserveField("content", "OnContentSet")
+                if GetCurrentMode() = "audio"
+                    m.newContent = m.unshuffleContent
+                    m.IsShuffleTrig = true
+                else
+                    m.top.UnObserveField("content")
+                    m.top.content = m.unshuffleContent
+                    m.top.ObserveField("content", "OnContentSet")
+                end if
                 m.unshuffleContent = invalid
             end if
         end if
@@ -522,15 +587,88 @@ sub OnIsContentListChange(event as Object)
 end sub
 
 sub OnDisableScreenSaver(event as Object)
-    if m.top.mode = "video"
-        disableScreenSaver = event.GetData()
-        if m.media <> invalid and disableScreenSaver <> invalid
-            m.media.disableScreenSaver = disableScreenSaver
-        end if
-    else
-        ? "WARNING: disableScreenSaver only works in video mode"
+    disableScreenSaver = event.GetData()
+    if m.media <> invalid and disableScreenSaver <> invalid
+        m.media.disableScreenSaver = disableScreenSaver
     end if
 end sub
+
+sub OnRepeatAllChanged(event as Object)
+    repeatAll = event.getData()
+    if GetCurrentMode() = "audio" and m.media <> invalid and m.top.isContentList
+        m.media.loop = repeatAll
+    end if
+end sub
+
+sub OnAudioContentIndexChanged(event as Object)
+    state = GetState()
+    audioIndex = event.GetData()
+    ' handling states between audio playlist items
+    if audioIndex <> m.top.currentIndex and m.media.state <> "none" and state <> "contentLoaded"
+        SetState("finished")
+    else if m.IsShuffleTrig = true
+        m.media.control = "pause"
+        m.top.content = m.newContent
+        OnContentLoaded()
+        m.IsShuffleTrig = false
+        m.media.control = "resume"
+        m.newContent = invalid
+    else if state = "playing" or state = "buffering"
+        currentItem = m.top.content.getChild(m.media.contentIndex)
+        m.top.currentIndex = m.media.contentIndex
+        m.top.currentItem = currentItem
+        m.npn.content = currentItem.clone(false)
+
+        if not m.isBookmarkHandlerCreated then CreateBookmarksHandler()
+        m.isBookmarkHandlerCreated = false
+    end if
+end sub
+
+sub OnAudioButtonContentChanged(event as Object)
+    content = event.getData()
+    if m.npn <> invalid and content <> invalid
+        m.npn.buttonContent = content.clone(true)
+    end if
+end sub
+
+sub OnAudioKeyPressed(event as Object)
+    key = event.GetData()
+    if GetCurrentMode() = "audio" and m.npn <> invalid
+        if key = "right" and m.top.isContentList
+            m.isNavigated = true
+            m.top.control = "play"
+            SetState("finished")
+        else if key = "left" and m.top.isContentList
+            m.isNavigated = true
+            m.top.control = "play"
+            m.top.currentIndex -= 2
+            SetState("finished")
+        end if
+        if m.top.buttons <> invalid and m.top.buttons.GetChildCount() > 0
+            if key = "ok"
+                m.top.buttonSelected = m.npn.jumpToItem
+            else if key = "up"
+                if m.npn.jumpToItem > 0
+                    m.npn.jumpToItem -= 1
+                else
+                    m.npn.jumpToItem = m.top.buttons.GetChildCount() - 1
+                end if
+            else if key = "down"
+                if m.npn.jumpToItem < m.top.buttons.GetChildCount() - 1
+                    m.npn.jumpToItem += 1
+                else
+                    m.npn.jumpToItem = 0
+                end if
+            end if
+        end if
+    end if
+end sub
+
+function onKeyEvent(key as String, press as Boolean) as Boolean
+    if key = "fastforward" or key = "rewind"
+        m.isFF = true
+    end if
+end function
 
 ' ************* Transition handlers functions *************
 
@@ -653,18 +791,39 @@ sub OnContentLoaded()
         SetState("contentLoading")
     else if currentItem <> invalid ' ready to play
         ShowBusySpinner(false)
-        if m.unshuffleContent = invalid and m.top.shuffle
-            OnContentShuffled()
-        end if
         m.handlerConfigRAF = invalid
         ExtractRafConfig()
         ' Set content node that we receive to Media Node
         content = currentItem.clone(false)
         UpdateMediaModeByContent()
         if m.npn <> invalid
+            if m.top.buttons <> invalid
+                m.npn.buttonContent = m.top.buttons.clone(true)
+                m.npn.jumpToItem = m.NPNButtonFocused
+            end if
             m.npn.content = content
         end if
-        m.media.content = content
+        if GetCurrentMode() = "audio" and m.top.isContentList
+           'reseting content of video node causes execution timeout on low-end devices,
+            'but if we invalidate content before, it doesn't happen
+            if m.media <> invalid and m.media.contentIndex = -1 and m.IsShuffleTrig = true or m.isFF = true and m.isNavigated = true
+                'turning shuffle off and navigating causes a lot of OnContentSet() calls,
+                'that leads to execution timeout on low-end devices
+                if m.isNavigated = true
+                    m.top.UnobserveField("content")
+                end if
+                m.media.content = invalid
+            end if
+
+            m.media.content = m.top.content
+
+            if m.isNavigated = true
+                m.top.ObserveField("content", "OnContentSet")
+                m.isNavigated = false
+            end if
+        else
+            m.media.content = content
+        end if
         if not m.isBookmarkHandlerCreated then CreateBookmarksHandler()
         if isCSASEnabled() then
             m.top.currentItem = currentItem
@@ -719,14 +878,16 @@ sub ProcessEndState()
         HandlerConfigEndcard = invalid
         if currentItem <> invalid then HandlerConfigEndcard = currentItem.HandlerConfigEndcard
         if HandlerConfigEndcard <> invalid then currentItem.HandlerConfigEndcard = invalid
-        ClearMediaNode()
-        CreateMediaNode()
+
         ' skip incrementing currentIndex if repeatOne mode enabled
         if m.top.mode = "audio"
             if not m.top.repeatOne
+                m.media.contentIndex = -1
                 m.top.currentIndex++
             end if
         else
+            ClearMediaNode()
+            CreateMediaNode()
             m.top.currentIndex++
         end if
         if NeedToShowEndcards(HandlerConfigEndcard) and GetCurrentMode() = "video"
@@ -751,7 +912,7 @@ sub OnCompletedPlayback()
 end sub
 
 sub OnStartedPlayback()
-
+    m.isFF = false
 end sub
 
 sub OnPausedPlayback()
@@ -976,10 +1137,26 @@ sub StartPlayback(control as String)
             ' set currentItem interface once we start playback
             m.top.currentItem = GetCurrentLoadedItem()
             m.media.control = control
+            if GetCurrentMode() = "audio" and m.top.isContentList
+                m.media.nextContentIndex = -1
+                m.media.nextContentIndex = m.top.currentIndex
+                m.media.control = "skipcontent"
+                seekToPos = m.top.currentItem.playStart
+                if seekToPos <> invalid and seekToPos > 0
+                    m.top.seek = seekToPos
+                else
+                    seekToPos = m.top.currentItem.bookmarkPosition
+                    if seekToPos <> invalid and seekToPos > 0
+                        m.top.seek = seekToPos
+                    end if
+                end if
+            end if
         end if
         if m.top.seek <> invalid and m.top.seek > -1
             OnSeekChanged()
         end if
+
+        m.media.enableTrickPlay = m.top.enableTrickPlay
     end if
 end sub
 
@@ -1078,7 +1255,6 @@ sub UpdateMediaModeByContent()
             ' To handle case when playing mixed streamFormats in playlist
             if GetCurrentMode() = "audio" then m.top.mode = "video"
         end if
-
         m.mediaModeSet = false
     end if
 end sub
@@ -1093,48 +1269,6 @@ end function
 
 function isCSASEnabled() as Boolean
     return (m.rafHandlerConfig <> invalid and m.rafHandlerConfig.useCSAS = true)
-end function
-
-function onKeyEvent(key as String, press as Boolean) as Boolean
-    key = LCase(key) ' safety check
-
-    if press and GetCurrentMode() = "audio"
-        position = Int(m.media.position)
-        if key = "play"
-            if m.media.state = "playing"
-                m.media.control = "pause"
-            else
-                m.media.control = "resume"
-            end if
-        else if key = "right" and m.top.isContentList
-            if m.top.repeatOne
-                m.top.currentIndex++
-            end if
-            SetState("finished")
-        else if key = "left" and m.top.isContentList
-            if m.top.repeatOne
-                m.top.currentIndex--
-            else
-                m.top.currentIndex -= 2
-            end if
-            SetState("finished")
-        else if key = "fastforward"
-            if (m.media.duration - position) > 30
-                m.media.seek = position + 30
-            else
-                SetState("finished")
-            end if
-        else if key = "rewind"
-            position = position - 30
-            if position < 0 then position = 0
-            m.media.seek = position
-        else if key = "replay"
-            position = position - 10
-            if position < 0 then position = 0
-            m.media.seek = position
-        end if
-    end if
-    return false
 end function
 
 ' ************* Theme functions *************
@@ -1219,6 +1353,16 @@ sub SGDEX_SetTheme(theme as Object)
         })
     end if
 
+    ' sharing theme attributes with NowPlayingView
+    if m.lastThemeAttributes <> invalid and m.npn <> invalid
+        npnTheme = m.lastThemeAttributes
+        sceneTheme = m.top.getScene().actualThemeParameters
+        if sceneTheme <> invalid and sceneTheme.NowPlayingView <> invalid
+            npnTheme.Append(sceneTheme.NowPlayingView)
+        end if
+        m.npn.theme = npnTheme
+    end if
+
     SGDEX_setThemeFieldstoNode(m, themeAttributes, theme)
 end sub
 
@@ -1301,7 +1445,96 @@ function SGDEX_GetViewType() as String
 end function
 
 sub SGDEX_UpdateViewUI()
+    if m.top.mode = "audio" and m.npn <> invalid
+        buttons = m.npn.findNode("buttons")
+        nowPlayingUIGroup = m.npn.findNode("nowPlayingUI")
+        poster = nowPlayingUIGroup.findNode("poster")
+		m.albumInfo = nowPlayingUIGroup.findNode("albumInfo")
+        m.titleInfo = nowPlayingUIGroup.findNode("titleInfo")
+        m.artistInfo = nowPlayingUIGroup.findNode("artistInfo")
+        m.releaseInfo = nowPlayingUIGroup.findNode("releaseInfo")
+        overhangHeightSet = m.lastThemeAttributes <> invalid and m.lastThemeAttributes["overhangHeight"] <> invalid
+        if overhangHeightSet
+            overhangHeight = m.lastThemeAttributes["overhangHeight"]
+        else
+            overhangHeight = m.top.findNode("overhang").boundingRect()["height"]
+        end if
+        if m.buttonBar.visible and m.buttonBar.alignment = "top"
+            buttonBarHeight = m.buttonBar.findNode("backgroundRectangle").height
+        else
+            buttonBarHeight = 0
+        end if
+        componentsHeight = overhangHeight + buttonBarHeight + 20
+        yOffset = componentsHeight - nowPlayingUIGroup.translation[1]
+        if yOffset > 0
+            m.top.viewContentGroup.translation = [m.top.viewContentGroup.translation[0], yOffset]
+            nowPlayingUIGroupPosInfo = nowPlayingUIGroup.boundingRect()
+            nowPlayingUIGroupYPosition = nowPlayingUIGroupPosInfo["y"]
+            nowPlayingUIGroupHeight = nowPlayingUIGroupPosInfo["height"]
+            vertDiff = 720 - nowPlayingUIGroupYPosition - m.contentAreaSafeZoneYPosition - nowPlayingUIGroupHeight - yOffset
+            if vertDiff < 0
+                if vertDiff >= -150
+                    poster.width = 300 + vertDiff
+                    poster.height = 300 + vertDiff
+                    buttons.numRows = poster.height / buttons.itemSize[1] - 1
+                else
+                    poster.width = 150
+                    poster.height = 150
+                    buttons.numRows = 2
+               end if
+            end if
+        else
+             m.top.viewContentGroup.translation = [m.top.viewContentGroup.translation[0], 0]
+             YValue = nowPlayingUIGroup.translation[1] + yOffset
+             if YValue < m.contentAreaSafeZoneYPosition
+                YValue = m.contentAreaSafeZoneYPosition
+             end if
+             nowPlayingUIGroup.translation = [nowPlayingUIGroup.translation[0], YValue]
+             buttons.translation = [buttons.translation[0], YValue]
+        end if
 
+        if m.buttonBar.alignment = "left" and m.buttonBar.visible = true
+            buttonBarWidth = m.buttonBar.findNode("backgroundRectangle").width
+            defaultWidth = 1024
+            defaultButtonSize = [340, 48]
+			minWidth = 2*(poster.width/2 + 30 + defaultButtonSize[0]/2)
+            defaultTranslation = [652, 140]
+            buttonsTranslation = [832, 140]
+            XtranslationDiff = buttonsTranslation[0] - defaultTranslation[0] - (300 - poster.width)/2
+            if not m.buttonBar.isInFocusChain() and m.buttonBar.autoHide
+			    XtranslationDiff = buttonsTranslation[0] - defaultTranslation[0]
+                m.top.viewContentGroup.translation = [0,m.top.viewContentGroup.translation[1]]
+                m.titleInfo.maxWidth = defaultWidth
+                m.artistInfo.maxWidth = defaultWidth
+                m.albumInfo.maxWidth = defaultWidth
+                m.releaseInfo.maxWidth = defaultWidth
+                nowPlayingUIGroup.translation = [defaultTranslation[0], nowPlayingUIGroup.translation[1]]
+                buttons.translation = [defaultTranslation[0] + XtranslationDiff, buttons.translation[1]]
+                buttons.itemSize = defaultButtonSize
+                buttons.rowItemSize = [defaultButtonSize]
+            else
+			    XtranslationDiff = buttonsTranslation[0] - defaultTranslation[0] - (300 - poster.width)/2
+                xValue = nowPlayingUIGroup.boundingRect()["x"]
+                xOffset = (buttonBarWidth + 10) - xValue
+                if xOffset > 0
+                    widthDiff = defaultWidth - buttonBarWidth  + GetViewXPadding()
+					newLength = widthDiff
+                    if minWidth > newLength
+                         newLength = minWidth
+                    end if
+                    m.titleInfo.maxWidth = newLength
+                    m.artistInfo.maxWidth = newLength
+                    m.albumInfo.maxWidth = newLength
+                    m.releaseInfo.maxWidth = newLength
+					buttonLength = newLength/2 - poster.width/2 - 30
+                    buttons.itemSize = [buttonLength, buttons.itemSize[1]]
+                    buttons.rowItemSize = [[buttonLength, buttons.itemSize[1]]]
+                    nowPlayingUIGroup.translation = [newLength/2, nowPlayingUIGroup.translation[1]]
+                    buttons.translation = [newLength/2 + XtranslationDiff, buttons.translation[1]]
+                end if
+            end if
+        end if
+    end if
 end sub
 
 sub customSuspend()
@@ -1311,7 +1544,7 @@ end sub
 sub customResume()
     'On Resume if the player is stopped then close the view
     'to go back to the previous screen
-    print "Resume state:";GetState()  
+    print "Resume state:";GetState()
     if GetState() = "stopped"
         m.top.close = true
     end if

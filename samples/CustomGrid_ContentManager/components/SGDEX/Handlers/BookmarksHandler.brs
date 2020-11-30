@@ -90,7 +90,7 @@ Sub bookmarksHandler()
                 lastState = data
             else if field = "position" then
                 if data < minBookmark OR data > duration - maxBookmark then
-                    if not bookmarkAlreadyRemoved then
+                    if duration > 0 and not bookmarkAlreadyRemoved then
                         m.top.position = 0
                         RemoveBookmark()
                         lastSavedPosition = 0

@@ -2,35 +2,7 @@
 
 sub Init()
     m.top.observeField("state", "OnStateChange")
-
-    ' get entitlements config params
-    m.config = {}
-    ConfigureEntitlements(m.config)
-    
-    ' keep mode value casted to a String for further calling 
-    ' mode-specific internal functions
-    m.sMode = Box(m.config.mode).ToStr()
-
-    ' build internal functionality for each specific mode (by mode prefix)
-    ' to be called as m.funcAA[m.sMode][fname]()
-    m.funcAA = {
-        RokuBilling: {
-            Init: RokuBilling__Init
-            SilentCheckEntitlement: RokuBilling__SilentCheckEntitlement
-            RunEntitlementFlow: RokuBilling__Subscribe
-        }
-        UserPass: {
-            SilentCheckAuthentication: UserPass__SilentCheckAuthentication
-            SilentDeAuthenticate: UserPass__SilentDeAuthenticate
-            RunEntitlementFlow: UserPass__Authenticate
-        }
-    }
-    
-    ' default mode should be "RokuBilling" (if mode = invalid)
-    m.funcAA.invalid = m.funcAA.RokuBilling
-    
-    ' call mode-specific init function if exists
-    CallModeFunc("Init")
+    m.top.functionName = "HandlerFunctionRunner"
 end sub
 
 ' "state" interface callback
@@ -65,21 +37,25 @@ end sub
 '           To override by end developer
 '------------------------------------------------------------------------------
 
-' Allows end developer to configure entitlements.
-' Developer should override this subroutine in their
-' component extended from EntitlementHandler
-' @param config [AA] should contain fields:
-' @param config.mode [String] the desired mode: "RokuBilling" (default) or "UserPass" 
-' @param config.products [Array] of AAs (only for "RokuBilling" mode): 
-' @param config.products[i].code [String] product code in ChannelStore
-' @param config.products[i].hasTrial [Boolean] true if product has trial period
+' Required for "RokuBilling" mode. Developer should override this subroutine 
+' in their component extended from EntitlementHandler to be able to
+' - determine user subscription status
+' - define RokuPay products to be displayed/offered to the user for the subscription flow 
+' @param config [AA]:
+' @param config.catalogProducts [Object][Read-Only] in "RokuBilling" mode - prepopulated with array of catalog products per roChannelStore.GetCatalog(); otherwise invalid 
+' @param config.purchases [Object][Read-Only] in "RokuBilling" mode - prepopulated with array of purchases per roChannelStore.GetPurchases(); otherwise invalid
+' @param config.isSubscribed [Boolean][Write-Only] for "RokuBilling" silentCheckEntitlement only - developer must specify true if user has active subscription, false otherwise
+' @param config.displayProducts [Array][Write-Only] for "RokuBilling" subsciption flow only - developer must specify the list of products to be displayed to the user
+' @param config.displayProducts[i].code [String] product code
+' @param config.displayProducts[i].name [String] optional, product display name; if not specified, SGDEX will use the Channel Store data
+' @param config.displayProducts[i].action [String] optional, product action for on-device upgrade/downgrade: "upgrade" or "downgrade", case insensitive; if not specified, SGDEX assumes regular purchase
 sub ConfigureEntitlements(config as Object)
     ? "SGDEX: you should implement "
     ? "         sub ConfigureEntitlements(config as Object)"
     ? "     in your "m.top.Subtype()" component"
 end sub
 
-' For "RokuBilling" mode only. Allows end developer to inject some suctom logic on 
+' For "RokuBilling" mode only. Allows developer to inject some business logic on 
 ' purchase success by overriding this subroutine in their component extended from
 ' EntitlementHandler. Default implementation does nothing
 sub OnPurchaseSuccess(transactionData as Object)
@@ -145,23 +121,41 @@ end function
 '           Handler functions invoked by EntitlementView
 '------------------------------------------------------------------------------
 
-' Initiates silent entitlement checking (no UI)
-sub SilentCheckEntitlement()
-    CallModeFunc("SilentCheckEntitlement")
-end sub
+sub HandlerFunctionRunner()
+    ' entitlements config params
+    m.config = {}
 
-' Initiates silent authentication checking (no UI)
-sub SilentCheckAuthentication()
-    CallModeFunc("SilentCheckAuthentication")
-end sub
+    ' keep mode value casted to a String for further calling
+    ' mode-specific internal functions
+    m.sMode = m.top.view.mode
+    m.isNewFlow = (m.sMode.Len() > 0)
+    if m.isNewFlow = false
+        ? "SGDEX warning: your ("m.top.view.Subtype()") doesn't specify mode."
+        ? "Using fallback flow with getting mode from ConfigureEntitlements config"
+        ConfigureEntitlements(m.config)
+        m.sMode = Box(m.config.mode).ToStr()
+    end if
 
-' Initiates silent de-authentication (no UI)
-sub SilentDeAuthenticate()
-    CallModeFunc("SilentDeAuthenticate")
-end sub
+    ' build internal functionality for each specific mode (by mode prefix)
+    ' to be called as m.funcAA[m.sMode][fname]()
+    m.funcAA = {
+        RokuBilling: {
+            Init: RokuBilling__Init
+            SilentCheckEntitlement: RokuBilling__SilentCheckEntitlement
+            RunEntitlementFlow: RokuBilling__Subscribe
+        }
+        UserPass: {
+            SilentCheckAuthentication: UserPass__SilentCheckAuthentication
+            SilentDeAuthenticate: UserPass__SilentDeAuthenticate
+            RunEntitlementFlow: UserPass__Authenticate
+        }
+    }
 
-' Initiates entitlement flow - subscription or authentication, depenging
-' on "config.mode" specified (see ConfigureEntitlements)
-sub RunEntitlementFlow()
-    CallModeFunc("RunEntitlementFlow")
+    ' default mode should be "RokuBilling" (if mode = invalid)
+    m.funcAA.invalid = m.funcAA.RokuBilling
+    ' call mode-specific init function if exists
+    CallModeFunc("Init")
+
+    ' call flow start function
+    CallModeFunc(m.top.fn)
 end sub

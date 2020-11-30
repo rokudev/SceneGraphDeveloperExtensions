@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2019 Roku, Inc. All rights reserved. -->
+<!--
+    @Public
+    - SlideShowView displays a collection of images to the user
+    - SlideShowView can be populated with content directly by setting its _content_
+    field or by using a ContentHandler.
+    - SlideShowView can be configured in a variety of ways using the fields documented below.
+
+    @Sample:
+    SlideShow = CreateObject("roSGNode", "SlideShowView")
+    SlideShow.posterShape = "square"
+
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Addfields({
+        ' set up a ContentHandler for the view
+        HandlerConfigSlideShow: {
+            name: "CHImages"
+        }
+    })
+
+    SlideShow.content = content
+
+    ' this will trigger job to show this View
+    m.top.ComponentController.CallFunc("show", {
+        view: SlideShow
+    })
+
+-->
+<component name="SlideShowView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <customization suspend="customSuspend" />
+    <customization resume="customResume" />
+    
+    <interface>
+        <!-- @Public -->
+        <!-- Tells SlideShowView how your content is structured
+            if set to true it will take children of content to display on View
+            if set to false it will take content and display it on the View
+            This field must be set before setting the content field. -->
+        <field id="isContentList" type="bool" value="true" />
+        <!-- @Public -->
+        <!-- Number of seconds each slide is displayed
+        Default value is 10 -->
+        <field id="slideDuration" type="integer" value="10" alias="slideTimer.duration" />
+        <!-- @Public -->
+        <!-- Controls whether the text overlay is displayed. -->
+        <field id="textOverlayVisible" type="bool" value="true" />
+        <!-- @Public -->
+        <!-- Number of milliseconds to display the text overlay for each slide. -->
+        <field id="textOverlayHoldTime" type="float" value="5" alias="hudTimer.duration" />
+        <!-- @Public -->
+        <!-- Sets the mode for displaying slideshow images
+            Valid display modes are:
+            scale-to-fit – scale image to fit horizontally or vertically as appropriate while still maintaining aspect ratio. (Default)
+            scale-to-fill – scale image to completely fill the rectangle of the bounding frame
+            zoom-to-fill – scales and crops image to maintain aspect ratio and completely fill the rectangle of the bounding frame.
+            no-scale – The bitmap will be loaded at the image's original resolution.
+                If the Poster's width and height differ from the bitmap's resolution,
+                it will be scaled to fill the Poster's dimensions. Aspect ratio is not preserved.-->
+        <field id="displayMode" type="string" value="scale-to-fit" alwaysNotify="true" />
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- Jumps to item in list of images. This field must be set after setting the content field. -->
+        <field id="jumpToItem" type="integer" value="0" alwaysNotify="true" />
+        <!-- @Public -->
+        <!-- @ReadOnly Index of the current image -->
+        <field id="currentIndex" type="integer" value="0" alwaysNotify="true" />
+        <!-- @Public -->
+        <!-- Controls whether SlideshowVIew loops through content repeatedly. -->
+        <field id="loop" type="bool" value="true" alwaysNotify="true" />
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- If set to true and loop is false, the SlideShowView will close after last slide is shown. -->
+        <field id="closeAfterLastSlide" type="bool" value="false" />
+        <!-- @Public -->
+        <!-- Field for setting control. Possible values: play, pause.-->
+        <field id="control" type="string" value="none" alwaysNotify="true" />
+
+        <!--
+            @Public
+            @Override <field id="theme" type="assocarray" />
+            @PossibleValue TitleColor - set text color for title shown on view
+            @PossibleValue DescriptionColor - set text color for description shown on view
+            @PossibleValue TextOverlayBackgroundColor - set background color for overlay text
+
+            @PossibleValue BackgroundColor - set background color for endcards view
+            @PossibleValue PauseIconColor - set color for pause icon
+            @PossibleValue PlayIconColor - set color for play icon
+
+            @PossibleValue BusySpinnerColor - set color for busy spinner shown on loading
+        -->
+
+    </interface>
+
+    <script type="text/brightscript" uri="SlideShowView.brs" />
+    <script type="text/brightscript" uri="../../ContentManager/ContentManagerUtils.brs" />
+    <script type="text/brightscript" uri="../utils/utils.brs" />
+
+    <children>
+        <Rectangle
+            id="background"
+            color="0x000000"
+            width="1280"
+            height="720"
+            translation="[0,0]"
+        />
+
+        <LayoutGroup
+            id="backgroundImgPosition"
+            translation = "[640,360]"
+            horizAlignment="center"
+            vertAlignment="center"
+        />
+
+        <LayoutGroup
+            id="mainImagePosition"
+            translation = "[640,360]"
+            horizAlignment="center"
+            vertAlignment="center"
+        />
+
+        <LayoutGroup
+            translation = "[640,360]"
+            horizAlignment="center"
+            vertAlignment="center">
+            <Poster
+                id="iconPlay"
+                width = "50"
+                height = "50"
+                uri="pkg:/components/SGDEX/Images/play.png"
+                opacity = "0.0" />
+        </LayoutGroup>
+
+        <LayoutGroup
+            translation = "[640,360]"
+            horizAlignment="center"
+            vertAlignment="center">
+            <Poster
+                id="iconPause"
+                width = "50"
+                height = "50"
+                uri="pkg:/components/SGDEX/Images/pause.png"
+                opacity = "0.0" />
+        </LayoutGroup>
+
+        <Group
+            id="hud"
+            opacity="0.0"
+            translation="[0,600]">
+
+            <Rectangle
+                id="hudBackgound"
+                color="0x00000088"
+                height="120"
+                width="1280"
+            />
+
+            <LayoutGroup
+                translation="[640, 50]"
+                horizAlignment="center"
+                vertAlignment="center">
+                <Label
+                    id="hudTitle"
+                    color="#EFEFEFFF"
+                    maxLines="1"
+                    width="310"
+                    horizAlign = "center"
+                    vertAlign = "center"
+                    wrap="true"
+                    font="font:SmallBoldSystemFont"
+                />
+                <Label
+                    id="hudText"
+                    color="#EFEFEFFF"
+                    maxLines="2"
+                    width="750"
+                    horizAlign="center"
+                    vertAlign="center"
+                    wrap="true"
+                />
+            </LayoutGroup>
+        </Group>
+
+        <Rectangle
+            id = "shadeRectangle"/>
+
+        <Timer id="hudTimer" repeat="false" />
+
+        <Timer id="slideTimer" repeat="true" />
+
+        <Timer id="iconTimer" repeat="false" />
+
+        <LayoutGroup
+            translation="[640, 360]"
+            horizAlignment="center"
+            vertAlignment="center">
+            <BusySpinner
+                id="spinner"
+                control="start"
+                visible="false"
+            />
+        </LayoutGroup>
+
+        <Animation id="fadeAnimation" duration="0.2" easeFunction="linear" optional="true">
+            <FloatFieldInterpolator
+                id="fadeInterpolator"
+                key="[0.0, 1.0]"
+                fieldToInterp="hud.opacity"
+            />
+        </Animation>
+
+        <Animation id="shadeAnimation" duration="0.2" easeFunction="linear" optional="true">
+            <FloatFieldInterpolator
+                id="shadeAnimationInterp"
+                key="[0.0, 1.0]"
+                fieldToInterp="shadeRectangle.opacity"
+            />
+        </Animation>
+
+        <Animation id="fadeIconAnimation" duration="0.2" easeFunction="linear" optional="true">
+            <FloatFieldInterpolator
+                id="fadeIconPlayInterpolator"
+                key="[0.0, 1.0]"
+                fieldToInterp="iconPlay.opacity"
+            />
+            <FloatFieldInterpolator
+                id="fadeIconPauseInterpolator"
+                key="[0.0, 1.0]"
+                fieldToInterp="iconPause.opacity"
+            />
+        </Animation>
+    </children>
+</component>

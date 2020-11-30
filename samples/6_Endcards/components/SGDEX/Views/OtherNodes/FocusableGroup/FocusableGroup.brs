@@ -12,7 +12,7 @@ Sub onFocusedChild()
     if m.top.hasFocus()
         foc = m.top.focusedChild
         if m.debug AND foc <> invalid then ?"focused now="foc.id
-        
+
         if m.currentFocusedNode = invalid ANd m.top.getchildCount() > 0 AND (m.top.focusedChild = invalid OR m.top.issameNode(m.top.focusedChild))
             firstFocusableChild = GetFirstFocusable(0, 1)
             if m.debug then ?"set focus to first focusable"
@@ -25,7 +25,7 @@ Sub onFocusedChild()
             if m.debug then ?"m.currentFocusedNode.setFocus(true)"
         end if
     end if
-    
+
     if m.currentFocusedNode = invalid OR (m.top.focusedChild <> invalid AND NOT m.currentFocusedNode.isSameNode(m.top.focusedChild))
         if m.debug then ?"set current focused node"m.top.focusedChild.id
         m.currentFocusedNode = m.top.focusedChild
@@ -40,30 +40,30 @@ Sub layoutChanged()
     end if
 end sub
 
-function onKeyEvent(key as String, press as Boolean)
+function onKeyEvent(key as String, press as Boolean) as Boolean
     handled = false
 
-    if press AND m.currentFocusedNode <> invalid AND m.buttonsTohandle[key] <> invalid 
+    if press AND m.currentFocusedNode <> invalid AND m.buttonsTohandle[key] <> invalid
         if m.top.getchildCount() > 0 then
             childCount = m.top.getchildCount()
             for index = 0 to childCount - 1
-                child = m.top.getChild(index) 
+                child = m.top.getChild(index)
                 if child <> invalid AND m.currentFocusedNode.isSameNode(child)
                     indexToMove = index + m.buttonsTohandle[key]
-                    if m.debug then 
+                    if m.debug then
                         ?"!index="index
                         ?"!indexToMove="indexToMove
                     end if
                     if (indexToMove >= 0 AND indexToMove < childCount) or m.top.allowCarousel
-                        if indexToMove < 0 then 
+                        if indexToMove < 0 then
                             index = childCount - 1
                         else if indexToMove >= childCount
                             index = 0
                         end if
 
-                        newchild = GetFirstFocusable(index, m.buttonsTohandle[key]) 
-                        
-                        if m.debug then 
+                        newchild = GetFirstFocusable(index, m.buttonsTohandle[key])
+
+                        if m.debug then
                             if newchild <> invalid
                                 ?"newFocus:"newchild.subType() " id="newchild.id
                             else
@@ -72,7 +72,7 @@ function onKeyEvent(key as String, press as Boolean)
                         end if
 
                         if newchild <> invalid AND (m.currentFocusedNode = invalid OR not m.currentFocusedNode.isSameNode(newchild))
-                            if m.currentFocusedNode <> invalid 
+                            if m.currentFocusedNode <> invalid
                                 m.currentFocusedNode.setFocus(false)
                             end if
                             m.currentFocusedNode = newchild
@@ -81,23 +81,23 @@ function onKeyEvent(key as String, press as Boolean)
                         end if
                     end if
                     exit for
-                end if 
+                end if
             end for
         end if
     else if press
         if m.debug then ?"error found"
     end if
-    
-    
+
+
     return handled
 end function
 
 function GetFirstFocusable(startIndex, stepIndex)
-    if m.debug 
+    if m.debug
         ?"startIndex:"startIndex
         ?"stepIndex:"stepIndex
     end if
-    
+
     index = startIndex
 
     while(index >= 0 AND index < m.top.getChildCount())

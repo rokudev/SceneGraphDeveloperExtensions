@@ -13,11 +13,11 @@ end sub
 sub RunEntitlementHander(name as String, functionName as String)
     handler = GetNodeFromChannel(name)
     if handler <> invalid
-        handler.SetFields({
+        handler.Update({
             content: m.top.content
             view: m.top
-            functionName: functionName
-        })
+            fn: functionName
+        }, true)
         handler.control = "RUN"
     end if
 end sub

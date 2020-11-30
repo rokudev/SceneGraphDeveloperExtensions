@@ -115,7 +115,7 @@ sub PlayContentWithFullRAFIntegration()
 
     ' event loop
     while true
-        msg = Wait(0, m.port)
+        msg = Wait(500, m.port)
         msgType = type(msg)
 
         ' if ads is stitched, handle it
@@ -129,7 +129,10 @@ sub PlayContentWithFullRAFIntegration()
             ' TODO: log for invalid content/adPods
             csasStream = adIface.constructStitchedStream(content,adPods) ' contructing stream with ads to work with
             ThemeRAFRenderer(csasStream,videoView) ' sharing themes between MediaView and RAFContentRenderer
-            isCSASPlaying = adIface.renderStitchedStream(csasStream, videoView) ' Start RAFContentRenderer playback
+            isCSASPlayedToCompletion = adIface.renderStitchedStream(csasStream, videoView) ' Start RAFContentRenderer playback
+            ' CSAS playback finished, exit now
+            videoView.close = true
+            exit while
         end if
 
         ' ad handled event; if stitched ad skipped, exit playback

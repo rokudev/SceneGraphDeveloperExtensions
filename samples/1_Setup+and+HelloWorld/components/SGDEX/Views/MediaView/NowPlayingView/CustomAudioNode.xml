@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="CustomAudioNode" extends="Video">
+    <interface>
+        <field id="keyPressed" type="string" alwaysnotify="true" />
+    </interface>
+
+    <script type="text/brightscript" uri="CustomAudioNode.brs" />
+</component>

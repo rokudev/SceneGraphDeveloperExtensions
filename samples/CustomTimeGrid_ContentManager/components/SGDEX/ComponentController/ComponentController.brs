@@ -64,6 +64,8 @@ function Show(config as Object)
     else if cmType <> invalid and GetInterface(cmType, "ifString") <> invalid and cmTypesSupported[cmType] <> invalid
         contentManager = CreateObject("roSgNode", cmTypesSupported[cmType]["nodeType"])
         contentManager.configFieldName = cmTypesSupported[cmType]["configName"]
+    else if cmType <> invalid and cmTypesSupported[cmType] = invalid
+        print "[SGDEX] Content Manager was not created. Please specify correct value for contentManagerType view interface."
     else
         print "[SGDEX] Content Manager was not created"
     end if
@@ -137,20 +139,15 @@ function handleButtonBarKeyEvents(buttonBar as Object, key as String) as Boolean
     ' handle switch focus between the ButtonBar and a showed view
     currentView = m.top.currentView
     if currentView <> invalid
-        if (key = "back" or key = "up") and currentView.Subtype() = "MediaView" and currentView.mode = "audio" then
-            if buttonBar.visible and (currentView.state = "paused" or buttonBar.renderOverContent) and currentView.isInFocusChain() then
-                buttonBar.SetFocus(true)
-                return true
-            else if key <> "up"
-                return closeView()
-            end if
+        if (key = "back" or (key = "up" and buttonBar.alignment = "top")) and currentView.Subtype() = "MediaView" and currentView.mode = "audio" then
+            return handleMediaViewBBKeyEvents(currentView, buttonBar, key)
         else if key = "back"
             if buttonBar.isInFocusChain()
                 return closeView()
             else if currentView.isInFocusChain()
                 buttonBar.SetFocus(true)
                 return true
-            end if 
+            end if
         else if buttonBar.alignment = "top"
             if key = "up" and currentView.isInFocusChain()
                 buttonBar.SetFocus(true)
@@ -161,8 +158,10 @@ function handleButtonBarKeyEvents(buttonBar as Object, key as String) as Boolean
             end if
         else if buttonBar.alignment = "left"
             if key = "left" and currentView.isInFocusChain()
-                buttonBar.SetFocus(true)
-                return true
+                if currentView.Subtype() <> "MediaView" and currentView.isContentList <> true
+                    buttonBar.SetFocus(true)
+                    return true
+                end if
             else if key = "right" and buttonBar.isInFocusChain()
                 currentView.SetFocus(true)
                 return true

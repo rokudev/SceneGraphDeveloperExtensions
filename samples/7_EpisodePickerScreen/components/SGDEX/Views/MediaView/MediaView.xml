@@ -15,11 +15,15 @@
         - Handling of RAF - handlerConfigRAF should be set in content node;
         - State field is aliased to make tracking of states easier;
         - Themes support
+
+    ### Limitations
+    - When using MediaView in audio mode with a list of content, you must populate the *url* field
+      of **all** items in the playlist before starting playback.
 -->
 <component name="MediaView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
     <customization suspend="customSuspend" />
     <customization resume="customResume" />
-    
+
     <interface>
         <!-- @Public -->
         <!-- Defines view mode to properly display media content on the view  -->
@@ -93,6 +97,10 @@
         <field id="currentItem" type="node" alwaysNotify="true" />
 
         <!-- @Public -->
+        <!-- Enables/Disables trick play -->
+        <field id="enableTrickPlay" type="boolean" value = "true" alwaysNotify="true" />
+
+        <!-- @Public -->
         <!-- Content node of endcard item what was selected  -->
         <field id="endcardItemSelected" type="node" alwaysNotify="true" />
 
@@ -109,16 +117,27 @@
         <!-- @Public -->
         <!-- If set to true shuffling ready content -->
         <!-- Else content has been shuffled ,unshuffle content to previous state -->
-        <!-- Working only in playlist mode -->
+        <!-- Working only for audio mode in playlist mode -->
         <field id="shuffle" type="bool" value="false" alwaysNotify="true" />
 
         <!--
           @Public
           This is an alias of the video node's field of the same name
           https://sdkdocs.roku.com/display/sdkdoc/Video#Video-MiscellaneousFields
-          This field only works in video mode
         -->
         <field id="disableScreenSaver" type="boolean" value="false" />
+
+        <!-- @Public -->
+        <!--
+          Only appies to audio mode.
+          Content node for buttons node. Has childrens with id and title that will be shown on View.
+        -->
+        <field id="buttons" type="node" />
+
+        <!-- @Public -->
+        <!-- @ReadOnly  -->
+        <!-- Is set when button is selected by user. Should be observed in channel. -->
+        <field id="buttonSelected" type="int" alwaysNotify="true" value="-1"/>
 
         <!--
             @Override <field id="theme" type="assocarray" />
@@ -168,10 +187,10 @@
                 <b>BIF customization</b>
                 @PossibleValue focusRingColor - a color to be blended with the image displayed behind individual BIF images displayed on the screen
 
-                <b>Endcard view theme attributes</b>
-                @PossibleValue buttonsFocusedColor - repeat button focused text color
-                @PossibleValue buttonsUnFocusedColor - repeat button unfocused text color
-                @PossibleValue buttonsfocusRingColor - repeat button background color
+                <b>Endcard & Nowplaying view theme attributes</b>
+                @PossibleValue buttonsFocusedColor - button focused text color
+                @PossibleValue buttonsUnFocusedColor - button unfocused text color
+                @PossibleValue buttonsfocusRingColor - button background color
 
                 <b>grid attributes</b>
                 @PossibleValue rowLabelColor - grid row title color
@@ -180,6 +199,12 @@
                 @PossibleValue itemTextColorLine1 - text color for 1st row on endcard item
                 @PossibleValue itemTextColorLine2 - text color for 2nd row on endcard item
                 @PossibleValue timerLabelColor - Color of remaining timer
+
+                <b> Audio mode text attributes</b>
+                @PossibleValue albumColor - set color for albom name
+                @PossibleValue titleColor - set color for title
+                @PossibleValue artistColor - set color for artist
+                @PossibleValue releaseDateColor - set color for release date
         -->
 
 
@@ -196,6 +221,7 @@
 
     <children>
         <Rectangle
+            id="background"
             width="1280"
             height="720"
             translation="[0,0]"

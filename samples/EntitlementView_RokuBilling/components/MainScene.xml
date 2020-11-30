@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="MainScene" extends="BaseScene" >
+    <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+    <script type="text/brightscript" uri="pkg:/components/DetailsScreenLogic.brs" />
+    <script type="text/brightscript" uri="pkg:/components/VideoPlayerLogic.brs" />
+
+    <script type="text/brightscript" uri="pkg:/source/rsg_utils.brs" />
+</component>
