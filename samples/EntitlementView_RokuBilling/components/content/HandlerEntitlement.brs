@@ -1,3 +1,9 @@
+' ********** Copyright 2020 Roku Corp.  All Rights Reserved. **********
+
+' !!! THE PRODUCT CODES USED IN THIS FILE ARE EXAMPLES !!!
+' For the sample channel to work, you must update them to match products
+' that you set up in your develper account.
+
 sub ConfigureEntitlements(config as Object)
     isActiveMonthly = false
     isActiveAnnual = false
@@ -10,17 +16,14 @@ sub ConfigureEntitlements(config as Object)
             expDate.FromISO8601String(purchase.expirationDate)
               
             ' check for trial purchases, even expired ones
-            ' FIXME: please, replace this codes to created codes in the Developer Dashboard
             if purchase.code = "monthly_trial_product_code" or purchase.code = "annual_trial_product_code"
                 isTrialUsed = true
             end if
               
             ' check active (not expired) purchases
             if expDate.AsSeconds() > nowDate.AsSeconds()
-                ' FIXME: please, replace this codes to created codes in the Developer Dashboard
                 if purchase.code = "monthly_product_code" or purchase.code = "monthly_trial_product_code"
                     isActiveMonthly = true
-                ' FIXME: please, replace this codes to created codes in the Developer Dashboard
                 else if purchase.code = "annual_product_code" or purchase.code = "annual_trial_product_code"         
                     isActiveAnnual = true
                 end if
@@ -32,14 +35,12 @@ sub ConfigureEntitlements(config as Object)
         ' no active subs, check if trial has been used
         if isTrialUsed
             ' prompt user with non-trial versions of both products
-            ' FIXME: please, replace this codes to created codes in the Developer Dashboard
             config.displayProducts = [
                 {name:"Monthly sub", code: "monthly_product_code"}
                 {name:"Annual sub", code: "annual_product_code"}
             ]
         else
             ' trial wasn't used, prompt user with trial versions of both products
-            ' FIXME: please, replace this codes to created codes in the Developer Dashboard
             config.displayProducts = [
                 {name: "Monthly trial", code: "monthly_trial_product_code"}
                 {name: "Annual trial",  code: "annual_trial_product_code"}
@@ -48,14 +49,12 @@ sub ConfigureEntitlements(config as Object)
     else
         ' have some active subs
         if isActiveAnnual = true
-            ' FIXME: please, replace this codes to created codes in the Developer Dashboard
             config.displayProducts = [
-                {name: "Monthly product (downgrade)", code: "monthly_trial_product_code", action: "downgrade"}
+                {name: "Monthly product (downgrade)", code: "monthly_product_code", action: "downgrade"}
             ]
         else 'isActiveMonthly = true
-            ' FIXME: please, replace this codes to created codes in the Developer Dashboard
             config.displayProducts = [
-                {name: "Annual Product (upgrade)", code: "annual_trial_product_code", action: "upgrade"}
+                {name: "Annual Product (upgrade)", code: "annual_product_code", action: "upgrade"}
             ]
         end if
     end if
