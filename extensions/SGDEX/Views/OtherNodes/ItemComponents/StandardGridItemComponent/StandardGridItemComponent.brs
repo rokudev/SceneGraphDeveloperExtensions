@@ -19,7 +19,7 @@ sub onContentSet()
         ' contentSetLine is field to check if text is set to label
         setLabelDataOrHide(m.line1, content.shortDescriptionLine1)
         setLabelDataOrHide(m.line2, content.shortDescriptionLine2)
-        setDurationBarData(content.length, content.bookmarkposition, content.hideItemDurationBar <> true)
+        setDurationBarData(content.length, content.playStart, content.hideItemDurationBar <> true)
         updateLabelsLayout()
     end if
 end sub
@@ -113,10 +113,10 @@ sub setLabelDataOrHide(label as Object, text as String)
     end if
 end sub
 
-sub setDurationBarData(length as Integer,BookmarkPosition as Integer, showDurationBar as Boolean)
-    if showDurationBar and length > 0 and BookmarkPosition > 0 and bookmarkPosition < length
+sub setDurationBarData(length as Integer, playStart as Integer, showDurationBar as Boolean)
+    if showDurationBar and length > 0 and playStart > 0 and playStart < length
         m.durationBar.length            = length
-        m.durationBar.BookmarkPosition  = BookmarkPosition
+        m.durationBar.playStart  = playStart
         m.durationBar.visible           = true
         m.durationBar.scale             = [1,1]
     else

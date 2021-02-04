@@ -13,9 +13,9 @@
         <!-- preffered color of progress on duration bar -->
         <field id="progressColor" type="color" alias="progress.color" />
         <!-- current playback position -->
-        <field id="length" type="int" onChange="UpdateBookmark" />
+        <field id="length" type="int" onChange="UpdatePlayStart" />
         <!-- stored bookmark playback position -->
-        <field id="bookmarkPosition" type="int" onChange="UpdateBookmark" />     
+        <field id="playStart" type="int" onChange="UpdatePlayStart" />     
     </interface> 
 
     <script type="text/brightscript" uri= "DurationBar.brs" />

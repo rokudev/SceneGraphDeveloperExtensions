@@ -28,9 +28,9 @@ Sub OnBackgroundColorChanged()
 end Sub
 
 'update progress on duration bar
-Sub UpdateBookmark()
-    if m.top.length > 0 AND m.top.length > m.top.BookmarkPosition
-        progress = Int(m.top.BookmarkPosition / m.top.length * 100)
+Sub UpdatePlayStart()
+    if m.top.length > 0 AND m.top.length > m.top.playStart
+        progress = Int(m.top.playStart / m.top.length * 100)
         if progress > 100
             progress = 100
         else if progress < 0
