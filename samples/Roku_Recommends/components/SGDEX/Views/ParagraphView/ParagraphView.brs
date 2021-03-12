@@ -110,7 +110,7 @@ sub SetupRenderingRectangles()
     buttonBar = m.top.getScene().buttonBar
     alignment = buttonBar.alignment
 
-    if alignment = "left" and buttonBar.visible
+    if (buttonBar.visible and buttonBar.overlay = false) and alignment = "left"
         buttonsX = m.visibleWidth - buttonsWidth
     else
         ' -20 for extra focus ring padding
@@ -327,20 +327,23 @@ end function
 
 
 sub SGDEX_UpdateViewUI()
-    contentGroupY = m.top.viewContentGroup.translation[1]
     buttonBar = m.top.getScene().buttonBar
 
     if m.buttons <> invalid
         if buttonBar.visible = true
-            if buttonBar.alignment = "top"
+            if buttonBar.overlay = false
+                if buttonBar.alignment = "top"
+                    m.layoutX = GetViewXPadding()
+                    m.visibleWidth = 1280 - (m.layoutX * 2)
+                    m.buttons.numRows = 2
+                else if buttonBar.alignment = "left"
+                    m.visibleWidth = ( 1280 - buttonBar.findNode("backgroundRectangle").width - GetViewXPadding() )
+                    m.layoutX = 0
+                end if
+            else
                 m.layoutX = GetViewXPadding()
                 m.visibleWidth = 1280 - (m.layoutX * 2)
-            else if buttonBar.alignment = "left"
-                m.visibleWidth = ( 1280 - buttonBar.findNode("backgroundRectangle").width - GetViewXPadding())
-                m.layoutX = 0
-            end if
-            if buttonBar.alignment = "top"
-                m.buttons.numRows = 2
+                m.buttons.numRows = 3
             end if
         else
             if buttonBar.alignment = "left"

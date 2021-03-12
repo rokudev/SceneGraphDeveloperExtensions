@@ -53,7 +53,7 @@ sub Init()
             children : [m.info1]
     })
 
-    m.viewLayout.insertChild(m.info1Layout,1)
+    m.viewLayout.insertChild(m.info1Layout,2)
 
     if m.LastThemeAttributes <> invalid then
         SGDEX_SetTheme(m.LastThemeAttributes)
@@ -498,41 +498,53 @@ end function
 
 
 sub SGDEX_UpdateViewUI()
-    buttonBar = m.top.getScene().buttonBar
-    contentGroupY = m.top.viewContentGroup.translation[1]
-    isButtonBarVisible = buttonBar.visible
-    isAutoHide = buttonBar.autoHide
-    descriptionLabelWidth = 593
-    translation = [1166, 0]
+    'avoid triggering if view wasn't initialized
+    if m.top.viewContentGroup.GetChildCount() > 0
+        padding = m.detailsGroup.BoundingRect()["x"]
+        buttonBar = m.top.GetScene().buttonBar
+        contentGroupY = m.top.viewContentGroup.translation[1]
+        isButtonBarVisible = buttonBar.visible
+        isButtonBarOverlay = buttonBar.overlay
+        isAutoHide = buttonBar.autoHide
+        descriptionLabelWidth = 593
 
-    if buttonBar <> invalid and m.detailsGroup <> invalid
-        if buttonBar.alignment = "left"
-            offset = buttonBar.FindNode("backgroundRectangle").width
-            if not buttonBar.isInFocusChain() and (isAutoHide and isButtonBarVisible)
-                m.top.viewContentGroup.translation = [0,contentGroupY]
-            else if isButtonBarVisible
-                ' Move view content to right to avoid overlaping
-                m.top.viewContentGroup.translation = [offset - GetViewXPadding()*1.5,contentGroupY]
+        if buttonBar <> invalid and m.detailsGroup <> invalid
+            if buttonBar.alignment = "left"
+                offset = buttonBar.FindNode("backgroundRectangle").width
+                if not buttonBar.IsInFocusChain() and (isAutoHide and isButtonBarVisible)
+                    m.top.viewContentGroup.translation = [0,contentGroupY]
+                else if isButtonBarVisible and not isButtonBarOverlay
+                    absoluteButtonBarWidth = offset - GetViewXPadding()
+                    buttonBarViewContentPadding = 50
+                    m.top.viewContentGroup.translation = [absoluteButtonBarWidth + 30,contentGroupY]
 
-                ' Resize description and buttons if layout shifted
-                if descriptionLabelWidth/2 >= offset - GetViewXPadding()
-                    descriptionLabelWidth -= (offset - GetViewXPadding())
-                else
-                    descriptionLabelWidth = descriptionLabelWidth - m.detailsGroup.boundingRect()["x"] - GetViewXPadding()
+                    distanceToShrinkRightGroup = m.descriptionLabel.sceneBoundingRect()["x"]+ m.descriptionLabel.sceneBoundingRect()["width"] - 1280 + 128
+                    ' shrink buttons and right labels only if it should be shrinked less then in 2/3
+                    if distanceToShrinkRightGroup < (593 / 3)*2
+                        descriptionLabelWidth -= distanceToShrinkRightGroup
+                        m.top.viewContentGroup.translation = [m.top.viewContentGroup.translation[0]-distanceToShrinkRightGroup,m.top.viewContentGroup.translation[1]]
+                    end if
                 end if
             end if
-        end if
-        if m.descriptionLabel <> invalid then m.descriptionLabel.width = descriptionLabelWidth
-        if m.buttons <> invalid
-            m.buttons.itemSize = [descriptionLabelWidth, 48]
-        end if
-    end if
 
-    if m.descriptionLabel <> invalid
-        if contentGroupY > 174
-            m.descriptionLabel.maxLines = 3
-        else
-            m.descriptionLabel.maxLines = 5
+            ' calculate minor change to avoid visual issue after overhang disabled
+            buttonsWidthDelta = m.descriptionLabel.width - descriptionLabelWidth
+            if buttonsWidthDelta < 0 then buttonsWidthDelta *= -1
+
+            if m.descriptionLabel <> invalid and buttonsWidthDelta > 24
+                m.descriptionLabel.width = descriptionLabelWidth
+                m.actorsLabel.width = descriptionLabelWidth
+                m.buttons.itemSize = [descriptionLabelWidth, 48]
+            end if
+
+        end if
+
+        if m.descriptionLabel <> invalid
+            if contentGroupY > 174
+                m.descriptionLabel.maxLines = 3
+            else
+                m.descriptionLabel.maxLines = 5
+            end if
         end if
     end if
 end sub

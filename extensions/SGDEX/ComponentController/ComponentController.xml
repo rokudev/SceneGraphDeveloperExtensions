@@ -59,6 +59,13 @@
          -->
         <function name="show" />
 
+        <!-- @Public -->
+        <!-- 
+            A function that allows to set up the view and initiate related content manager prior adding it to the stack with "show" function. 
+            This is optional as the view gets set up automatically behind the scenes once added to the stack.
+         -->
+        <function name="setup" />
+
         <!-- View manager is a reference to node that handles all View stack functionality -->
         <field id="ViewManager" type="node" />
     </interface>

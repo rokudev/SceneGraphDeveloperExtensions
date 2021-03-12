@@ -4,4 +4,5 @@
 <component name="MainScene" extends="BaseScene" >
     <script type="text/brightscript" uri="MainScene.brs" />
     <script type="text/brightscript" uri="ParagraphHelper.brs" />
+    <script type="text/brightscript" uri="DeepLinkingLogic.brs" />
 </component>

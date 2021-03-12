@@ -1,4 +1,4 @@
-' Copyright (c) 2019 Roku, Inc. All rights reserved.
+' Copyright (c) 2021 Roku, Inc. All rights reserved.
 
 sub init()
     m.top.theme = {}
@@ -32,9 +32,9 @@ sub init()
     m.defaultWidth = 55
     m.buttonHeight = 55
     m.backgroundMargin = 20
-    m.autoHideVertTransl = 15
+    m.autoHideVertTransl = 10
     m.defaultOverhangHeight = 115
-    m.backgroundRectangle.height = m.buttonHeight + m.backgroundMargin*2
+    m.backgroundRectangle.height = m.buttonHeight + m.backgroundMargin * 2
 
     ' button bar internal fields
     m.Handler_ConfigField = "handlerConfigButtonBar"
@@ -97,7 +97,7 @@ sub SetButtonBarContent(content as Object)
             m.buttonsRowList.numColumns = buttonsCount
         else if m.top.alignment = "left"
             ' Calculating visible buttons on buttonBar to switch animation
-            ' The vertical BB uses floating focus when there are not enough buttons to wrap  
+            ' The vertical BB uses floating focus when there are not enough buttons to wrap
             ' and uses fixed focus once the set of buttons gets big enough to wrap.
             safeZone = (720 - m.defaultOverhangHeight - 72)
             numRows = Cint(safeZone / m.buttonHeight)
@@ -307,6 +307,9 @@ sub AlignButtonBar()
         m.clippingGroup.clippingRect = [0, 0, m.backgroundRectangle.width, m.backgroundRectangle.height]
         popUpInterpolator.keyValue = [[0, -m.backgroundRectangle.height], [0, 0]]
         fadeOutInterpolator.keyValue = [[0, 0], [0, -m.backgroundRectangle.height]]
+
+        ' RDE-6815: this will ensure the buttons are centered vertically within the ButtonBar
+        m.buttonsRowList.itemSpacing = [0, 0]
     else if m.top.alignment = "left"
         popUpInterpolator = m.top.findNode("popUpInterpolator")
         fadeOutInterpolator = m.top.findNode("fadeOutInterpolator")
@@ -343,6 +346,8 @@ sub AlignButtonBar()
         m.clippingGroup.clippingRect = [0, 0, m.backgroundWidth, m.backgroundRectangle.height]
         popUpInterpolator.keyValue = [[-m.backgroundWidth, 0], [0, 0]]
         fadeOutInterpolator.keyValue = [[0, 0], [-m.backgroundWidth, 0]]
+
+        m.buttonsRowList.itemSpacing = [0, 10] ' RDE-6815
     end if
 
     m.buttonsRowList.itemSize = [m.buttonBarWidth, m.buttonHeight]
@@ -439,12 +444,12 @@ end sub
 
 sub OnGlobalThemeChange()
     theme = m.top.GetScene().actualThemeParameters
-    m.top.theme = resolveGlobalThemeAttributes(theme)
+    resolveGlobalThemeAttributes(theme)
 end sub
 
 sub OnGlobalUpdateThemeChange()
     theme = m.top.GetScene().updateTheme
-    m.top.updateTheme = resolveGlobalThemeAttributes(theme)
+    resolveGlobalThemeAttributes(theme)
 end sub
 
 function resolveGlobalThemeAttributes(newGlobalTheme as Object)

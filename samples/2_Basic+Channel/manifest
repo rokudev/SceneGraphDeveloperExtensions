@@ -12,3 +12,4 @@ splash_screen_sd=pkg:/images/splash_sd.jpg
 splash_color=#121212
 ui_resolutions=hd
 splash_rsg_optimization=1
+supports_input_launch=1

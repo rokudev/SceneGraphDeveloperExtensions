@@ -12,7 +12,31 @@ sub Init()
 
     m.top.observeField("allowCloseChannelOnLastView","OnAllowCloseChannel")
     m.top.allowCloseChannelOnLastView = true
+
+    m.preloadMediaView = invalid
 end sub
+
+function Setup(config as Object)
+    if m.preloadMediaView <> invalid and m.preloadMediaView.contentManager <> invalid
+        m.preloadMediaView.contentManager = invalid
+        m.preloadMediaView.RemoveField("contentManager")
+    end if
+    m.preloadMediaView = invalid
+
+    view = config.view
+    if view.contentManager = invalid
+        contentManager = InitContentManagerHelper(config)
+        if contentManager <> invalid
+            contentManager.Parent = m.top.getparent()
+            contentManager.callfunc("setView", view)
+            view.Update({contentManager: contentManager}, true)
+            if contentManager.subtype() = "ContentManagerMedia"
+                m.preloadMediaView = view
+            end if
+            contentManager.control = "start"
+        end if
+    end if
+end function
 
 function Show(config as Object)
     if GetInterface(config, "ifAssociativeArray") = invalid or config.view = invalid then
@@ -21,7 +45,6 @@ function Show(config as Object)
     end if
 
     View = config.view
-    contentManager = config.contentManager
 
     data = {}
 
@@ -33,10 +56,53 @@ function Show(config as Object)
         ? "Error: Component controller, received wrong config. Field setFocus must be Boolean."
     end if
 
+    contentManager = view.contentManager
+    if contentManager <> invalid
+        data.contentManager = contentManager
+        view.contentManager = invalid
+        view.RemoveField("contentManager")
+    else
+        contentManager = InitContentManagerHelper(config)
+        if contentManager <> invalid
+            contentManager.Parent = m.top.getparent()
+            contentManager.callFunc("setView", View)
+            data.contentManager = contentManager
+        end if
+    end if
+
+    m.top.ViewManager.callFunc("runProcedure", {
+        fn: "addView"
+        fp: [View, data]
+    })
+
+    buttonBar = m.top.GetScene().buttonBar
+    if data.setFocus = false and buttonBar.visible
+        if not buttonBar.IsInFocusChain()
+            buttonBar.SetFocus(true)
+        else if View.subtype() = "MediaView" and View.mode = "audio"
+            timer = m.top.CreateChild("Timer")
+            timer.duration = 0.001
+            timer.repeat = false
+            timer.control = "start"
+            timer.ObserveField("fire", "OnMediaTimerFired")
+        end if
+    end if
+    if contentManager <> invalid then
+        contentManager.control = "start"
+    end if
+
+    'do other stuff for proper registering and unregistering events
+end function
+
+function InitContentManagerHelper(config) as Object
+    View = config.view
+    contentManager = config.contentManager
+
     subTypesSupported = {
         GridView: "ContentManager",
         SearchView: "ContentManager",
-        TimeGridView: "ContentManagerTimeGrid"
+        TimeGridView: "ContentManagerTimeGrid",
+        MediaView: "ContentManagerMedia"
     }
 
     cmTypesSupported = {
@@ -48,12 +114,15 @@ function Show(config as Object)
             nodeType: "ContentManagerTimeGrid"
             configName: "HandlerConfigTimeGrid"
         }
+        media: {
+            nodeType: "ContentManagerMedia"
+            configName: "HandlerConfigMedia"
+        }
     }
 
     subtype = View.subtype()
     parentType = View.parentSubtype(View.subtype())
     cmType = View.contentManagerType
-
     ' Create content manager for SGDEX views
     if subTypesSupported[subtype] <> invalid
         contentManager = CreateObject("roSgNode", subTypesSupported[subtype])
@@ -70,34 +139,7 @@ function Show(config as Object)
         print "[SGDEX] Content Manager was not created"
     end if
 
-    if contentManager <> invalid
-        contentManager.Parent = m.top.getparent()
-        contentManager.callFunc("setView", View)
-        data.contentManager = contentManager
-    end if
-
-    m.top.ViewManager.callFunc("runProcedure", {
-        fn: "addView"
-        fp: [View, data]
-    })
-
-    buttonBar = m.top.GetScene().buttonBar
-    if data.setFocus = false and buttonBar.visible
-        if not buttonBar.IsInFocusChain()
-            buttonBar.SetFocus(true)
-        else if subtype = "MediaView" and view.mode = "audio"
-            timer = m.top.CreateChild("Timer")
-            timer.duration = 0.001
-            timer.repeat = false
-            timer.control = "start"
-            timer.ObserveField("fire", "OnMediaTimerFired")
-        end if
-    end if
-    if contentManager <> invalid then
-        contentManager.control = "start"
-    end if
-
-    'do other stuff for proper registering and unregistering events
+    return contentManager
 end function
 
 sub OnMediaTimerFired()

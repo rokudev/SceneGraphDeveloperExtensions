@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!-- Copyright (c) 2020 Roku, Inc. All rights reserved. -->
+<!-- Copyright (c) 2021 Roku, Inc. All rights reserved. -->
 <component name="MainScene" extends="BaseScene">
     <script type="text/brightscript" uri="MainScene.brs" />
+    <script type="text/brightscript" uri="DeepLinkingLogic.brs" />
+    <script type="text/brightscript" uri="MediaScreenLogic.brs" />
 </component>

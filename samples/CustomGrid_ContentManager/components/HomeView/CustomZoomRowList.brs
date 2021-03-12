@@ -1,4 +1,4 @@
-' ********** Copyright 2020 Roku Corp.  All Rights Reserved. **********
+' ********** Copyright 2021 Roku Corp.  All Rights Reserved. **********
 
 sub init()
     contentGrid = m.top.FindNode("contentGrid")

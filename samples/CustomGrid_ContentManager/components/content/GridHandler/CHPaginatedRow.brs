@@ -1,4 +1,4 @@
-' ********** Copyright 2020 Roku Corp.  All Rights Reserved. **********
+' ********** Copyright 2021 Roku Corp.  All Rights Reserved. **********
 
 sub GetContent()
     ' get row pagination parameters - offset and pageSize are passed via
@@ -18,7 +18,7 @@ sub GetContent()
 
     ' make an API call
     rawReponse = url.GetToString()
-
+    
     ' parsing content items from response
     json = ParseJSON(rawReponse)
     if json <> invalid and json.response <> invalid
@@ -29,6 +29,10 @@ sub GetContent()
                 contentItem = CreateObject("roSGNode", "ContentNode")
                 contentItem.Update({
                     title: item.title
+                    description: item.description
+                    artist: item.creator
+                    releaseDate: item.date
+                    downloads: item.downloads
                     hdposterurl: BuildPosterUrl(item.identifier)
                 }, true)
                 items.push(contentItem)
@@ -52,7 +56,7 @@ function BuildSearchUrl(pageSize as Integer, itemIndex as Integer, query as Stri
 
     params = {
         output: "json"
-        "fl[]": "identifier"
+        "fl[]": ""
         q: query
         rows: pageSize.ToStr()
         page: itemIndex.ToStr()

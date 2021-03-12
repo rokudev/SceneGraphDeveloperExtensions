@@ -1,6 +1,31 @@
 # Scene Graph Developer Extensions
 
-> 11.30.20
+> 03.12.21
+
+## v.2.6
+
+### Features
+
+* The MediaView ContentManager can now be used with custom views
+* GridView has a new currFocusRow field that can be observed to monitor the vertical movement of the focus ring
+* TimeGridView has new jumpToRow and jumpToRowItem fields that can be used to move focus programmatically
+* ButtonBar has a new overlay field that can be used to render the ButtonBar in front of the active view rather than moving the view to make room for the ButtonBar
+* The rowItemFocused field on SearchView will now indicate when focus moves to the keyboard
+
+### Bug Fixes
+
+* Fixed an issue where the value of m.top.componentController.currentView sometimes contained the wrong value when accessed from a wasShown observer
+* Fixed an issue where the background color could change unexpectedly after updating the theme
+* Fixed an issue in ButtonBar where setting the updateTheme field did not always work as expected
+* Fixed an issue in ButtonBar where certain theme attributes sometimes did not work as expected
+* Fixed an issue in ButtonBar where the buttons were not always correctly aligned vertically
+* Fixed an issue in MediaView where audio would sometimes not repeat if the screensaver was active
+* Fixed an issue in MediaView where playback could fail with using RAF with server stitched ads in playlist mode
+* Fixed an issue in MediaView where playback could fail after programmatically changing the control field in playlist mode.
+* Fixed an issue in MediaView where an unexpected visual artifact sometimes appeared in audio mode
+* Fixed an issue in MediaView that could cause large texture warnings to appear on the console
+* Fixed an issue in DetailsView the view's layout could become corrupted after changing the height of the overhang
+* Fixed an issue in SearchView that could cause a nonexistent field warning to appear on the console
 
 ## v.2.5
 

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2018 Roku, Inc. All rights reserved. -->
+
+<!--
+  The SGDEX Content Manager simplifies task management for developers
+  so they don't have to worry as much about things like Task Nodes
+  and the multi-threaded nature of Roku Scene Graph. SGDEX does this
+  using ContentHandlers. In order to populate a view, all the developer
+  needs to do is provide SGDEX with a some config data to drive that view's 
+  ContentHandler(s).
+-->
+
+<component name="ContentManagerMedia" extends="Group" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <interface>
+        <field id="Parent" type="node" />
+
+        <field id="control" type="string" onChange="onControlChanged" />
+
+        <!--
+            Allows to specify the name of the content node field
+            where content handler config should be situated.
+        -->
+        <field id="configFieldName" type="string" onChange="OnConfigFieldNameChanged" />
+        
+        <function name="setView" />
+    </interface>
+
+    <script type="text/brightscript" uri="ContentManagerMedia.brs" />
+    <script type="text/brightscript" uri="../ContentManagerUtils.brs" />
+    <script type="text/brightscript" uri="../../Views/utils/utils.brs" />
+</component>

@@ -6,4 +6,5 @@
     <script type="text/brightscript" uri="SearchViewLogic.brs" />
     <script type="text/brightscript" uri="GridViewLogic.brs" />
     <script type="text/brightscript" uri="VideoPlayerLogic.brs" />
+    <script type="text/brightscript" uri="DeepLinkingLogic.brs" />
 </component>

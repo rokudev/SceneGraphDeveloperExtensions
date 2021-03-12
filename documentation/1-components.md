@@ -158,6 +158,10 @@ ButtonBar provides an easy way to display a collection of buttons over any view
     * Controls whether the ButtonBar is hidden when it does not have focus.  
  When ButtonBar is hidden, a hint will be displayed in its place.  
     * Write Only  
+* <a id="buttonbar#fields#overlay"></a>**overlay** (bool)
+    * Default value: false
+    * Controls whether ButtonBar slides over the screen's content  
+    * Write Only  
 * <a id="buttonbar#fields#renderovercontent"></a>**renderOverContent** (bool)
     * Default value: false
     * Controls whether ButtonBar is displayed over playing content.  
@@ -261,7 +265,9 @@ If there is a stack with such ID, ComponentController switches to it and makes i
 
 #### <a id="componentcontroller#functions"></a>Functions
 * <a id="componentcontroller#functions#show"></a>**show**
-    * Function that has to be called when you want to add view to view stack, and set focus to view
+    * Function that has to be called when you want to add view to view stack, and set focus to view* <a id="componentcontroller#functions#setup"></a>**setup**
+    * A function that allows to set up the view and initiate related content manager prior adding it to the stack with "show" function.   
+This is optional as the view gets set up automatically behind the scenes once added to the stack.
 
 ### <a id="componentcontroller#sample"></a>Sample of usage:
     ' in Scene context in channel
@@ -527,7 +533,7 @@ EntitlementView can work in one of two modes which is driven by EntitlementView.
 - username/password authentication handling/check (mode = "UserPass")  
   
 EntitlementView.mode should be specifically set by developer.  
-   
+  
 Developer is able to implement their entitlement related business logic in EntitlementHandler.  
 The handler is specified by handlerConfigEntitlement field of the content node assigned to the view.  
   
@@ -567,19 +573,19 @@ Roku account email address and use that value to pre-populate the KeyboardView.
     * initiates silent de-authentication (no UI)  
     * Write Only  
 * <a id="entitlementview#fields#username"></a>**username** (string)
-    * a string field which contains username. This field used in case of   
+    * a string field which contains username. This field used in case of  
 custom UI for collecting the credentials.  
   
 * <a id="entitlementview#fields#password"></a>**password** (string)
-    * a string field which contains user password. This field used in case of   
+    * a string field which contains user password. This field used in case of  
 custom UI for collecting the credentials.  
 
 
 ### <a id="entitlementview#sample"></a>Sample of usage:
     ' ====== Use case 1: silent RokuPay subscription check ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to do silent subscription check, you need to:
     ' - create the view
     ' - specify "RokuBilling" mode
@@ -597,9 +603,9 @@ custom UI for collecting the credentials.
     }, true)
     ent.content = content
     ent.silentCheckEntitlement = true
-    
+
     ' ... mySubscriptionCheckHandler scope:
-    
+
     sub ConfigureEntitlements(config as Object)
         ' Here you should implement the business logic to check subsciption status.
         '
@@ -609,12 +615,12 @@ custom UI for collecting the credentials.
         ' You need to set config.isSubscribed to true or false in order to indicate
         ' whether user is subscribed or not.
     end sub
-    
-    
+
+
     ' ====== Use case 2: RokuPay subscription flow ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to initiate RokuPay subscription flow, you need to:
     ' - create the view
     ' - specify "RokuBilling" mode
@@ -632,11 +638,11 @@ custom UI for collecting the credentials.
     }, true)
     ent.content = content
     m.top.ComponentController.callFunc("show", {view: ent})
-    
+
     ' ... mySubscriptionHandler scope:
-    
+
     sub ConfigureEntitlements(config as Object)
-        ' Here you should implement the business logic to determine which subscription 
+        ' Here you should implement the business logic to determine which subscription
         ' products to show to the user.
 
         ' You may use config.purchases and config.catalogProducts that will be
@@ -645,29 +651,29 @@ custom UI for collecting the credentials.
         ' You need to populate config.displayProducts with the list of products
         ' to be displayed to the user and be available for selection.
 
-        ' Each item in config.displayProducts should be an AA containing 
+        ' Each item in config.displayProducts should be an AA containing
         ' product _code_ per Channel Store data and, optionally, _name_ and _action_,
         ' for instance:
-        
+
         config.displayProducts = [
             ' a subscription purchase product (no action field)
             {name: "Subscription 1", code: "mytestsub1"},
-            
+
             ' a subscription upgrade product, it should belong to a product group
             ' configured in the Roku Developer dashboard
             {name: "Subscription 2 (upgrade)", code: "mytestsub2", action: "upgrade"},
-            
+
             ' a subscription downgrade product, it should belong to a product group
             ' configured in the Roku Developer dashboard
             {name: "Subscription 3 (downgrade)", code: "mytestsub3", action: "downgrade"}
         ]
     end sub
-    
-    
+
+
     ' ====== Use case 3: silent authentication check ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to do silent authentication check, you need to:
     ' - create the view
     ' - specify "UserPass" mode
@@ -685,19 +691,19 @@ custom UI for collecting the credentials.
     }, true)
     ent.content = content
     ent.silentCheckAuthentication = true
-    
+
     ' ... myAuthHandler scope:
-    
+
     function CheckAuthentication() as Boolean
         ' Here you should implement the business logic to validate user auth status
         ' and return true if user is authenticated, false if not
     end function
-    
-    
+
+
     ' ====== Use case 4: silent de-authentication ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to do silent de-authentication, you need to:
     ' - create the view
     ' - specify "UserPass" mode
@@ -715,9 +721,9 @@ custom UI for collecting the credentials.
     }, true)
     ent.content = content
     ent.silentDeAuthenticate = true
-    
+
     ' ... myAuthHandler scope:
-    
+
     function DeAuthenticate() as Boolean
         ' Here you should implement the business logic to de-authenticate user
         ' (API calls etc) and return result of the operation:
@@ -726,12 +732,12 @@ custom UI for collecting the credentials.
         ' EntitlementView.isAuthenticated will be populated with the value opposite to
         ' this return value
     end function
-    
-    
+
+
     ' ====== Use case 5: user/password authentication flow ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to initiate user/password authentication flow, you need to:
     ' - create the view
     ' - specify "UserPass" mode
@@ -740,7 +746,7 @@ custom UI for collecting the credentials.
     ' - show the view
     ent = CreateObject("roSGNode", "EntitlementView")
     ent.mode = "UserPass"
-    ent.ObserveField("isSubscribed", "OnIsSubscribed")
+    ent.ObserveField("isAuthenticated", "OnIsAuth")
     content = CreateObject("roSGNode", "ContentNode")
     content.Update({
         handlerConfigEntitlement: {
@@ -749,9 +755,9 @@ custom UI for collecting the credentials.
     }, true)
     ent.content = content
     m.top.ComponentController.callFunc("show", {view: ent})
-    
+
     ' ... myAuthHandler scope:
-    
+
     function Authenticate(username as String, password as String) as Boolean
         ' Here you should implement the business logic for authentication based on username
         ' and password (API calls etc) and return result of the operation:
@@ -893,6 +899,9 @@ This field must be set after setting the content field.
 Value is an array of strings, which set row poster shapes.  
 If the array contains fewer elements than the number of rows, then the shape of rest rows will be set to posterShape field 	or to the last value in the array.  
   
+* <a id="gridview#fields#currfocusrow"></a>**currFocusRow** (float)
+    * The value is a floating point value where the integer part represents the row that overlaps yFocusTOp and the fractional part represents the percentage of the item that overlaps the fixed focus position.  
+    * Read Only  
 * <a id="gridview#fields#showmetadata"></a>**showMetadata** (boolean)
     * Default value: true
     * Controls whether the view displays metadata for the focused item above the grid  
@@ -1044,6 +1053,7 @@ SearchView requires firmware v9.1 or newer
 #### <a id="searchview#fields"></a>Fields
   
 * <a id="searchview#fields#rowitemfocused"></a>**rowItemFocused** (vector2d)
+    * Default value: [-1,-1]
     * Read only  
 Updated when grid focused item changes  
 Value is an array containing the index of the row and item that were focused  
@@ -1443,7 +1453,17 @@ Specifies the total width of the TimeGrid in days
     * Updated when user selects a program from the TimeGrid  
 Value is an array of indexes represents [channelIndex, programIndex]  
 updated simultaneously with channelSelected and programSelected  
-
+  
+* <a id="timegridview#fields#jumptorow"></a>**jumpToRow** (integer)
+    * Set grid focus to specified row  
+Value is an integer index of the row that should be focused  
+This field must be set after setting the content field.  
+    * Write Only  
+* <a id="timegridview#fields#jumptorowitem"></a>**jumpToRowItem** (vector2d)
+    * Set grid focus to specified item in a row  
+Value is an array containing the index of the row and item that should be focused  
+This field must be set after setting the content field.  
+    * Write Only
 
 ### <a id="timegridview#sample"></a>Sample of usage:
     timeGrid = CreateObject("roSGNode", "TimeGridView")
@@ -1659,6 +1679,4 @@ If you do not update the HandlerConfig, SGDEX will re-use the original one for s
       })
     end sub
 
-
-___
-
+###### Copyright (c) 2021 Roku, Inc. All rights reserved.

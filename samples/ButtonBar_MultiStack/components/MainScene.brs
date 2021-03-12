@@ -41,7 +41,18 @@ sub Show(args as Object)
     gridConfig = GetButtonBarScreensConfig()["movies"]
     ShowNewScreenFromConfig(gridConfig)
 
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
+
     m.top.signalBeacon("AppLaunchComplete")
+end sub
+
+sub Input(args as object)
+    ' handle roInput event deep linking
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
 end sub
 
 sub OnButtonBarItemSelected(event as Object)

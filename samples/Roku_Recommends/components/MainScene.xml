@@ -6,4 +6,5 @@
     <script type="text/brightscript" uri="MainScene.brs" />
     <script type="text/brightscript" uri="DetailsView.brs" />
     <script type="text/brightscript" uri="VideoView.brs" />
+    <script type="text/brightscript" uri="DeepLinkingLogic.brs" />
 </component>

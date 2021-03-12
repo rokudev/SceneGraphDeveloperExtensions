@@ -15,3 +15,4 @@ ui_resolutions=hd
 splash_color=#121212
 splash_min_time=0
 bs_libs_required=roku_ads_lib
+supports_input_launch=1

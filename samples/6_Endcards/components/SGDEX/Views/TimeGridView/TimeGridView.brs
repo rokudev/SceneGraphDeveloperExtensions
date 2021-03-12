@@ -14,6 +14,9 @@ function Init()
 
     m.view.observeField("content", "onTimeGridViewContentChange")
 
+    m.top.ObserveField("jumpToRow", "OnJumpToRowChanged")
+    m.top.ObserveField("jumpToRowItem", "OnJumpToRowItemChanged")
+
     m.top.ObserveField("posterShape", "OnPosterShapeChange")
     m.top.posterShape = "4x3"
 
@@ -93,6 +96,21 @@ function programFocused(event as Object)
         ChannelProgramFocused(m.view.channelFocused, m.view.programFocused)
     end if
 end function
+
+sub OnJumpToRowChanged(event as Object)
+    row = event.getData()
+    if m.view <> invalid
+        m.view.jumpToChannel = row
+    end if
+end sub
+
+sub OnJumpToRowItemChanged(event as Object)
+    jumpToRowItem = event.getData()
+    if m.view <> invalid
+        m.view.jumpToChannel = jumpToRowItem[0]
+        m.view.jumpToProgram = jumpToRowItem[1]
+    end if
+end sub
 
 ' ChannelProgramFocused is invoked when either channelFocused or programFocused was changed
 ' Used for loading content when user navigates vertically

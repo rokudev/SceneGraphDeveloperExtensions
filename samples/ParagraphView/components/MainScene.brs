@@ -31,8 +31,21 @@ sub Show(args as Object)
     m.top.componentController.CallFunc("show", {
         view: m.paragraphView
     })
+
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
+
     m.top.signalBeacon("AppLaunchComplete")
 end sub
+
+sub Input(args as object)
+    ' handle roInput event deep linking
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
+end sub
+
 
 ' function: GetButtons()
 ' @Description: create node with button, which should reload linking code, as child

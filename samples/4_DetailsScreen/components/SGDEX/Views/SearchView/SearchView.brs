@@ -23,7 +23,7 @@ sub init()
     ' when user navigates to grid
     m.visibleArea.clippingRect = [-15, -15, 1280, 720]
     ' set constants for sliding the layout up and down
-    m.layoutBaseY = -10
+    m.layoutBaseY = 2
     ' move SearchView layout under the overhang
     m.layout.translation = [0, m.layoutBaseY]
     m.top.viewContentGroup.appendChild(m.visibleArea)
@@ -45,7 +45,7 @@ sub init()
 end sub
 
 sub OnFocuseChange(event as Object)
-    if m.top.IsInFocusChain()
+    if m.top.IsInFocusChain() and not m.lastFocusedNode.isInFocusChain()
         m.lastFocusedNode.SetFocus(true)
     end if
 end sub
@@ -151,7 +151,7 @@ function GetGridConfiguration() as Object
     xRowTranslation = 125
     'need to adjust grid translation when we have left aligned button bar
     if buttonBar <> invalid
-        if buttonBar.visible = true and buttonBar.alignment = "left"
+        if buttonBar.visible = true and buttonBar.overlay = false and buttonBar.alignment = "left"
             xRowTranslation = 0
         end if
     end if
@@ -172,7 +172,7 @@ function GetGridConfiguration() as Object
     itemComponentName = "StandardGridItemComponent"
     rowTitleComponentName = "DefaultRowTitleComponent"
 
-    if buttonBar <> invalid and buttonBar.visible = true and buttonBar.alignment = "left"
+    if buttonBar <> invalid and buttonBar.visible = true and buttonBar.overlay = false and buttonBar.alignment = "left"
         if rowListRowWidth >= 1000
             rowListRowWidth = 1280 - (buttonBar.findNode("backgroundRectangle").width + 125 + m.viewOffsetX)
         end if
@@ -315,7 +315,6 @@ sub SGDEX_SetTheme(theme as Object)
     colorTheme = {
         TextColor: {
             gridNode: [
-                "rowLabelColor"
                 "rowTitleColor"
                 "rowCounterColor"
                 "itemTextColorLine1"
@@ -345,7 +344,7 @@ sub SGDEX_SetTheme(theme as Object)
 
     gridThemeAttributes = {
         noResultsLabelColor: { noResultsLabel: "color" }
-        rowLabelColor:       { gridNode: ["rowLabelColor", "rowTitleColor", "rowCounterColor"] }
+        rowLabelColor:       { gridNode: ["rowTitleColor", "rowCounterColor"] }
         focusRingColor:      { gridNode: "focusBitmapBlendColor" }
         focusFootprintColor: { gridNode: "focusFootprintBlendColor" }
         itemTextColorLine1:  { gridNode: "itemTextColorLine1" }
@@ -381,6 +380,7 @@ function OnKeyEvent(key as String, press as Boolean) as Boolean
                 SlideLayout(m.layoutTopY, m.layoutBaseY)
                 m.lastFocusedNode = m.keyboard
                 m.keyboard.SetFocus(true)
+                m.top.rowItemFocused = [-1,-1]
                 handled = true
             end if
         end if
@@ -390,6 +390,11 @@ function OnKeyEvent(key as String, press as Boolean) as Boolean
 end function
 
 sub SGDEX_UpdateViewUI()
+    ' avoid triggering if view wasn't initialized
+    if m.top.viewContentGroup.GetChildCount() = 0
+        return
+    end if
+
     buttonBar = m.top.GetScene().buttonBar
     if buttonBar <> invalid
         bbBackgroundRectangle = buttonBar.findNode("backgroundRectangle")
@@ -397,20 +402,20 @@ sub SGDEX_UpdateViewUI()
         buttonBarWidth = bbBackgroundRectangle.width
 
         overhangHeight = m.top.overhang.height
-        m.layoutTopY = (0-(buttonBarHeight+buttonBarHeight))
-        
-        if m.layoutKeyboard <> invalid then m.layoutKeyboard.translation = [640, 0]            
+        m.layoutTopY = (m.layoutBaseY - (buttonBarHeight + buttonBarHeight))
+
+        if m.layoutKeyboard <> invalid then m.layoutKeyboard.translation = [640, 0]
         if m.gridNode <> invalid then RebuildGridNode()
         if m.noResultsLabelGroup <> invalid then m.noResultsLabelGroup.translation = [640, 430]
         if m.spinnerGroup <> invalid then m.spinnerGroup.translation = [640, 430]
 
-        if buttonBar.visible = true
+        if buttonBar.visible = true and buttonBar.overlay = false
             if buttonBar.alignment = "left" and m.layoutKeyboard <> invalid
                 bbPadding = 30
                 if buttonBar.autoHide = true and buttonBar.IsInFocusChain() = false
                     bbPadding = 41
                 end if
-                
+
                 spinnerWidth = 100
                 safeZoneWidth = GetViewXPadding()
                 keyboardWidth = 1280 - 2*safeZoneWidth
@@ -419,10 +424,10 @@ sub SGDEX_UpdateViewUI()
                 offset = (centeredAreaWidth - spinnerWidth) / 2 + bbPadding
 
                 m.layoutKeyboard.translation = [offset, 0]
-                m.layoutTopY = 0 - overhangHeight
+                m.layoutTopY = m.layoutBaseY - m.defaultOverhangHeight
                 m.noResultsLabelGroup.translation = [offset, 430]
                 m.spinnerGroup.translation = [offset, 430]
-                
+
                 if keyboardWidth > centeredAreaWidth
                     ' try to shrink keyboard to keep it in a safe zone
                     scaleRatio = centeredAreaWidth / keyboardWidth
@@ -438,7 +443,7 @@ sub SGDEX_UpdateViewUI()
                 end if
             end if
         else
-            m.layoutTopY = 0 - overhangHeight
+            m.layoutTopY = m.layoutBaseY - m.defaultOverhangHeight
             if m.keyboard <> invalid
                 ' scale keyboard up to normal size
                 m.keyboard.scale = [1.0, 1.0]

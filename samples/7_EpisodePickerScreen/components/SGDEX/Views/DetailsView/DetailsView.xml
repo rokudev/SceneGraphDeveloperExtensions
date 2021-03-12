@@ -100,9 +100,15 @@
             itemSpacings="[40]">
             <LayoutGroup
                 id = "viewLayout"
-                itemSpacings="[14, 10]"
+                itemSpacings="[4, 14, 10]"
                 layoutDirection="vert"
                 horizAlignment="right">
+                <Rectangle
+                    id="dummyPlaceHolder"
+                    height="0"
+                    width="0"
+                    color="0x00000000">
+                </Rectangle>
                 <Rectangle
                     id="styledPosterArea"
                     height="201"
@@ -143,13 +149,11 @@
                         id="description"
                         wrap="true"
                         maxLines="5"
-                        width="593"
                     />
 
                     <Label
                         id="actors"
                         wrap="false"
-                        width="520"
                     />
                 </LayoutGroup>
             </Group>

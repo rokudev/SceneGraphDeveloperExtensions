@@ -23,7 +23,11 @@ end sub
 
 sub syncOutProperties()
     if m.ssUI <> invalid
-        m.top.currentView = m.ssUI.getchild(0)
+        currentView = m.ssUI.getChild(0)
+        m.top.currentView = currentView
+        if currentView <> invalid and currentView.hasField("wasShown")
+            currentView.wasShown = true
+        end if
     else
         m.top.currentView = invalid
     end if
@@ -99,12 +103,12 @@ end sub
 ' <<<   procedureObject  part -----------------------------------------------------------------------------------------------------------
 
 function createViewVO(NodeOrName, ViewInitData)
-
-    if lcase(type(ViewComponentName)) = "rosgnode" then
+    if lcase(type(NodeOrName)) = "rosgnode" then
         name = NodeOrName.id
     else
         name = NodeOrName
     end if
+
     previousViewSid = m.ssA.Peek()
     if previousViewSid <> invalid then
         previousViewsid = previousViewsid.sid
@@ -185,10 +189,6 @@ sub addView(ViewComponentName, ViewInitData)
         end if
     end if
 
-    if newView.hasField("wasShown") then
-        newView.wasShown = true
-    end if
-
     if NOT newView.hasField("close") then
         newView.addField("close", "string", true)
     end if
@@ -238,9 +238,6 @@ sub closeView(sid = invalid, closeData = invalid)
                     if not nowViewUI.isInFocusChain()
                         nowViewUI.setFocus(true)
                     end if
-                end if
-                if nowViewUI.hasField("wasShown") then
-                    nowViewUI.wasShown = true
                 end if
             end if
         else
@@ -315,9 +312,6 @@ sub closeToView(sid = invalid, closeData = invalid)
                 else
                     nowViewUI.setFocus(true)
                 end if
-                if nowViewUI.hasField("wasShown") then
-                    nowViewUI.wasShown = true
-                end if
             else
                 ?"SGDEX: closed to many View, check your id"
             end if
@@ -347,9 +341,6 @@ sub replaceCurrentView(ViewComponentName, ViewInitData)
         newView = m.ui_object[ViewVO.sid]
         m.ssUI.appendChild(newView)
         newView.setFocus(true)
-        if newView.hasField("wasShown") then
-            newView.wasShown = true
-        end if
         m.ssA.push(ViewVO)
 
         'Delete and clean closed View

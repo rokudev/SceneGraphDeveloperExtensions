@@ -87,6 +87,7 @@ end sub
 
 sub CreateNewOrUpdateGridNode(componentName = "" as String, fields = {} as Object)
     observers = {
+        "currFocusRow": "SimulateAlias"
         "rowItemFocused": "SimulateAlias"
         "rowItemSelected": "SimulateAlias"
         "numRows": "SimulateAlias"
@@ -195,10 +196,10 @@ function GetConfigurationForStyle(style as String) as Object
     rowItemAspectRatio = GetRowsAspectRatio()
     rowListRowsHeight = GetRowsHeight()
     xRowTranslation = 125
-    
-    'need to adjust grid translation when we have left aligned button bar
+
+    ' need to adjust grid translation when we have left aligned button bar
     if buttonBar <> invalid
-        if buttonBar.visible = true and buttonBar.alignment = "left"
+        if buttonBar.visible = true and buttonBar.overlay = false and buttonBar.alignment = "left"
             xRowTranslation = 0
         end if
     end if
@@ -238,10 +239,10 @@ function GetConfigurationForStyle(style as String) as Object
         wrapDividerHeight = m.LastThemeAttributes["wrapdividerheight"]
     end if
 
-    're-calculation row width when we have left aligned buttonBar 
-    'for moving row counter to the right place
-    if buttonBar <> invalid 
-        if buttonBar.visible = true and buttonBar.alignment = "left" and rowListRowWidth = 1280
+    ' re-calculation row width when we have left aligned buttonBar
+    ' for moving row counter to the right place
+    if buttonBar <> invalid
+        if buttonBar.visible = true and buttonBar.overlay = false and buttonBar.alignment = "left" and rowListRowWidth = 1280
             rowListRowWidth = 1280 - (buttonBar.findNode("backgroundRectangle").width + 125 + m.viewOffsetX)
         end if
     end if
@@ -474,5 +475,5 @@ sub SGDEX_UpdateViewUI()
     buttonBar = m.top.getScene().buttonBar
     if buttonBar <> invalid and m.gridNode <> invalid
         RebuildRowList()
-    end if 
+    end if
 end sub

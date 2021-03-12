@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (c) 2018 Roku, Inc. All rights reserved. -->
+<!-- Copyright (c) 2021 Roku, Inc. All rights reserved. -->
 
 <!--
     @Public
@@ -13,19 +13,19 @@
 
     EntitlementView.mode should be specifically set by developer.
 
-     
+
     Developer is able to implement their entitlement related business logic in EntitlementHandler.
     The handler is specified by handlerConfigEntitlement field of the content node assigned to the view.
-    
-    
+
+
     "RokuBilling" mode now supports not only regular RokuPay purchase but also [on-device upgrade/downgrade](https://developer.roku.com/docs/developer-program/roku-pay/implementation/on-device-upgrade-downgrade.md).
     Please see EntitlementHandler documentation for more details.
-        
+
     @Sample:
     ' ====== Use case 1: silent RokuPay subscription check ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to do silent subscription check, you need to:
     ' - create the view
     ' - specify "RokuBilling" mode
@@ -43,9 +43,9 @@
     }, true)
     ent.content = content
     ent.silentCheckEntitlement = true
-    
+
     ' ... mySubscriptionCheckHandler scope:
-    
+
     sub ConfigureEntitlements(config as Object)
         ' Here you should implement the business logic to check subsciption status.
         '
@@ -55,12 +55,12 @@
         ' You need to set config.isSubscribed to true or false in order to indicate
         ' whether user is subscribed or not.
     end sub
-    
-    
+
+
     ' ====== Use case 2: RokuPay subscription flow ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to initiate RokuPay subscription flow, you need to:
     ' - create the view
     ' - specify "RokuBilling" mode
@@ -78,11 +78,11 @@
     }, true)
     ent.content = content
     m.top.ComponentController.callFunc("show", {view: ent})
-    
+
     ' ... mySubscriptionHandler scope:
-    
+
     sub ConfigureEntitlements(config as Object)
-        ' Here you should implement the business logic to determine which subscription 
+        ' Here you should implement the business logic to determine which subscription
         ' products to show to the user.
 
         ' You may use config.purchases and config.catalogProducts that will be
@@ -91,29 +91,29 @@
         ' You need to populate config.displayProducts with the list of products
         ' to be displayed to the user and be available for selection.
 
-        ' Each item in config.displayProducts should be an AA containing 
+        ' Each item in config.displayProducts should be an AA containing
         ' product _code_ per Channel Store data and, optionally, _name_ and _action_,
         ' for instance:
-        
+
         config.displayProducts = [
             ' a subscription purchase product (no action field)
             {name: "Subscription 1", code: "mytestsub1"},
-            
+
             ' a subscription upgrade product, it should belong to a product group
             ' configured in the Roku Developer dashboard
             {name: "Subscription 2 (upgrade)", code: "mytestsub2", action: "upgrade"},
-            
+
             ' a subscription downgrade product, it should belong to a product group
             ' configured in the Roku Developer dashboard
             {name: "Subscription 3 (downgrade)", code: "mytestsub3", action: "downgrade"}
         ]
     end sub
-    
-    
+
+
     ' ====== Use case 3: silent authentication check ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to do silent authentication check, you need to:
     ' - create the view
     ' - specify "UserPass" mode
@@ -131,19 +131,19 @@
     }, true)
     ent.content = content
     ent.silentCheckAuthentication = true
-    
+
     ' ... myAuthHandler scope:
-    
+
     function CheckAuthentication() as Boolean
         ' Here you should implement the business logic to validate user auth status
         ' and return true if user is authenticated, false if not
     end function
-    
-    
+
+
     ' ====== Use case 4: silent de-authentication ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to do silent de-authentication, you need to:
     ' - create the view
     ' - specify "UserPass" mode
@@ -161,9 +161,9 @@
     }, true)
     ent.content = content
     ent.silentDeAuthenticate = true
-    
+
     ' ... myAuthHandler scope:
-    
+
     function DeAuthenticate() as Boolean
         ' Here you should implement the business logic to de-authenticate user
         ' (API calls etc) and return result of the operation:
@@ -172,12 +172,12 @@
         ' EntitlementView.isAuthenticated will be populated with the value opposite to
         ' this return value
     end function
-    
-    
+
+
     ' ====== Use case 5: user/password authentication flow ======
-    
+
     ' ... Scene scope:
-    
+
     ' In order to initiate user/password authentication flow, you need to:
     ' - create the view
     ' - specify "UserPass" mode
@@ -186,7 +186,7 @@
     ' - show the view
     ent = CreateObject("roSGNode", "EntitlementView")
     ent.mode = "UserPass"
-    ent.ObserveField("isSubscribed", "OnIsSubscribed")
+    ent.ObserveField("isAuthenticated", "OnIsAuth")
     content = CreateObject("roSGNode", "ContentNode")
     content.Update({
         handlerConfigEntitlement: {
@@ -195,9 +195,9 @@
     }, true)
     ent.content = content
     m.top.ComponentController.callFunc("show", {view: ent})
-    
+
     ' ... myAuthHandler scope:
-    
+
     function Authenticate(username as String, password as String) as Boolean
         ' Here you should implement the business logic for authentication based on username
         ' and password (API calls etc) and return result of the operation:
@@ -241,14 +241,14 @@
         <!-- @WriteOnly -->
         <!-- initiates silent de-authentication (no UI) -->
         <field id="silentDeAuthenticate" type="bool" value="false" alwaysNotify="true" />
-        
+
         <!-- @Public -->
-        <!-- a string field which contains username. This field used in case of 
+        <!-- a string field which contains username. This field used in case of
         custom UI for collecting the credentials. -->
         <field id="username" type="string" />
-        
+
         <!-- @Public -->
-        <!-- a string field which contains user password. This field used in case of 
+        <!-- a string field which contains user password. This field used in case of
         custom UI for collecting the credentials. -->
         <field id="password" type="string" />
 

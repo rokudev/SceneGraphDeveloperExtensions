@@ -214,7 +214,8 @@ sub SGDEX_UpdateViewUI()
     buttonBar = m.top.getScene().buttonBar
     buttonBaralignment = buttonBar.alignment
     isButtonBarVisible = buttonBar.visible
-    if m.top.getScene().buttonBar.visible and buttonBaralignment = "top" and m.repeatButton <> invalid then
+    isButtonBarOverlay = buttonBar.overlay
+    if m.top.getScene().buttonBar.visible and not isButtonBarOverlay and buttonBaralignment = "top" and m.repeatButton <> invalid then
         newY = m.buttonBar.boundingRect()["y"] + m.buttonBar.boundingRect()["height"] + m.viewOffsetY
         m.repeatButton.translation= [m.repeatButton.translation[0],newY]
         if newY + m.repeatButton.itemsize[1] > m.bottomRectangle.boundingRect()["y"] then
@@ -224,7 +225,7 @@ sub SGDEX_UpdateViewUI()
             m.topRectangle.height = moveContentOnY + m.topRectangle.height
             m.grid.translation = [m.grid.translation[0], m.grid.translation[1] + moveContentOnY]
         end if
-    else if isButtonBarVisible and buttonBaralignment = "left"
+    else if isButtonBarVisible and not isButtonBarOverlay and buttonBaralignment = "left"
         newX = (buttonBar.findNode("backgroundRectangle").width - GetViewXPadding()) + m.viewOffsetX
         if m.bottomRectangle <> invalid and m.timerLabel <> invalid and m.grid <> invalid
             m.bottomRectangle.translation = [m.bottomRectangle.translation[0] + newX, m.bottomRectangle.translation[1]]

@@ -7,10 +7,12 @@ sub init()
 
     m.roundedRectangle = m.top.findNode("roundedRectangle")
 
+    m.scene = m.top.getScene()
     m.buttonBar = m.top.GetScene().buttonBar
     m.enableFootprint = m.buttonBar.enableFootprint
     m.footprintStyle = m.buttonBar.footprintStyle
     m.buttonBar.ObserveFieldScoped("theme", "SaveColors")
+    m.scene.ObserveFieldScoped("theme", "SaveColors")
     SaveColors()
     m.buttonBar.ObserveFieldScoped("footprintStyle", "OnFootprintStyleChange")
     m.buttonBar.ObserveFieldScoped("enableFootprint", "OnEnableFootprintChange")
@@ -81,7 +83,14 @@ sub setTitleLabelStyle(width as Integer, height as Integer)
 end sub
 
 sub SaveColors()
-    theme = m.buttonBar.theme
+    theme = {}
+
+    if m.scene.theme <> invalid
+        if m.scene.theme.global <> invalid then theme.Append(m.scene.theme.global)
+        if m.scene.theme.buttonBar <> invalid then theme.Append(m.scene.theme.buttonBar)
+    end if
+
+    theme.Append(m.buttonBar.theme)
 
     if theme.buttonColor <> invalid
         m.buttonColor = theme.buttonColor

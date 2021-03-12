@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- Copyright (c) 2020 Roku, Inc. All rights reserved. -->
+<!-- Copyright (c) 2021 Roku, Inc. All rights reserved. -->
 <component name="SimpleGridItem" extends="Group">
     <interface>
         <field id="width" type="float" alias="itemPoster.width" />

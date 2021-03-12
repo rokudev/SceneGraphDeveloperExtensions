@@ -1,91 +1,91 @@
 ' Copyright (c) 2018 Roku, Inc. All rights reserved.
 
-sub Init()
-    m.labelsLayout = m.top.findNode("labelsLayout")
-    m.labelsBackground = m.top.findNode("labelsBackground")
-    m.line1 = m.top.findNode("line1")
-    m.line2 = m.top.findNode("line2")
-    
-    m.posterRect = m.top.findNode("posterRect")
-    m.poster = m.top.findNode("poster")
-    m.durationBar = m.top.findNode("durationBar")
-    m.durationBar.height = 6
-end sub 
-
 sub onContentSet()
     content = m.top.itemContent
     if content <> invalid
-        m.poster.uri = content.hdPosterUrl
+        m.top.findNode("poster").uri = content.hdPosterUrl
+        line1 = m.top.findNode("line1")
+        line2 = m.top.findNode("line2")
         ' contentSetLine is field to check if text is set to label
-        setLabelDataOrHide(m.line1, content.shortDescriptionLine1)
-        setLabelDataOrHide(m.line2, content.shortDescriptionLine2)
-        setDurationBarData(content.length, content.bookmarkposition, content.hideItemDurationBar <> true)
+        setLabelDataOrHide(line1, content.shortDescriptionLine1)
+        setLabelDataOrHide(line2, content.shortDescriptionLine2)
+        setDurationBarData(content)
         updateLabelsLayout()
     end if
 end sub
 
 sub onWidthChange()
-    m.durationBar.width = m.top.width
-    m.poster.width      = m.top.width
-    m.poster.loadWidth  = m.top.width
+    m.top.FindNode("durationBar").width = m.top.width
+    m.top.FindNode("poster").width      = m.top.width
+    m.top.FindNode("poster").loadWidth  = m.top.width
+    m.top.FindNode("posterRect").width = m.top.width
     updateLabelsLayout()
 end sub
 
 sub onHeightChange()
-    m.poster.height = m.top.height
-    m.poster.loadHeight  = m.top.height
-    m.durationBar.translation = [0,m.top.height - m.durationBar.height]
+    m.top.FindNode("poster").height = m.top.height
+    m.top.FindNode("poster").loadHeight  = m.top.height
+    m.top.FindNode("posterRect").height = m.top.height
+    durationBar = m.top.FindNode("durationBar")
+    durationBar.translation = [0,m.top.height - durationBar.height]
     updateLabelsLayout()
 end sub
+
 
 sub updateLabelsLayout()
     width = m.top.width
     height = m.top.height
     if width > 0 and height > 0
+        line1 = m.top.findNode("line1")
+        line2 = m.top.findNode("line2")
+        posterRect = m.top.FindNode("posterRect")
+        labelsBackground = m.top.findNode("labelsBackground")
+        labelsLayout = m.top.findNode("labelsLayout")
+
         ' set theme parametres
         parent = Utils_getParentbyIndex(3, m.top)
         if parent <> invalid
             if parent.itemTextColorLine1 <> invalid
-                m.line1.color = parent.itemTextColorLine1
+                line1.color = parent.itemTextColorLine1
             end if
             if parent.itemTextColorLine2 <> invalid
-                m.line2.color = parent.itemTextColorLine2
+                line2.color = parent.itemTextColorLine2
             end if
             if parent.itemBackgroundColor <> invalid and parent.itemBackgroundColor <> ""
-                m.posterRect.color = parent.itemBackgroundColor
+                posterRect.color = parent.itemBackgroundColor
             end if
             if parent.shortDescriptionLine1Align <> invalid and parent.shortDescriptionLine1Align <> ""
-                m.line1.horizAlign = parent.shortDescriptionLine1Align
+                line1.horizAlign = parent.shortDescriptionLine1Align
             end if
             if parent.shortDescriptionLine2Align <> invalid and parent.shortDescriptionLine2Align <> ""
-                m.line2.horizAlign = parent.shortDescriptionLine2Align
+                line2.horizAlign = parent.shortDescriptionLine2Align
             end if
 
             itemTextBgColor = parent.itemTextBackgroundColor
             if itemTextBgColor <> invalid and itemTextBgColor <> "" ' when itemTextBackgroundColor field is set
-                if m.line1.visible Or m.line2.visible ' show background if there is text for atleast one label
-                    m.labelsBackground.color = parent.itemTextBackgroundColor
-                    m.labelsBackground.opacity = 1
+                if line1.visible Or line2.visible ' show background if there is text for atleast one label
+                    labelsBackground.color = parent.itemTextBackgroundColor
+                    labelsBackground.opacity = 1
                 end if
             end if
         end if
 
         padding = 5
         if height > 200 then padding = 10   
-        setLabelStyle(m.line1, width, height, padding)
-        setLabelStyle(m.line2, width, height, padding)
+        setLabelStyle(line1, width, height, padding)
+        setLabelStyle(line2, width, height, padding)
 
         ' set rectangle background width and height
-        heightLayout = m.labelsLayout.boundingRect().height
-        m.labelsBackground.width = width + 1 ' background should fill whole item width
-        m.labelsBackground.height = heightLayout + 2 * padding
+        heightLayout = labelsLayout.boundingRect().height
+        labelsBackground.width = width + 1 ' background should fill whole item width
+        labelsBackground.height = heightLayout + 2 * padding
 
         ' translate layouts to the bottom of item
-        m.labelsBackground.translation = [0, height - m.labelsBackground.height]
-        if m.line1.visible and not m.line2.visible ' to centralize text on labelsLayout
-            m.labelsLayout.translation = [padding, height - padding + m.labelsLayout.itemSpacings[0]]
+        labelsBackground.translation = [0, height - labelsBackground.height]
+        if line1.visible and not line2.visible ' to centralize text on labelsLayout
+            labelsLayout.translation = [padding, height - padding + labelsLayout.itemSpacings[0]]
         else
-            m.labelsLayout.translation = [padding, height - padding]
+            labelsLayout.translation = [padding, height - padding]
         end if
     end if
 end sub
@@ -113,14 +113,30 @@ sub setLabelDataOrHide(label as Object, text as String)
     end if
 end sub
 
-sub setDurationBarData(length as Integer,BookmarkPosition as Integer, showDurationBar as Boolean)
+sub setDurationBarData(content as Object)
+    length = content.length
+    
+    ' Try to get bookmark from playStart first, then fallback to bookmarkPosition
+    ' and use shallow copy of the content node fields to avoid either of values
+    ' to be auto-filled by RSG
+    cf = content.GetFields()
+    bookmarkPosition = cf.playStart
+    if bookmarkPosition = invalid or bookmarkPosition = 0
+        bookmarkPosition = cf.bookmarkPosition
+        if bookmarkPosition = invalid
+            bookmarkPosition = 0
+        end if
+    end if
+    
+    showDurationBar = content.hideItemDurationBar <> true
+    durationBar = m.top.FindNode("durationBar")
     if showDurationBar and length > 0 and BookmarkPosition > 0 and bookmarkPosition < length
-        m.durationBar.length            = length
-        m.durationBar.BookmarkPosition  = BookmarkPosition
-        m.durationBar.visible           = true
-        m.durationBar.scale             = [1,1]
+        durationBar.length            = length
+        durationBar.BookmarkPosition  = BookmarkPosition
+        durationBar.visible           = true
+        durationBar.scale             = [1,1]
     else
-        m.durationBar.visible = false
-        m.durationBar.scale = [0,0]
+        durationBar.visible = false
+        durationBar.scale = [0,0]
     end if
 end sub

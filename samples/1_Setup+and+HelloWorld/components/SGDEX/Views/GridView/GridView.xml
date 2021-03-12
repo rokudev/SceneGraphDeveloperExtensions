@@ -138,6 +138,13 @@
         <field id="rowPosterShapes" type="stringarray" alwaysNotify="true" onChange="RebuildRowList" />
 
         <!-- @Public -->
+        <!-- @ReadOnly -->
+        <!--
+            The value is a floating point value where the integer part represents the row that overlaps yFocusTOp and the fractional part represents the percentage of the item that overlaps the fixed focus position.
+        -->
+        <field id="currFocusRow" type="float" alwaysNotify="true" onChange="SimulateAlias" />
+
+        <!-- @Public -->
         <!--
             Controls whether the view displays metadata for the focused item above the grid
         -->

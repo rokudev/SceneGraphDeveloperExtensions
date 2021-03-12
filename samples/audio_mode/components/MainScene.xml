@@ -5,4 +5,5 @@
     <script type="text/brightscript" uri="DetailsScreenLogic.brs" />
     <script type="text/brightscript" uri="MediaPlayerLogic.brs" />
     <script type="text/brightscript" uri="pkg:/source/rsg_utils.brs" />
+    <script type="text/brightscript" uri="DeepLinkingLogic.brs" />
 </component>

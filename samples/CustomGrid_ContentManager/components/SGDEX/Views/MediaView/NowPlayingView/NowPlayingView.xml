@@ -29,6 +29,9 @@
                 id="poster"
                 width="300"
                 height="300"
+                loadWidth="300"
+                loadHeight="300"
+                loadDisplayMode="limitSize"
                 uri=""
             />
 

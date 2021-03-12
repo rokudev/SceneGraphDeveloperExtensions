@@ -2,6 +2,19 @@
 
 sub Show(args as Object)
     ShowHomeView()
+    
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
+
+    m.top.signalBeacon("AppLaunchComplete")
+end sub
+
+sub Input(args as object)
+    ' handle roInput event deep linking
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
 end sub
 
 function ShowHomeView() as Object
@@ -24,7 +37,6 @@ function ShowHomeView() as Object
     m.top.ComponentController.CallFunc("show", {
         view: m.grid
     })
-    m.top.signalBeacon("AppLaunchComplete")
     return m.grid
 end function
 

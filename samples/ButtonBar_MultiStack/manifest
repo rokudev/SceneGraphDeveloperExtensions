@@ -16,3 +16,4 @@ splash_screen_sd=pkg:/images/splash_sd.jpg
 
 ui_resolutions=hd
 bs_libs_required=roku_ads_lib
+supports_input_launch=1

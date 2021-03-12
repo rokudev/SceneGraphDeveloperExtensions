@@ -19,6 +19,8 @@ sub Init()
     m.top.getScene().ObserveField("theme", "SGDEX_GlobalThemeObserver")
     m.top.getScene().ObserveField("updateTheme", "SGDEX_GlobalUpdateThemeObserver")
     m.top.getScene().buttonBar.ObserveField("visible", "SGDEX_OnButtonBarVisibleChange")
+    m.top.getScene().buttonBar.ObserveField("overlay", "SGDEX_OnButtonBarVisibleChange")
+
     m.top.viewContentGroup = m.top.FindNode("viewContentGroup")
 
     m.top.ObserveField("wasShown", "OnViewWasShown")
@@ -47,6 +49,8 @@ sub SGDEX_OnOverhangHeightChange()
     buttonBarList = buttonBar.findNode("buttonBarLayout")
     buttonsRowList = buttonBar.findNode("buttonsRowList")
 
+    buttonBarYSpacing = buttonBarList.itemSpacings[0] * 2 + buttonsRowList.itemSpacing[1] - 2
+
     buttonBarListX = buttonBarList.translation[0]
 
     if buttonBar.alignment = "left" and buttonBar.visible = true
@@ -72,7 +76,7 @@ sub SGDEX_OnOverhangHeightChange()
             end if
         end if
         ' Resize ButtonBar to fill gap appeared because of disabled overhang
-        ' ButtonBar will be resized if overhang height is default or equal to 0
+        ' ButtonBar will be resized if overhang height is default or equal to 0 OR if overlay mode is enabled
         if fullSizeViews[m.top.subtype()] = "" and (overhang.height = m.contentAreaSafeZoneYPosition or overhang.height = 0) and buttonBar.translation[1] <> 0
             if m.top.hasField("mode") and m.top.mode = "audio"
                 buttonBar.translation = [0, m.defaultOverhangHeight]
@@ -84,6 +88,11 @@ sub SGDEX_OnOverhangHeightChange()
                 buttonBarList.translation = [buttonBarListX,m.defaultOverhangHeight]
                 autoHideHint.translation = [autoHideHint.translation[0],buttonBarRectangle.height/2]
             end if
+        else if buttonBar.overlay
+            buttonBar.translation = [0,0]
+            ' aligning buttonsRowList to 72px
+            buttonBarList.translation = [buttonBarListX, m.contentAreaSafeZoneYPosition - buttonBarYSpacing]
+            autoHideHint.translation = [autoHideHint.translation[0], buttonBarRectangle.height/2]
         else
             ' restoring translation
             buttonBarList.translation = [buttonBarListX,0]
@@ -113,6 +122,7 @@ end sub
 sub SGDEX_UpdateBaseViewUI()
     buttonBar = m.top.getScene().buttonBar
     isButtonBarVisible = buttonBar.visible
+    isButtonBarOverlay = buttonBar.overlay
     overhang = m.top.findNode("overhang")
     overhangHeight = overhang.height
     if not overhang.visible
@@ -124,10 +134,12 @@ sub SGDEX_UpdateBaseViewUI()
 
     if isButtonBarVisible
         buttonBar.translation = [0, overhangHeight]
-        if buttonBar.alignment = "top"
-            viewContentOffsetY += buttonBar.findNode("backgroundRectangle").height
-        else if buttonBar.alignment = "left"
-            viewContentOffsetX += buttonBar.findNode("backgroundRectangle").width + m.viewOffsetX
+        if not isButtonBarOverlay
+            if buttonBar.alignment = "top"
+                viewContentOffsetY += buttonBar.findNode("backgroundRectangle").height
+            else if buttonBar.alignment = "left"
+                viewContentOffsetX += buttonBar.findNode("backgroundRectangle").width + m.viewOffsetX
+            end if
         end if
         SGDEX_OnOverhangHeightChange()
     end if
@@ -224,7 +236,7 @@ sub SGDEX_InternalBuildAndSetTheme(viewTheme as Object, newTheme as Object, isUp
         SGDEX_InternalSetTheme(theme, isUpdate)
 
         buttonBar = m.top.getScene().buttonBar
-        if buttonBar <> invalid and buttonBar.visible = true then
+        if buttonBar <> invalid
             SGDEX_UpdateBaseViewUI()
         end if
     end if
@@ -310,20 +322,18 @@ sub SGDEX_SetOverhangTheme(theme)
 end sub
 
 sub SGDEX_SetBackgroundTheme(theme as Object)
-    isUriBackground = GetInterface(theme.backgroundImageURI, "ifString") <> invalid
-
-    if isUriBackground then
+    colorTheme = {}
+    if GetInterface(theme.backgroundImageURI, "ifString") <> invalid
         ' don't use backgroundColor for blending color as it's used for other Views
         ' so developers don't want it to be applied to this View
         colorTheme = { backgroundImageURI: { backgroundImage: "uri" } }
-    else
+        m.backgroundImage.visible = true
+        m.backgroundRectangle.visible = false
+    else if GetInterface(theme.backgroundColor, "ifString") <> invalid
         colorTheme = { backgroundColor: { backgroundRectangle: "color" } }
+        m.backgroundImage.visible = false
+        m.backgroundRectangle.visible = true
     end if
-
-    m.backgroundRectangle.visible = not isUriBackground
-    m.backgroundImage.visible = isUriBackground
-
-
     SGDEX_setThemeFieldstoNode(m, colorTheme, theme)
 end sub
 

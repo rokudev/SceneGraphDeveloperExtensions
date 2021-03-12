@@ -4,6 +4,18 @@ sub Init()
     m.debug = false
     m.ContentManager_id = 0
 
+    ' Obtain real display UI resolution for proper setting of loadWidth/loadHeight
+    deviceInfo = CreateObject("roDeviceinfo")
+    m.displayWidth = 1280
+    m.displayHeight = 720
+    if deviceInfo <> invalid
+        uiResolution = deviceInfo.GetUIResolution()
+        if uiResolution.width <> invalid and uiResolution.height <> invalid
+            m.displayWidth = uiResolution.width
+            m.displayHeight = uiResolution.height
+        end if
+    end if
+    
     m.buttonBar = m.top.getScene().buttonBar
     m.isButtonBarVisible = m.buttonBar.visible
     m.renderOverContent = m.buttonBar.renderOverContent
@@ -410,8 +422,8 @@ sub CreatePoster()
     if m.mainImage = invalid
         m.mainImage = m.mainImagePosition.CreateChild("Poster")
         m.mainImage.loadDisplayMode = "limitSize"
-        m.mainImage.loadWidth=1280
-        m.mainImage.loadHeight=720
+        m.mainImage.loadWidth = m.displayWidth
+        m.mainImage.loadHeight = m.displayHeight
         m.mainImage.ObserveFieldScoped("loadStatus", "OnImageLoadStatusChanged")
     end if
 end sub
@@ -430,8 +442,8 @@ sub SetPreloadImage(contentNode as Object)
             m.backgroundImg = m.backgroundImgPosition.CreateChild("Poster")
             m.backgroundImg.visible = false
             m.backgroundImg.loadDisplayMode = "limitSize"
-            m.backgroundImg.loadWidth=1280
-            m.backgroundImg.loadHeight=720
+            m.backgroundImg.loadWidth = m.displayWidth
+            m.backgroundImg.loadHeight = m.displayHeight
             m.backgroundImg.uri = contentNode.hdPosterUrl
         else
             m.backgroundImg.uri = contentNode.hdPosterUrl

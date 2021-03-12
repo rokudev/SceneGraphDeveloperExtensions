@@ -18,6 +18,11 @@ sub Show(args as Object)
     m.top.ComponentController.CallFunc("show", {
         view: m.grid
     })
+
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
+
     m.top.signalBeacon("AppLaunchComplete")
 end sub
 
@@ -32,4 +37,11 @@ end sub
 sub OnDetailsWasClosed(event as Object)
     details = event.GetRoSGNode()
     m.grid.jumpToRowItem = [m.grid.rowItemFocused[0], details.itemFocused]
+end sub
+
+sub Input(args as object)
+    ' handle roInput event deep linking
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
 end sub

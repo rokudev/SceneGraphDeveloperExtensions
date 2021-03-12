@@ -8,4 +8,5 @@
     <script type="text/brightscript" uri="VideoPlayerLogic.brs" />
     <script type="text/brightscript" uri="EpisodePickerLogic.brs" />
     <script type="text/brightscript" uri="../source/rsg_utils.brs" />
+    <script type="text/brightscript" uri="DeepLinkingLogic.brs" />
 </component>

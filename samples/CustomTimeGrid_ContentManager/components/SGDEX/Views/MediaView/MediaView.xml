@@ -209,9 +209,13 @@
 
 
         <!--
-            Private by design
-            Config data for the RAF handler
+            Private fields by design. Reference to nodes are used for theming logic.
         -->
+        <field id="npn" type="node" />
+        <field id="RafTask" type="node" />
+        <field id="endcardView" type="node" />
+        <field id="media" type="node" />
+        <field id="currentRAFHandler" type="assocarray" />
         <field id="handlerConfigRAF" type="assocarray" />
     </interface>
 

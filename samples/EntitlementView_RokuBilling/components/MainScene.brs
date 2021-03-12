@@ -25,8 +25,20 @@ sub show(args as Object)
     m.top.ComponentController.callFunc("show", {
         view: m.grid
     })
+
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
+
+    m.top.signalBeacon("AppLaunchComplete")
 end sub
 
+sub Input(args as object)
+    ' handle roInput event deep linking
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
+end sub
 
 sub OnGridItemSelected(event as Object)
     grid = event.GetRoSGNode()

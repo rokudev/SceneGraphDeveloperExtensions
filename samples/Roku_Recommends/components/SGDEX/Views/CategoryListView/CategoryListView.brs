@@ -71,7 +71,7 @@ sub initCategoryListViewNodes()
 
     m.itemsList = m.top.viewContentGroup.CreateChild("MarkupListWithRewFF")
     m.itemsList.id = "itemsList"
-    m.itemsList.translation = [537, 5]
+    m.itemsList.translation = [537, 20]
     m.itemsList.itemComponentName = "StandardCategoryListItemComponent"
     m.itemsList.drawFocusFeedbackIfViewUnfocused = false
     m.itemsList.drawFocusFeedbackOnTop = true
@@ -621,7 +621,7 @@ sub SGDEX_UpdateViewUI()
     minLabelItemsListWidth = labelItemsListWidth * 0.75
 
     ' start position settings of the items list
-    itemsListTranslation = [537, 5]
+    itemsListTranslation = [537, 20]
     if m.top.style = "rmp" then itemsListTranslation = [457, 5]
 
     ' visual horizontal spacing between ButtonBar and CategoryListView 
@@ -631,7 +631,9 @@ sub SGDEX_UpdateViewUI()
     isButtonBarInFocusChain = buttonBar.isInFocusChain()
     isButtonBarVisible = buttonBar.visible
     isAutoHide = buttonBar.autoHide
-    if buttonBar.alignment = "left"
+    isButtonBarOverlay = buttonBar.overlay
+
+    if buttonBar.alignment = "left" and not isButtonBarOverlay
         ' delta BB width is BB width minus free space between BB and CL
         deltaBBWidth = (buttonBar.findNode("backgroundRectangle").width - bb2ViewHorizSpacing) / 2
         if not isButtonBarInFocusChain and isAutoHide
@@ -654,7 +656,7 @@ sub SGDEX_UpdateViewUI()
     m.itemsList.translation = [itemsListTranslation[0] - labelCategoryListWidth + newLabelCategoryListWidth, itemsListTranslation[1]]
     m.itemsList.itemSize = [labelItemsListWidth, m.itemsList.itemSize[1]]
     m.categoryList.itemSize = [newLabelCategoryListWidth, 48]
-    if isButtonBarVisible and (not isAutoHide or isButtonBarInFocusChain) and buttonBar.alignment = "left"
+    if isButtonBarVisible and not isButtonBarOverlay and (not isAutoHide or isButtonBarInFocusChain) and buttonBar.alignment = "left"
         '  minimize horizontal spacing between left-aligned ButtonBar and the view contents
         m.top.viewContentGroup.translation = [m.top.viewContentGroup.translation[0] - bb2ViewHorizSpacing, m.top.viewContentGroup.translation[1]]
     end if

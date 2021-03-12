@@ -3,8 +3,8 @@
 
 <component name="StandardGridItemComponent" extends="Group" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
     <interface>
-      <field id="width" type="float" onChange="onWidthChange" alias="posterRect.width" />
-      <field id="height" type="float" onChange="onHeightChange" alias="posterRect.height" />
+      <field id="width" type="float" onChange="onWidthChange"  />
+      <field id="height" type="float" onChange="onHeightChange" />
       <field id="itemContent" type="node" onChange="OnContentSet" />
     </interface>
 
@@ -31,6 +31,7 @@
             id="durationBar" 
             backgroundColor="#000000" 
             progressColor="#AD0E34"
+            height="6"
         />
     </children>
 </component>

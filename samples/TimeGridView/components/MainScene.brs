@@ -21,5 +21,17 @@ sub Show(args as Object)
     m.top.ComponentController.CallFunc("show", {
         view: grid
     })
+
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
+
     m.top.signalBeacon("AppLaunchComplete")
+end sub
+
+sub Input(args as object)
+    ' handle roInput event deep linking
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
 end sub

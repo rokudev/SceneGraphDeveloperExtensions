@@ -2,7 +2,12 @@
 
 ## Roku Recommends
 
-This sample shows a complete channel driven by a single RSS feed.
+This sample shows a complete channel driven by a single RSS feed containing basic deep linking logic implementation.
+
+Samples of the valid deep linking parameters:
+    mediaType=episode, contentId=decbe34b64ea4ca281dc09997d0f23fd
+    mediaType=episode, contentId=6c9d0951d6d74229afe4adf972b278dd
+    mediaType=episode, contentId=7405a8c101ee4c9da312c426e6067044
 
 ### GridView
 

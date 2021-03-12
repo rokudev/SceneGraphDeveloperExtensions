@@ -18,5 +18,17 @@ sub Show(args as Object)
         view: video
     })
 
+    if args.contentId <> invalid and args.mediaType <> invalid
+        ' Implement your deep linking logic. For more details, please see Roku_Recommends sample.
+    end if
+
     m.top.signalBeacon("AppLaunchComplete")
 end sub
+
+sub Input(args as object)
+    ' handle roInput event deep linking
+    if IsDeepLinking(args)
+        PerformDeepLinking(args)
+    end if
+end sub
+

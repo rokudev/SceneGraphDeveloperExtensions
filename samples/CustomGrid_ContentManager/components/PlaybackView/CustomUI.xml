@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2021 Roku, Inc. All rights reserved. -->
+<component name="CustomUI" extends="Group" >
+    <interface>
+        <field id="mode" type="string" />
+        <field id="position" type="int" value="0" />
+        <field id="duration" type="int" value="0" />
+        <field id="currentItem" type="node" />
+    </interface>
+
+    <script type="text/brightscript" uri="CustomUI.brs" />
+
+    <children>
+        <Rectangle
+            id="audioBackground"
+            width="1280"
+            height="720"
+            color="0x000000"
+            visible="false"/>
+           
+        <Poster
+            id="poster"
+            width="350"
+            height="350"
+            loadWidth="350"
+            loadHeight="350"
+            translation="[450,130]"
+            loadDisplayMode="limitSize"/>
+
+        <Rectangle
+            id="topBackground"
+            width="1280"
+            height="100"
+            opacity="0.6"
+            color="0x000000"/>
+
+        <Rectangle
+            id="bottomBackground"
+            width="1280"
+            height="280"
+            opacity="0.6"
+            color="0x000000"
+            translation="[0, 580]"/>
+
+        <Overhang/>
+
+        <Label
+            id="title"
+            translation="[124, 600]"
+            width="720"
+            font="font:SmallBoldSystemFont"/>
+        <Label
+            id="description"
+            translation="[124, 630]"
+            width="1024"
+            lineSpacing="1"
+            maxLines="2"
+            wrap="true"
+            font="font:SmallSystemFont"/>
+
+        <Group
+            id="playBar"
+            translation="[0,580]">
+            <Rectangle
+                id="progressWell"
+                width="1280"
+                height="10"
+                color="0xc0c0c040"/>
+            <Rectangle
+                id="progress"
+                width="2"
+                height="10"
+                color="0xc0c0c0ff"/>           
+        </Group>
+
+        <Label
+            id="progressLabel"
+            color="0xc0c0c0ff"
+            horizAlign="left"
+            translation="[1024,596]"
+            font="font:SmallestBoldSystemFont"/>
+    </children>
+</component>

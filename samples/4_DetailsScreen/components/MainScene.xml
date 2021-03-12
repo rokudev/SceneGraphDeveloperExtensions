@@ -6,4 +6,5 @@
     <script type="text/brightscript" uri="MainScene.brs" />
     <script type="text/brightscript" uri="DetailsViewLogic.brs" />
     <script type="text/brightscript" uri="../source/rsg_utils.brs" />
+    <script type="text/brightscript" uri="DeepLinkingLogic.brs" />
 </component>

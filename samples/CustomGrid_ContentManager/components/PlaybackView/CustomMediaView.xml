@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2021 Roku, Inc. All rights reserved. -->
+
+<component name="CustomMedia" extends="Group">
+    <interface> 
+        <field id="contentManagerType" type="string" value="media" />
+        <field id="content" type="node" />
+        <field id="mode" type="string" />
+        <field id="jumpToItem" type="integer" value="0" alwaysNotify="true" />
+        <field id="control" type="string" value="none" alwaysNotify="true" />
+        <field id="isContentList" type="bool" alwaysNotify="true" />
+        <field id="state" type="string" value="none" alwaysNotify="true" />
+        <field id="position" type="integer" value="0" alwaysNotify="true" />
+        <field id="duration" type="integer" value="0" alwaysNotify="true" />
+        <field id="currentItem" type="node" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="CustomMediaView.brs" />
+    <children>
+        <ProxyVideo id="contentMedia" />
+        
+        <CustomUI
+            id="customUI"
+            visible="false"/>
+
+        <LayoutGroup
+            id="spinnerLayout"
+            translation="[640,360]"
+            horizAlignment="center"
+            vertAlignment="center"
+            visible="false">
+            <BusySpinner
+                id="spinner"
+                uri="pkg:/images/spinner.png"/>
+        </LayoutGroup>
+    </children>
+</component>

@@ -58,6 +58,24 @@
             updated simultaneously with channelSelected and programSelected
         -->
         <field id="rowItemSelected" type="array" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!--
+            Set grid focus to specified row
+            Value is an integer index of the row that should be focused
+            This field must be set after setting the content field.
+        -->
+        <field id="jumpToRow" type="integer" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!--
+            Set grid focus to specified item in a row
+            Value is an array containing the index of the row and item that should be focused
+            This field must be set after setting the content field.
+        -->
+        <field id="jumpToRowItem" type="vector2d" alwaysNotify="true" />
     </interface>
 
     <script type="text/brightscript" uri="TimeGridView.brs" />

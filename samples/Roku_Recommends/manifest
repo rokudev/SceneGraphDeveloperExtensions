@@ -11,3 +11,4 @@ splash_color=#121212
 splash_min_time=0
 ui_resolutions=hd
 splash_rsg_optimization=1
+supports_input_launch=1

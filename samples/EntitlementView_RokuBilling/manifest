@@ -8,3 +8,4 @@ splash_screen_fhd=pkg:/images/splash_fhd.jpg
 splash_screen_hd=pkg:/images/splash_hd.jpg
 ui_resolutions=hd
 bs_libs_required=roku_ads_lib
+supports_input_launch=1

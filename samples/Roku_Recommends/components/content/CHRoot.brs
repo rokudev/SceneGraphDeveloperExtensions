@@ -24,8 +24,11 @@ sub GetContent()
         if xmlItem.GetName() = "item"
             itemAA = xmlItem.GetChildElements() 'itemAA contains a single feed <item> element
             if itemAA <> invalid
+                item = {}
                 for each xmlItem in itemAA
-                    item = {}
+                    if xmlItem.GetName() = "guid"
+                        item.id = xmlItem.GetText()
+                    end if
                     if xmlItem.GetName() = "media:content"
                         item.url = xmlItem.GetAttributes().url
                         xmlTitle = xmlItem.GetNamedElements("media:title")
@@ -69,6 +72,7 @@ sub GetContent()
         rootChildren.children.Push(rowAA)
     end if
     m.top.content.Update(rootChildren)
+    m.top.content.Update({isContentLoaded: true})
 end sub
 
 function ParseXML(str As String) As dynamic
