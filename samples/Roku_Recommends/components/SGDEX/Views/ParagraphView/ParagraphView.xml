@@ -72,6 +72,7 @@
             numRows="3"
             itemSpacing="[0, 10]"
             textHorizAlign="right"
+            wrapDividerHeight="0"
             />
 
         <LayoutGroup

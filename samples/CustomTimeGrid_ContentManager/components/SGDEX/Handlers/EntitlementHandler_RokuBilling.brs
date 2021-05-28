@@ -207,15 +207,19 @@ sub RokuBilling__StartPurchase(product = m.productToPurchase as Object)
         m.channelStore.SetOrder(order)
     end if
 
-    if m.channelStore.DoOrder()
-        msg = Wait(0, port)
-        if msg.IsRequestSucceeded()
-            transactionsList = msg.GetResponse()
-            if transactionsList <> invalid and transactionsList.Count() > 0
-                OnPurchaseSuccess(transactionsList[0])
-                isPurchased = true
-            end if
+    m.channelStore.DoOrder()
+    msg = Wait(0, port)
+    if msg.IsRequestSucceeded()
+        transactionsList = msg.GetResponse()
+        if transactionsList <> invalid and transactionsList.Count() > 0
+            OnPurchaseSuccess(transactionsList[0])
+            isPurchased = true
         end if
+    else if msg.isRequestFailed()
+        OnPurchaseFailure({
+            errorCode: msg.GetStatus()
+            errorMessage: msg.GetStatusMessage()    
+        })
     end if
 
     dialog.close = true

@@ -1,9 +1,8 @@
-' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+' ********** Copyright 2021 Roku Corp.  All Rights Reserved. **********
 
 sub Show(args as Object)
-    grid = CreateObject("roSGNode", "GridView")
-
-    ' setup UI of view
+    ' Create a GridView object and setup UI of view
+    grid = CreateObject("roSGNode", "GridView") 
     grid.SetFields({
         posterShape: "16x9"
     })
@@ -15,17 +14,22 @@ sub Show(args as Object)
             name: "CHRoot"
         }
     })
-    grid.ObserveField("rowItemSelected", "OnGridItemSelected")
     grid.content = content
 
+    ' Set Callback to the rowItemSelected field to handle a result of seleceted item
+    grid.ObserveField("rowItemSelected", "OnGridItemSelected")
+
+    ' Push the GridView object to the stack to show on the screen
     m.top.ComponentController.CallFunc("show", {
         view: grid
     })
     
+    ' Handle a launch deep linking arguments 
     if IsDeepLinking(args)
         PerformDeepLinking(args)
     end if
 
+    ' Fire an AppLaunchComplete beacon as it required for channel application 
     m.top.signalBeacon("AppLaunchComplete")
 end sub
 
@@ -36,9 +40,18 @@ sub Input(args as object)
     end if
 end sub
 
+' Callback function to handle a result of selection item from grid
+' If user selects and item from the first row of the grid we will be using
+' the native endcard for playback, otherwise - the custom endcard
 sub OnGridItemSelected(event as Object)
     grid = event.GetRoSGNode()
     selectedIndex = event.GetData()
     row = grid.content.GetChild(selectedIndex[0])
-    detailsView = ShowDetailsView(row, selectedIndex[1])
+    
+    ' assume usage of the custom endcard for further playback
+    ' if that was an item not from the 1st row
+    m.useCustomEndcard = selectedIndex[0] <> 0
+    
+    ' open the DetailsView
+    ShowDetailsView(row, selectedIndex[1])
 end sub

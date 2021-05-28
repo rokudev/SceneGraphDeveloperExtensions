@@ -5,35 +5,32 @@
     @Public
     EntitlementView provides developers with easier way of handling entitlements in their apps.
 
-
-    EntitlementView can work in one of two modes which is driven by EntitlementView.mode:
-    - RokuPay subscription check/purchase/upgrade/downgrade (mode = "RokuBilling")
+    EntitlementView can work in one of the modes defined by EntitlementView.mode:
+    - Roku Pay subscription check/purchase/upgrade/downgrade (mode = "RokuPay_SVOD")
+    - Roku Pay transactional purchase (mode = "RokuPay_TVOD")
     - username/password authentication handling/check (mode = "UserPass")
 
-
     EntitlementView.mode should be specifically set by developer.
-
 
     Developer is able to implement their entitlement related business logic in EntitlementHandler.
     The handler is specified by handlerConfigEntitlement field of the content node assigned to the view.
 
-
-    "RokuBilling" mode now supports not only regular RokuPay purchase but also [on-device upgrade/downgrade](https://developer.roku.com/docs/developer-program/roku-pay/implementation/on-device-upgrade-downgrade.md).
+    "RokuPay_SVOD" mode supports not only regular Roku Pay purchases but also [on-device upgrade/downgrade](https://developer.roku.com/docs/developer-program/roku-pay/implementation/on-device-upgrade-downgrade.md).
     Please see EntitlementHandler documentation for more details.
 
     @Sample:
-    ' ====== Use case 1: silent RokuPay subscription check ======
+    ' ====== Use case 1: silent Roku Pay subscription check ======
 
     ' ... Scene scope:
 
     ' In order to do silent subscription check, you need to:
     ' - create the view
-    ' - specify "RokuBilling" mode
+    ' - specify "RokuPay_SVOD" mode
     ' - observe its isSubscribed interface that will be populated with subscription check result
     ' - assign content node with the handler config
     ' - trigger silentCheckEntitlement without showing the view
     ent = CreateObject("roSGNode", "EntitlementView")
-    ent.mode = "RokuBilling"
+    ent.mode = "RokuPay_SVOD"
     ent.ObserveField("isSubscribed", "OnIsSubscriptionChecked")
     content = CreateObject("roSGNode", "ContentNode")
     content.Update({
@@ -56,19 +53,18 @@
         ' whether user is subscribed or not.
     end sub
 
-
-    ' ====== Use case 2: RokuPay subscription flow ======
+    ' ====== Use case 2: Roku Pay subscription flow ======
 
     ' ... Scene scope:
 
-    ' In order to initiate RokuPay subscription flow, you need to:
+    ' In order to initiate Roku Pay subscription flow, you need to:
     ' - create the view
-    ' - specify "RokuBilling" mode
+    ' - specify "RokuPay_SVOD" mode
     ' - observe its isSubscribed interface that will be populated with subscription flow result
     ' - assign content node with the handler config
     ' - show the view
     ent = CreateObject("roSGNode", "EntitlementView")
-    ent.mode = "RokuBilling"
+    ent.mode = "RokuPay_SVOD"
     ent.ObserveField("isSubscribed", "OnIsSubscribed")
     content = CreateObject("roSGNode", "ContentNode")
     content.Update({
@@ -109,7 +105,6 @@
         ]
     end sub
 
-
     ' ====== Use case 3: silent authentication check ======
 
     ' ... Scene scope:
@@ -138,7 +133,6 @@
         ' Here you should implement the business logic to validate user auth status
         ' and return true if user is authenticated, false if not
     end function
-
 
     ' ====== Use case 4: silent de-authentication ======
 
@@ -173,7 +167,6 @@
         ' this return value
     end function
 
-
     ' ====== Use case 5: user/password authentication flow ======
 
     ' ... Scene scope:
@@ -205,6 +198,64 @@
         ' - false if not authenticated
         ' EntitlementView.isAuthenticated will be populated with this return value
     end function
+
+    ' ====== Use case 6: Roku Pay transactional purchase (TVOD) flow ======
+
+    ' ... Scene scope:
+
+    ' In order to initiate transactional purchase flow, you need to:
+    ' - create the view
+    ' - specify "RokuPay_TVOD" mode
+    ' - observe its orderResult interface that will be populated with TVOD flow result
+    ' - assign content node with the handler config
+    ' - show the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "RokuPay_TVOD"
+    ent.ObserveField("orderResult", "OnOrderResult")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "myTVODHandler"
+            orderRequest: {  'this is optional, can be done in ConfigureEntitlements() in the handler scope (see below)
+                code: "mytvodproduct1"  'Roku Pay one-time purchase product ID
+                price: "0.99"           'price to be charged, without currency sign
+                priceDisplay: "0.99"    'price to be displayed
+                title: "TVOD product 1" 'title of the product to be shown on user's invoices for the purchased item
+            }
+        }
+    }, true)
+    ent.content = content
+    m.top.ComponentController.callFunc("show", {view: ent})
+
+    ' ... myTVODHandler scope:
+    
+    sub ConfigureEntitlements(config as Object)
+        ' Here you can optionally implement business logic to set config.orderRequest
+        ' if orderRequest wasn't specified on the associated handlerConfigEntitlement
+        ' or redefine it, if needed
+    end function
+
+    function ConfirmOrder(orderInfo as Object) as Boolean
+        ' This is the place to implement business logic to either proceed or not
+        ' with the transaction requested by orderRequest. 
+        
+        ' In order to confirm and proceed with the transaction, true should be returned.
+        
+        ' If return value is false then transaction will not be performed.
+        ' Prior to returning false, you can optionally specify orderInfo.errorCode
+        ' and orderInfo.errorMessage (both values shoudl be strings) to be reflected in
+        ' EntitlementView.orderResult and OnPurchaseFailure() errorInfo
+    end function
+    
+    sub OnPurchaseSuccess(purchaseInfo as Object)
+        ' Here you can optionally implement business logic (API calls etc)
+        ' in response to the successful transaction
+    end sub
+    
+    sub OnPurchaseFailure(errorInfo as Object)
+        ' Here you can optionally implement business logic (API calls etc)
+        ' in response to the failed transaction
+    end sub
 -->
 
 <component name="EntitlementView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
@@ -225,6 +276,18 @@
         1) checking via silentCheckAuthentication=true (see below)
         2) exitting from authentication flow initiated by adding view to View stack -->
         <field id="isAuthenticated" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- [ObserveOnly] -->
+        <!-- AA indicating the result of the "RokuPay_TVOD" flow, contains the following fields: 
+        - isSuccess (Boolean) – indicates whether the flow ended with a successful purchase transaction:
+            true – successful purchase.
+            false – an error occurred during the flow.
+        - purchaseID – only if isSuccess=true, contains transaction ID (String); otherwise will be Invalid
+        - contentKey – only if isSuccess=true, can optionally contain contentKey value specified by developer; otherwise invalid
+        - errorCode – only if isSuccess=false, can optionally contain code of the error (String); otherwise Invalid
+        - errorMessage – only if isSuccess=false, can optionally contain error message (String); otherwise Invalid -->
+        <field id="orderResult" type="assocarray" alwaysNotify="true" />
 
         <!-- @Public -->
         <!-- @WriteOnly -->
@@ -252,11 +315,17 @@
         custom UI for collecting the credentials. -->
         <field id="password" type="string" />
 
-        <!-- @Public-->
-        <!-- a string field which contains mode for entitlement flow -->
-        <field id="mode" type="string" value = ""/>
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- a string field to specify the entitlement mode. Supported values are:
+        - "RokuPay_SVOD" - Roku Pay subscription check/purchase/update/downgrade;
+        - "RokuPay_TVOD" - Roku Pay transactional purchase (TVOD);
+        - "UserPass" - user/password based sign-in/sign-out/auth check;
+        - "RokuBilling" (deprecated) - same as "RokuPay_SVOD" -->
+        <field id="mode" type="string" value="" />
   </interface>
 
   <script type="text/brightscript" uri="EntitlementView.brs" />
   <script type="text/brightscript" uri="../../ContentManager/ContentManagerUtils.brs" />
 </component>
+

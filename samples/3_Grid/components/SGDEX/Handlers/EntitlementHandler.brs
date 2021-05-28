@@ -37,18 +37,21 @@ end sub
 '           To override by end developer
 '------------------------------------------------------------------------------
 
-' Required for "RokuBilling" mode. Developer should override this subroutine 
-' in their component extended from EntitlementHandler to be able to
-' - determine user subscription status
-' - define RokuPay products to be displayed/offered to the user for the subscription flow 
+' Required for "RokuBilling"/"RokuPay_SVOD" and "RokuPay_TVOD" modes.
+' Developer should override this subroutine in their component extended from
+' the EntitlementHandler to be able to
+' - determine user SVOD subscription status
+' - define RokuPay products to be displayed/offered to the user for the SVOD flow
+' - define transactional order request for the TVOD flow
 ' @param config [AA]:
-' @param config.catalogProducts [Object][Read-Only] in "RokuBilling" mode - prepopulated with array of catalog products per roChannelStore.GetCatalog(); otherwise invalid 
-' @param config.purchases [Object][Read-Only] in "RokuBilling" mode - prepopulated with array of purchases per roChannelStore.GetPurchases(); otherwise invalid
-' @param config.isSubscribed [Boolean][Write-Only] for "RokuBilling" silentCheckEntitlement only - developer must specify true if user has active subscription, false otherwise
-' @param config.displayProducts [Array][Write-Only] for "RokuBilling" subsciption flow only - developer must specify the list of products to be displayed to the user
-' @param config.displayProducts[i].code [String] product code
-' @param config.displayProducts[i].name [String] optional, product display name; if not specified, SGDEX will use the Channel Store data
-' @param config.displayProducts[i].action [String] optional, product action for on-device upgrade/downgrade: "upgrade" or "downgrade", case insensitive; if not specified, SGDEX assumes regular purchase
+' @param config.catalogProducts [Object][Read-Only] in "RokuBilling"/"RokuPay_SVOD" and "RokuPay_TVOD" mode - prepopulated with array of catalog products per roChannelStore.GetCatalog(); otherwise invalid 
+' @param config.purchases [Object][Read-Only] in "RokuBilling"/"RokuPay_SVOD" and "RokuPay_TVOD" mode - prepopulated with array of purchases per roChannelStore.GetPurchases(); otherwise invalid
+' @param config.orderRequest [String] "RokuPay_TVOD" mode only - order request data prepopulated with the handlerConfigEntitlement.orderRequest value which developer can update in this function
+' @param config.orderRequest.code [String] Channel Store product code (ID) to be associated with the purchase
+' @param config.orderRequest.price [String] the price to be charged, without currency sign, e.g. "5.99"
+' @param config.orderRequest.priceDisplay [String] the price to be displayed in the Roku Pay screen without currency sign, e.g. "5.99"
+' @param config.orderRequest.contentKey [String] – optional value corresponding to the item's publisher-specific SKU or other unique identifier to be used for the transaction
+' @param config.orderRequest.title (String) – the name to be shown on user's invoices for the purchased item
 sub ConfigureEntitlements(config as Object)
     ? "SGDEX: you should implement "
     ? "         sub ConfigureEntitlements(config as Object)"
@@ -59,6 +62,12 @@ end sub
 ' purchase success by overriding this subroutine in their component extended from
 ' EntitlementHandler. Default implementation does nothing
 sub OnPurchaseSuccess(transactionData as Object)
+end sub
+
+' Allows developer to inject some business logic 
+' in case when purchase was failure by overriding this function in their component extended from
+' EntitlementHandler. Default implementation does nothing
+sub OnPurchaseFailure(errorInfo as Object)
 end sub
 
 ' This function should be overridden by the developer to validate user 
@@ -117,6 +126,24 @@ function DeAuthenticate() as Boolean
     return false
 end function
 
+' This function should be overridden by developer in order to proceed with the transactional purchase.
+' @param orderInfo [AA] contains information about the transactional order requested for processing:
+' @param orderInfo.orderID [String] an internal ID of the initiated transaction per Channel Store API
+' @param orderInfo.tax [String] cost of tax (if applicable)
+' @param orderInfo.total [String] total cost of the transaction
+' @param orderInfo.code [String] Channel Store product code (ID) to be associated with the purchase
+' @param orderInfo.price [String] the price to be charged, without currency sign, e.g. "5.99"
+' @param orderInfo.priceDisplay [String] the price to be displayed in the Roku Pay screen without currency sign, e.g. "5.99"
+' @param orderInfo.contentKey [String] optional, the value corresponding to the item's publisher-specific SKU or other unique identifier to be used for the transaction
+' @param orderInfo.title [String] the name to be shown on user's invoices for the purchased item
+' @return [Boolean] should be true to proceed with the transaction, false otherwise (in this case developer can set orderInfo.errorCode and orderInfo.errorMessage strings to be reflected in EntitlementView.orderResult and OnPurchaseFailure() errorInfo).
+function ConfirmOrder(orderInfo as Object) as Boolean
+    ? "SGDEX: you should implement "
+    ? "         function ConfirmOrder(orderInfo as Object) as Boolean"
+    ? "     in your "m.top.Subtype()" component"
+    return false
+end function
+
 '------------------------------------------------------------------------------
 '           Handler functions invoked by EntitlementView
 '------------------------------------------------------------------------------
@@ -149,7 +176,14 @@ sub HandlerFunctionRunner()
             SilentDeAuthenticate: UserPass__SilentDeAuthenticate
             RunEntitlementFlow: UserPass__Authenticate
         }
+        RokuPay_TVOD: {
+            Init: TVOD__Init
+            RunEntitlementFlow: TVOD__InitiatePurchase
+        }
     }
+    
+    ' add "RokuPay_SVOD" as a synonym of "RokuBilling" mode
+    m.funcAA.RokuPay_SVOD = m.funcAA.RokuBilling
 
     ' default mode should be "RokuBilling" (if mode = invalid)
     m.funcAA.invalid = m.funcAA.RokuBilling

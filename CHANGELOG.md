@@ -1,6 +1,23 @@
 # Scene Graph Developer Extensions
 
-> 03.12.21
+> 05.28.21
+
+## v.2.7
+
+### Features
+
+* EntitlementView now supports TVOD with Roku Pay
+* EntitlementView "RokuBilling" mode has been renamed to "RokuPay_SVOD"
+* Custom media views now support custom endcard layouts
+* MediaView now supports RAF's setTrackingCallback feature
+
+### Bug Fixes
+
+* Fixed an issue in MediaView where the view might close unexpectedly at the end of a piece of content in playlist mode when using client side ad stitching
+* Fixed an issue in MediaView where the value of the currentItem field could be invalid when accessed from a BookmarkHandler if the MdiaView also had a RAFHandler
+* Fixed an issue in MediaView where the second track in an audio playlist would sometimes fail to play
+* Fixed an issue in MediaView where a custom media view being used in audio mode could sometimes display the default audio UX
+* Fixed an issue in MediaView where the RAF counter could be displayed over non-ad content if an ad was interrupted programmatically. For instance, when sending a deep link while an ad was playing.
 
 ## v.2.6
 

@@ -11,13 +11,6 @@
     <script type="text/brightscript" uri="CustomUI.brs" />
 
     <children>
-        <Rectangle
-            id="audioBackground"
-            width="1280"
-            height="720"
-            color="0x000000"
-            visible="false"/>
-           
         <Poster
             id="poster"
             width="350"

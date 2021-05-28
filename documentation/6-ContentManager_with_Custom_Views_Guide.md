@@ -177,6 +177,8 @@ MediaView to populate your own custom media views. You can use all the same
 ContentHandlers supported by MediaView to manage your custom view in the
 most efficient way possible.
 
+A full working example of a custom media view can be found in the [custom grid view sample channel](https://github.com/rokudev/SceneGraphDeveloperExtensions/tree/master/samples/CustomGrid_ContentManager)
+
 ### Requirements
 
 In order to use the Media ContentManager, you must do all of the following in your custom view:
@@ -347,5 +349,123 @@ sub Show(args as Object)
 end sub
 ```
 A sample channel using ContentManager with a custom view can be found [here](/samples/CustomGrid_ContentManager)
+
+### Endcards
+
+Starting with SGDEX v2.7 you can define a custom endcard UX for your custom media view.
+
+A full working example of custom endcards can be found in the [video preloading sample channel](https://github.com/rokudev/SceneGraphDeveloperExtensions/tree/master/samples/video_preloading)
+
+#### Requirements
+
+In order to use custom endcards, your custom media view must have a child node whose id is "endcardLayout". This child should be extended from a Group node.
+
+#### Required Fields
+
+Your custom endcard layout must include the following field. 
+
+* **visible** (boolean)
+    * Default value: false
+    * Specifies if the endcard layout is visible. SGDEX wil set this field to "true" when the endcard is displayed to the user.
+
+#### Optional Fields
+
+Your custom endcard layout may include the following field if needed. 
+
+* **content** (node)
+    * Default value: invalid
+    * SGDEX will populate this field with data from your EndcardHandler if you define one.
+
+#### Example
+
+EndcardLayout.xml
+```
+<component name="EndcardLayout" extends="FocusableGroup">
+    <interface>
+        <field id="content" type="node" />
+    </interface>
+    <children>
+        <Button
+            id="repeatButton"
+            text="Replay"
+        />
+        <Button
+            id="playNextButton"
+            text="Play next"
+        />
+        <RowList
+            id="grid"
+        />
+    </children>
+</component>
+```
+
+CustomMedia.xml
+```
+<component name="CustomMedia" extends="Group">
+    <interface> 
+        <field id="contentManagerType" type="string" value="media" />
+        <field id="content" type="node" />
+        <field id="jumpToItem" type="integer" value="0" alwaysNotify="true" />
+        <field id="control" type="string" value="none" alwaysNotify="true" />
+    </interface>
+    <script type="text/brightscript" uri="CustomMedia.brs" />
+    <children>
+        <ProxyVideo id="contentMedia" />
+        <EndcardLayout
+            id="endcardLayout"
+            visible="false"
+        />
+    </children>
+</component>
+```
+
+CustomMedia.brs
+```
+sub Init()
+    m.endcardView = m.top.FindNode("endcardLayout")
+    m.endcardView.ObserveField("visible", "OnEndcardsVisibleChanged")
+    m.endcardView.ObserveField("content", "OnContentChanged")
+    m.grid = m.top.FindNode("grid")
+    m.grid.ObserveField("rowItemSelected", "OnRowItemSelected")
+    m.repeatButton = m.top.FindNode("repeatButton")
+    m.repeatButton.ObserveField("buttonSelected", "OnButtonSelected")
+    m.playNextButton = m.top.FindNode("playNextButton")
+    m.playNextButton.ObserveField("buttonSelected", "OnPlayNextButtonSelected")
+end sub
+
+sub OnEndcardsVisibleChanged(event as Object)
+    ? "visible=" event.GetData()
+    ' Do some stuff on visible change if you need. SGDEX set "visible" to true at the end of playback.
+end sub
+
+sub OnPlayNextButtonSelected()
+    ' Start next item of playlist
+    m.top.control = "play"
+    m.endcardView.visible = false
+end sub
+
+sub OnButtonSelected()
+    ' Replay previous item of playlist
+    m.top.jumpToItem = m.top.currentIndex - 1
+    m.top.control = "play"
+    m.endcardView.visible = false
+end sub
+
+sub OnContentChanged()
+    m.grid.content = m.endcardView.content
+end sub
+
+sub OnRowItemSelected(event as Object)
+    selectedItemIndex = event.GetData()
+    grid = event.GetRoSGNode()
+    row = grid.content.GetChild(selectedItemIndex[0])
+    item = row.GetChild(selectedItemIndex[1])
+    ' Set new content and start playback
+    m.top.content = item
+    m.top.control = "play"
+    m.endcardView.visible = false
+end sub
+```
 
 ###### Copyright (c) 2021 Roku, Inc. All rights reserved.

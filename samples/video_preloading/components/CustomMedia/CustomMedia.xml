@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--********** Copyright 2021 Roku Corp.  All Rights Reserved. **********-->
+
+<component name="CustomMedia" extends="Group">
+    <interface> 
+        <field id="contentManagerType" type="string" value="media" />
+        <field id="content" type="node" />
+        <field id="jumpToItem" type="integer" value="0" alwaysNotify="true" />
+        <field id="control" type="string" value="none" alwaysNotify="true" />
+        <field id="alwaysShowEndcards" type="bool" alwaysNotify="true" />
+        <field id="preloadContent" type="bool" value="false" />
+        <field id="wasClosed" type="bool" value="false" alwaysNotify="true" />
+    </interface>
+
+    <script type="text/brightscript" uri="CustomMedia.brs" />
+    
+    <children>
+        <CustomEndcardLayout
+            id="endcardLayout"
+            visible="false"
+        />
+    </children>
+</component>

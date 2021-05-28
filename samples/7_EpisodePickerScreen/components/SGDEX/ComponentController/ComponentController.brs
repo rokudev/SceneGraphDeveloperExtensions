@@ -76,16 +76,8 @@ function Show(config as Object)
     })
 
     buttonBar = m.top.GetScene().buttonBar
-    if data.setFocus = false and buttonBar.visible
-        if not buttonBar.IsInFocusChain()
-            buttonBar.SetFocus(true)
-        else if View.subtype() = "MediaView" and View.mode = "audio"
-            timer = m.top.CreateChild("Timer")
-            timer.duration = 0.001
-            timer.repeat = false
-            timer.control = "start"
-            timer.ObserveField("fire", "OnMediaTimerFired")
-        end if
+    if data.setFocus = false and buttonBar.visible and not buttonBar.IsInFocusChain()
+        buttonBar.SetFocus(true)
     end if
     if contentManager <> invalid then
         contentManager.control = "start"
@@ -141,11 +133,6 @@ function InitContentManagerHelper(config) as Object
 
     return contentManager
 end function
-
-sub OnMediaTimerFired()
-    buttonBar = m.top.GetScene().buttonBar
-    buttonBar.SetFocus(true)
-end sub
 
 sub OnCurrentViewChange()
     stack_id = m.top.activeStack

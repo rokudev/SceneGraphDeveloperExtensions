@@ -2,7 +2,6 @@
 
 sub Init()
     ' Cache children to m for work with them in observers
-    m.audioBackground = m.top.FindNode("audioBackground")
     m.playBar = m.top.FindNode("playBar")
     m.progressBar = m.top.FindNode("progress")
     m.progressWell = m.top.FindNode("progressWell")
@@ -20,12 +19,9 @@ end sub
 sub OnCurrentItemChanged(event as Object)
     currentItem = event.getData()
     if currentItem <> invalid
-        ' For audio mode show background and poster at the middle
+        ' For audio mode show poster at the middle
         if m.top.mode = "audio"
-            m.audioBackground.visible = true
             m.poster.uri = currentItem.hdPosterUrl
-        else
-            m.audioBackground.visible = false
         end if
         ' Updating texts for description and title label
         m.title.text = currentItem.title

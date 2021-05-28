@@ -142,12 +142,12 @@ sub CreateSpinner()
     if m.spinnerGroup = invalid
         m.spinnerGroup = m.topView.CreateChild("LayoutGroup")
         m.spinnerGroup.SetFields({
-            id: "spinnerGroup"           
+            id: "spinnerGroup"
             translation: "[640,360]"
             horizAlignment: "center"
             vertAlignment: "center"
             visible: "false"
-        })  
+        })
         m.spinner = m.spinnerGroup.CreateChild("BusySpinner")
         m.spinner.SetFields({
             id:"spinner"
@@ -155,7 +155,7 @@ sub CreateSpinner()
             visible: "true"
         })
     else
-        m.spinner = m.topView.FindNode("spinner") 
+        m.spinner = m.topView.FindNode("spinner")
     end if
 end sub
 
@@ -271,7 +271,7 @@ sub InitPlayback()
                     OnControlSet()
                 end if
             end if
-            if m.contentMedia.HasField("enableTrickPlay") 
+            if m.contentMedia.HasField("enableTrickPlay")
                 if m.contentMedia.enableTrickPlay <> true
                     m.topView.enableTrickPlay = m.contentMedia.enableTrickPlay
                 else
@@ -285,7 +285,7 @@ sub InitPlayback()
                     m.contentMedia.loop = m.topView.repeatAll
                 end if
             end if
-            if m.contentMedia.HasField("disableScreenSaver") 
+            if m.contentMedia.HasField("disableScreenSaver")
                 if m.contentMedia.disableScreenSaver <> false
                     m.topView.disableScreenSaver = m.contentMedia.disableScreenSaver
                 else
@@ -315,8 +315,12 @@ end function
 
 sub OnFocusedChildChange()
     if m.topView.media <> invalid
+        customEndcardLayout = m.topView.FindNode("endcardLayout")
+        isCustomEndcard = customEndcardLayout <> invalid and customEndcardLayout.visible
+        isNativeEndcard = m.endcardAvailable
+        isEndcard = isCustomEndcard or isNativeEndcard
         ' Check if endcard isn't shown to avoid focus losting
-        if m.topView.wasShown and not m.endcardAvailable
+        if m.topView.wasShown and not isEndcard
             if GetCurrentMode() = "video" and m.isButtonBarVisible
                 if m.renderOverContent    ' renderOverContent = true
                     if m.isAutoHideMode    ' renderOverContent = true && autoHide = true
@@ -342,11 +346,15 @@ sub OnFocusedChildChange()
                 end if
                 m.topView.media.setFocus(true)
             end if
-        else if m.endcardAvailable ' Handle endcardView focuses
+        else if isEndcard ' Handle endcardView focuses
             if m.isButtonBarVisible ' safe restoring buttonBar visibility
                 m.buttonBar.visible = true
             end if
-            m.topView.endCardView.SetFocus(true)
+            if isCustomEndcard and customEndcardLayout.IsInFocusChain() = false
+                customEndcardLayout.SetFocus(true)
+            else if isNativeEndcard
+                m.topView.endCardView.SetFocus(true)
+            end if
             m.buttonBar.opacity = 1.0 ' show buttonBar over endcardView
         end if
         if m.buttonBar.IsInFocusChain() and m.isButtonBarVisible and not m.topView.IsInFocusChain()
@@ -385,25 +393,21 @@ sub CreateMediaNode()
         m.topView.media = video
     else if mode = "audio"
         if isCustomView
-            m.topView.npn = CreateObject("roSGNode", "NowPlayingView")
-            m.topView.InsertChild(m.topView.npn, 0)
+            audio = CreateObject("roSGNode", "Video")
+            m.topView.InsertChild(audio, 0)
         else
             m.topView.npn = m.topView.viewContentGroup.createChild("NowPlayingView")
-        end if
-
-        audio = CreateObject("roSGNode", "CustomAudioNode")
-        if isCustomView
-            m.topView.InsertChild(audio, 1)
-        else
+            audio = CreateObject("roSGNode", "CustomAudioNode")
             m.topView.AppendChild(audio)
+            m.topView.FindNode("background").visible = false
         end if
         audio.width = "1280"
         audio.height = "720"
         audio.translation = "[0,0]"
+        audio.enableUI = true
         InitMediaWithContentMediaFields(audio)
         audio.id = "audio"
         audio.disableScreenSaver = m.topView.disableScreenSaver
-        audio.enableUI = true
         if m.topView.isContentList
             audio.contentIsPlaylist = m.topView.isContentList
             audio.loop = m.topView.repeatAll
@@ -413,7 +417,6 @@ sub CreateMediaNode()
         audio.ObserveFieldScoped("trickPlayBarVisibilityHint", "OnPlayBarVisibilityHintChanged")
         audio.ObserveFieldScoped("retrievingBarVisibilityHint", "OnPlayBarVisibilityHintChanged")
         m.topView.media = audio
-        m.topView.FindNode("background").visible = false
     end if
     m.previousMode = mode
     if m.contentMedia <> invalid
@@ -648,6 +651,7 @@ sub OnContentSet()
     content = m.topView.content
     ' Handle case when new content set to MediaView
     isNewContent = content <> invalid and (m.content = invalid or not m.content.isSameNode(content))
+    isCustomEndcardVisible = (m.topView.FindNode("endcardLayout") <> invalid and GetState() = "endcardVisible")
     ' save current processing content node
     ' so we can distinguish if new content arrived
     if content = invalid
@@ -655,7 +659,9 @@ sub OnContentSet()
         if m.topView.media <> invalid then m.topView.media.content = invalid
         m.topView.currentItem = invalid
         SetState("none")
-    else if isNewContent and (m.topView.control = "play" or m.topView.control = "prebuffer")
+    else if isNewContent and (isCustomEndcardVisible or (m.topView.control = "play" or m.topView.control = "prebuffer"))
+        ' Content handling should be started
+        ' if developer set new content to the mediaView while custom endcard is visible
         m.content = content
         if IsHandlerConfig(content)
             SetState("contentLoading") ' load content using existing ContentHandler
@@ -681,6 +687,16 @@ sub OnControlSet()
             end if
         else if GetState() = "stopped" or GetState() = "paused"
             m.topView.media.control = control
+        else if GetState() = "endcardVisible"
+            isCustomEndcard = m.topView.FindNode("endcardLayout") <> invalid 
+            if isCustomEndcard and m.topView.preloadContent = false
+                ' This is custom endcards visible and preloadContent=false case,
+                ' so we need to change internal state to "contentLoaded" in order
+                ' to trigger the content handler (if exists) and start playback.
+                ' This way developer doesn't need to set jumpToItem=currentIndex
+                ' to initiate the playback.
+                SetState("contentLoaded")
+            end if
         end if
     else 'handling control field when user set control programmatically
         if isCSASEnabled() and m.topView.RafTask <> invalid and m.topView.RafTask.renderNode <> invalid
@@ -710,12 +726,6 @@ sub OnMediaWasClosed(event as Object)
             m.topView.RafTask.renderNode.getchild(0).content = invalid ' Force stopping RafContentRenderer's videoNode
         end if
 
-        'Removing RAF playback if it exist to avoid RAF error on deeplink
-        RAFRenderer = m.topView.GetScene().GetChild(m.topView.GetScene().GetChildCount()-1)
-        if RAFRenderer <> invalid and LCase(RAFRenderer.id) = "rafrender" then
-            RAFRenderer.getChild(0).content = invalid ' Reseting RAF video node content to kill it
-            RAFRenderer = invalid
-        end if
         m.topView.RafTask = invalid
     end if
     m.buttonBar.visible = m.isButtonBarVisible
@@ -777,12 +787,14 @@ sub OnJumpToItem()
     content = m.topView.content
     ' check of content is available, and there is a child to play
     if m.topView.jumpToItem >= 0 and m.topView.media <> invalid
-        m.topView.currentIndex = m.topView.jumpToItem
-        m.topView.media.content = invalid
-        if GetState() = "contentLoaded"
-            OnContentLoaded() ' updating currentItem and content for media node to workaround race condition when content set before jumpToItem and(or) preloadContent
-        else if GetState() <> "contentLoading" and GetState() <> "none"
-            SetState("contentLoaded")
+        if not (m.topView.currentIndex = m.topView.jumpToItem and m.topView.media.content <> invalid)
+            m.topView.currentIndex = m.topView.jumpToItem
+            m.topView.media.content = invalid
+            if GetState() = "contentLoaded"
+                OnContentLoaded() ' updating currentItem and content for media node to workaround race condition when content set before jumpToItem and(or) preloadContent
+            else if GetState() <> "contentLoading" and GetState() <> "none"
+                SetState("contentLoaded")
+            end if
         end if
     end if
 end sub
@@ -896,7 +908,9 @@ sub OnAudioContentIndexChanged(event as Object)
         currentItem = m.topView.content.getChild(m.topView.media.contentIndex)
         m.topView.currentIndex = m.topView.media.contentIndex
         m.topView.currentItem = currentItem
-        m.topView.npn.content = currentItem.clone(false)
+        if m.topView.npn <> invalid
+            m.topView.npn.content = currentItem.clone(false)
+        end if
 
         if not m.isBookmarkHandlerCreated then CreateBookmarksHandler()
         m.isBookmarkHandlerCreated = false
@@ -954,7 +968,11 @@ end function
 sub LoadContent()
     content = m.topView.content
     ShowBusySpinner(true)
-    if m.topView.endcardView <> invalid or m.topView.mode = "audio"
+    customEndcardLayout = m.topView.FindNode("endcardLayout")
+    isCustomEndcard = customEndcardLayout <> invalid and customEndcardLayout.visible
+    isNativeEndcard = m.topView.endcardView <> invalid
+    isEndcard = isCustomEndcard or isNativeEndcard
+    if isEndcard and m.topView.preloadContent or m.topView.mode = "audio"
         ' do not show spinner in audio mode and on endcards
         ShowBusySpinner(false)
     end if
@@ -990,20 +1008,21 @@ end sub
 
 sub LoadEndcardContent(endcardContent as Object, HandlerConfigEndcard as Object)
     nextItem = Utils_CopyNode(m.topView.content.GetChild(m.topView.currentIndex))
-
+    customEndcardLayout = m.topView.FindNode("endcardLayout")
+    isCustomEndcard = customEndcardLayout <> invalid
     if HandlerConfigEndcard <> invalid and HandlerConfigEndcard.name <> ""
         callback = {
             nextItem: nextItem
             content: endcardContent
             config: HandlerConfigEndcard
             mAllowEmptyResponse : true
-
+            isCustomEndcard: isCustomEndcard
             onReceive: function(data)
                 if data <> invalid
                     if data.GetChildCount() = 0 ' no content received from CH
                         SetState("completed")
                     else
-                        if m.nextItem <> invalid and data.getChild(0) <> invalid
+                        if m.nextItem <> invalid and data.getChild(0) <> invalid and m.isCustomEndcard = false
                             ' insert next item in playlist
                             data.GetChild(0).InsertChild(m.nextItem, 0)
                         end if
@@ -1026,12 +1045,14 @@ sub LoadEndcardContent(endcardContent as Object, HandlerConfigEndcard as Object)
         m.contentHandlerEndcard = GetContentData(callback, HandlerConfigEndcard, endcardContent)
         if m.contentHandlerEndcard = invalid then SetState("completed") 'if endcard handler was not created then just go to the next video
     else
-        if nextItem <> invalid
-            rowContent = CreateObject("roSGNode", "ContentNode")
-            rowContent.AppendChild(nextItem)
-            endcardContent.AppendChild(rowContent)
+        if isCustomEndcard = false
+            if nextItem <> invalid
+                rowContent = CreateObject("roSGNode", "ContentNode")
+                rowContent.AppendChild(nextItem)
+                endcardContent.AppendChild(rowContent)
+            end if
+            m.endcardContent = endcardContent
         end if
-        m.endcardContent = endcardContent
         SetState("endcardLoaded")
     end if
 end sub
@@ -1140,11 +1161,14 @@ sub OnStartBuffering()
     ' it by value, not reference
     control = m.topView.control.toStr()
     if control = "play" or control = "prebuffer" or control = "resume"
-        if m.topView.endcardView <> invalid
+        customEndcardLayout = m.topView.FindNode("endcardLayout")
+        isCustomEndcard = customEndcardLayout <> invalid and customEndcardLayout.visible
+        isNativeEndcard = m.topView.endcardView <> invalid
+        if isNativeEndcard or (isCustomEndcard and m.topView.preloadContent = true)
             ' prebuffer content on endcard
             m.topView.media.control = "prebuffer"
         else
-            if GetCurrentMode() = "video" and control = "resume" 
+            if GetCurrentMode() = "video" and control = "resume"
                 StartPlayback("play")
             else
                 StartPlayback(control)
@@ -1227,10 +1251,23 @@ sub OnFinishedEndcardLoadedTransition()
 end sub
 
 sub OnEndcardVisibleTransition()
-    m.endcardAvailable = true
     if m.spinnerGroup.visible then ShowBusySpinner(false)
-
-    if m.topView.endcardView = invalid
+    ' Use custom endcard if developer provides layout with 'endcardLayout' id.
+    customEndcardLayout = m.topView.FindNode("endcardLayout")
+    isCustomEndcard = customEndcardLayout <> invalid
+    if isCustomEndcard
+        m.topView.control = "none"
+        ' Content field is optional for developer
+        if customEndcardLayout.HasField("content")
+            customEndcardLayout.content = m.endcardContent
+        end if
+        ' Show endcards and set focus to it
+        customEndcardLayout.visible = true
+        m.topView.appendChild(customEndcardLayout)
+        customEndcardLayout.SetFocus(true)
+        StartPrebufferingOnEndcard()
+    else if m.topView.endcardView = invalid
+        m.endcardAvailable = true
         m.topView.endcardView = CreateObject("roSGNode", "EndcardView")
         m.topView.endcardView.id = "endcardView"
         m.topView.endcardView.translation = "[0, 0]"
@@ -1247,11 +1284,14 @@ sub OnEndcardVisibleTransition()
 
         m.topView.appendChild(m.topView.endcardView)
         m.topView.endcardView.SetFocus(true)
+        StartPrebufferingOnEndcard()
+    end if
+end sub
 
-        if m.topView.preloadContent
-            m.topView.control = "prebuffer"
-            SetState("contentLoaded")
-        end if
+sub StartPrebufferingOnEndcard()
+    if m.topView.preloadContent
+        m.topView.control = "prebuffer"
+        SetState("contentLoaded")
     end if
 end sub
 
@@ -1403,12 +1443,19 @@ sub StartPlayback(control as String)
         end if
         if control = "play" and m.topView.currentRAFHandler <> invalid then
             ' start RAFTask on play control if there is rafConfig
+            m.topView.currentItem = GetCurrentLoadedItem()
             SetState("StartRAFTask")
         else if not isCSASEnabled()
             ' set currentItem interface once we start playback
             m.topView.currentItem = GetCurrentLoadedItem()
-            m.topView.media.control = control
             if GetCurrentMode() = "audio" and m.topView.isContentList
+                ' audio playlist mode - don't set control="play" if the content
+                ' is already playing (state="playing") to avoid playback failures
+                ' for some media formats
+                isAlreadyPlaying = (control = "play" and m.topView.media.state = "playing")
+                if not isAlreadyPlaying then
+                    m.topView.media.control = control
+                end if
                 m.topView.media.nextContentIndex = -1
                 m.topView.media.nextContentIndex = m.topView.currentIndex
                 m.topView.media.control = "skipcontent"
@@ -1421,6 +1468,10 @@ sub StartPlayback(control as String)
                         m.topView.seek = seekToPos
                     end if
                 end if
+            else
+                ' not the audio playlist - always set the control
+                ' for backward compatibility
+                m.topView.media.control = control
             end if
         end if
         if m.topView.seek <> invalid and m.topView.seek > -1

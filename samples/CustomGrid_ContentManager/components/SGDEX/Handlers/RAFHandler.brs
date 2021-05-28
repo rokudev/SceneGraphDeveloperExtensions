@@ -4,6 +4,25 @@ Library "Roku_Ads.brs"
 
 sub Init()
     m.top.functionname = "PlayContentWithFullRAFIntegration"
+    m.top.ObserveFieldScoped("state", "OnStateChanged")
+end sub
+
+sub OnStateChanged(event as Object)
+    state = event.getData()
+    if state = "stop" or state = "done"
+        ' do the cleanup
+        scene = m.top.GetScene()
+        if scene <> invalid
+            ' locate the rafGroup that we pass as a parent view to the RAF for 
+            ' the ads rendering in PlayContentWithFullRAFIntegration()
+            rafGroup = scene.FindNode("rafGroup")
+            if rafGroup <> invalid
+                ' remove the rafGroup, if exists, to make sure the renderer
+                ' node appended by RAF behind the scenes gets disposed
+                scene.RemoveChild(rafGroup)
+            end if
+        end if
+    end if
 end sub
 
 sub ConfigureRAF(adIface)
@@ -51,12 +70,23 @@ sub PlayContentWithFullRAFIntegration()
 
     content = m.top.content
 
-    ' Should developer scene as a place for ads rendering
-    view = m.top.getScene()
-    if view = invalid
-        print "Error: invalid view"
-        return
-    end if
+    scene = m.top.GetScene()
+    if scene = invalid then return
+
+    ' Create a dummy group (rafGroup) to be used as a parent view for RAF ads
+    ' rendering. RAF will be creating its own renderer node behind the scenes
+    ' as a child of this rafGroup node.
+    '
+    ' This is a workaround for the case when the Media view is being closed 
+    ' programmatically (MediaView.close=true) in the middle of the ads playback.
+    '
+    ' RAF doesn't provide any functionality to dispose its renderer node
+    ' on demand, so instead we will be disposing our rafGroup node having RAF
+    ' renderer as its child to clean things up when the RAF handler has stopped
+    ' (state="stop") or finished (state="done") - see OnStateChanged() callback.
+    view = scene.CreateChild("Group")
+    view.id = "rafGroup"
+    scene = invalid
 
     ' Add loading facade for case if GetAds would be loaded for some time
     facade = videoView.createChild("LoadingFacade")
@@ -68,9 +98,11 @@ sub PlayContentWithFullRAFIntegration()
     if m.top.useCSAS then
         adIface.sgdex_flag_ClientStitchedAds_was_enabled = true
         adIface.sgdex_flag_StitchedAdsInit_was_called = true
-        adIface.sgdex_original_SetTrackingCallBack(SGDEXProxyTrackingCallback)
-        m.m_adinstance["videoView"] = videoView
+        adIface.videoView = videoView
     end if
+
+    ' enable tracking callbacks for all RAF modes
+    adIface.sgdex_original_SetTrackingCallBack(SGDEXProxyTrackingCallback)
 
     ' if it is not imported ads and not stitched ads, load ads with usual GetAds
     if adIface.sgdex_flag_importAds_was_called = Invalid and (adIface.sgdex_flag_StitchedAdsInit_was_called = Invalid or adIface.sgdex_flag_ClientStitchedAds_was_enabled = true) then
@@ -130,8 +162,11 @@ sub PlayContentWithFullRAFIntegration()
             csasStream = adIface.constructStitchedStream(content,adPods) ' contructing stream with ads to work with
             ThemeRAFRenderer(csasStream,videoView) ' sharing themes between MediaView and RAFContentRenderer
             isCSASPlayedToCompletion = adIface.renderStitchedStream(csasStream, videoView) ' Start RAFContentRenderer playback
-            ' CSAS playback finished, exit now
-            videoView.close = true
+            ' CSAS playback finished
+            ' close media view if the user exited playback before the stream completed
+            if not isCSASPlayedToCompletion
+                videoView.close = true
+            end if
             exit while
         end if
 
@@ -240,18 +275,20 @@ end sub
 
 ' Proxy tracking callback to provide info about position, state to MediaView and allow developer to track them independently
 sub SGDEXProxyTrackingCallback(obj = invalid as Dynamic, eventType = invalid as Dynamic, ctx = invalid as Dynamic)
-    instance = getglobalAA().m_adinstance 'TODO: replace getglobalAA()
-    videoView = instance.videoView
+    instance = Roku_Ads()
     if instance.sgdex_user_custom_trackingCallback <> invalid then
-        instance.sgdex_user_custom_trackingCallback(obj,eventType,ctx)
+        instance.sgdex_user_custom_trackingCallback(instance.sgdex_user_custom_callbackObj, eventType, ctx)
     end if
 
-    ' handling position/state change events to allow user track them on MediaView
-    if eventType = "ContentPosition" then
-        videoView.position = ctx.contentPos
-    else if eventType = "AdStateChange" then
-        videoView.state = ctx.state
-    else if eventType = "ContentStateChange" then
-        videoView.state = ctx.state
+    ' propagate position and state values from RAF CSAS playback to the MediaView fields
+    if instance.sgdex_flag_ClientStitchedAds_was_enabled = true
+        videoView = instance.videoView
+        if eventType = "ContentPosition" then
+            videoView.position = ctx.contentPos
+        else if eventType = "AdStateChange" then
+            videoView.state = ctx.state
+        else if eventType = "ContentStateChange" then
+            videoView.state = ctx.state
+        end if
     end if
 end sub

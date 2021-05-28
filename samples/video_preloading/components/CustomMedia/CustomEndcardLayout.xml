@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--********** Copyright 2021 Roku Corp.  All Rights Reserved. **********-->
+
+<component name="CustomEndcardLayout" extends="Group">
+    <children>
+        <LayoutGroup 
+            id="nextItemGroup"
+            translation="[452,130]">
+
+            <Label
+                id="nextItemLabel"
+                font="font:MediumSystemFont"
+            />
+
+            <Poster 
+                id="nextItemPoster"
+                width="368"
+                height="300"
+                loadWidth="368"
+                loadHeight="300"
+                loadDisplayMode="scaleToFit"
+            />
+
+            <ButtonGroup
+                id="buttonGroup"
+            />
+        </LayoutGroup>
+    </children>
+</component>

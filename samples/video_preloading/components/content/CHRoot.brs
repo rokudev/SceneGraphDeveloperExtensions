@@ -1,4 +1,4 @@
-' ********** Copyright 2019 Roku Corp.  All Rights Reserved. **********
+' ********** Copyright 2021 Roku Corp.  All Rights Reserved. **********
 
 sub GetContent()
     url = CreateObject("roUrlTransfer")
@@ -11,8 +11,11 @@ sub GetContent()
     responseArray = responseXML.GetChildElements()
     rowAA = {
        children: [{
-            title: "Playlist Videos"
-            children: []
+           title: "Playlist of videos with standard MediaView and endcards"
+           children: []
+       },{
+           title: "Playlist of videos with custom media view and endcards"
+           children: []
        }]
     }
 
@@ -22,7 +25,7 @@ sub GetContent()
             itemAA = xmlItem.GetChildElements() ' itemAA contains a single feed <item> element
             if itemAA <> invalid
                 for each xmlItem in itemAA
-                    item = {}
+                    item = CreateObject("roSGNode", "ContentNode")
                     if xmlItem.GetName() = "media:content"
                         item.url = xmlItem.GetAttributes().url
                         xmlTitle = xmlItem.GetNamedElements("media:title")
@@ -34,12 +37,12 @@ sub GetContent()
                         item.HDPosterUrl = xmlThumbnail.GetAttributes().url
 
                         rowAA.children[0].children.Push(item)
+                        rowAA.children[1].children.Push(item.clone(false))
                     end if
                 end for
             end if
         end if
     end for
-
     m.top.content.Update(rowAA)
 end sub
 

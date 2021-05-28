@@ -91,4 +91,5 @@
     <script type="text/brightscript" uri="EntitlementHandler.brs" />
     <script type="text/brightscript" uri="EntitlementHandler_RokuBilling.brs" />
     <script type="text/brightscript" uri="EntitlementHandler_UserPass.brs" />
+    <script type="text/brightscript" uri="EntitlementHandler_TVOD.brs" />
 </component>
