@@ -1,36 +1,28 @@
-# Scene Graph Developer Extensions
+# SDK Development Guide
+
+![](/images/ch-dev-guide-example-ui.jpg)
 
 ## Overview
 
-This is a collection of developer sample code that we call Scene Graph Developer Extensions (SGDEX). This sample code demonstrates how a developer can use pre-built, reusable Roku Scene Graph (RSG) components to enable rapid development of channels that follow a consistent UX paradigm.
+The guide covers some key concepts to building your first Roku channel. Before proceeding, please review:
 
-### Views
+* [Developer Setup Guide](https://developer.roku.com/develop/getting-started/setup-guide) to enable developer settings on your Roku device
+* [Hello World Guide](https://developer.roku.com/develop/getting-started/sdk-hello-world) to understand how to side-load a channel
 
-SGDEX views are full screen components. If you've built channels using the legacy Roku SDK this will be familiar to you. Using an SGDEX view saves you the effort of building a screen from scratch using lower level RSG components.
+This guide is composed of the following sections:
 
-### Content Manager
+### 1. [Setting up a project](/project-setup.md)
 
-SGDEX includes a robust content manager that makes it easy to connect a view to a content source like a feed or API. Using the content manager saves you the effort of having to manage RSG Task Nodes and helps ensure that your channel will perform well on all Roku devices.
+How to setup a project with the required directories, files, and assets.
 
-### Component Controller
+### 2. [Parsing an XML content feed](/parsing-feed.md)
 
-SGDEX includes a component controller that helps manage the views in your channel. Using the component controller saves you the effort of managing the screen stack on your own.
+How to parse a content feed and retrieve videos, titles, descriptions, etc.
 
-### Other components
+### 3. [Building a user interface in SceneGraph](/scenegraph-ui.md)
 
-SGDEX also includes components that make it easier to:
+How to build a basic grid layout using the `RowList` component.
 
-* Use Roku Ad Framework (RAF) to monetize your content
-* Use Roku Billing to manage subscriptions and entitlement
+### 4. [Playing video](/video-playback.md)
 
-## Installation
-
-Follow these steps to prepare your channel to use SGDEX components:
-
-* Copy the `extentions/SGDEX` folder into your channel so that the path to the folder is `pkg:/components/SGDEX`. _This path is required for certain graphic elements to work correctly._
-* Copy `extentions/SGDEX.brs` into your channel so that the path to the file is `pkg:/source/SGDEX.brs`
-* Add this line to your manifest: `bs_libs_required=roku_ads_lib`
-
-You are now ready to use SGDEX components in your channel!
-
-###### Copyright (c) 2018 Roku, Inc. All rights reserved.
+How to setup and play video in SceneGraph.
