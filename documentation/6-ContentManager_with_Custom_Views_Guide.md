@@ -224,7 +224,7 @@ end sub
 
 ### Building the View
 
-#### Required FIelds
+#### Required Fields
 
 Your custom view must include the following fields. These are used by the ContentManager to optimize the performance of the data loading logic and give the user the most responsive experience possible.
 
@@ -244,7 +244,7 @@ Your custom view must include the following fields. These are used by the Conten
     * This field must be declared as alwaysNotify=true
     * Write-only. Specifies the control value for the Video node like "play", "pause" etc. Supported values are the same as for the Video node control field
 
-#### Optional FIelds
+#### Optional Fields
 
 Your custom view may include the following fields if you need them. These fields will behanve exactly as they do in MediaView.
 
@@ -465,6 +465,95 @@ sub OnRowItemSelected(event as Object)
     m.top.content = item
     m.top.control = "play"
     m.endcardView.visible = false
+end sub
+```
+
+## Details Views
+
+Starting with SGDEX v2.8 you can leverage the ContentManager used by the SGDEX 
+DetailsView to populate your own custom detail style views. You can use all the same 
+data loading models supported by DetailsView to populate your custom view in the
+most efficient way possible.
+
+### Requirements
+
+In order to use the details ContentManager, you must do all of the following in your custom view:
+
+- Extend from an RSG component. We recommend using the Group component
+- Include the following fields: `content`, `contentManagerType`, `itemFocused`
+
+### Building the View
+
+#### Required Fields
+Your custom view must include the following fields. These are used by the ContentManager
+to optimize the performance of the data loading logic and give the user the most
+responsive experience possible.
+
+* **content** (ContentNode)
+    * Default value: invalid  
+    * Specifies the content of the details view as a ContentNode. Depending on isContentList interface value, can represent a single item (isContentList="false", the items is content itself) or a list (isContentList="true", the list items are child ContentNodes).
+* **contentManagerType** (string)
+    * Default value: "details"
+    * For Details views, you must set this field to "details"
+    * This field tells the ContentManager which mode to operate in for this view. 
+* **itemFocused** (integer)
+    * Default value: 0
+    * This field tells what item is currently focused.
+    * This field can be safely removed only if your view includes an isContentList field whose value is false.
+
+#### Optional Fields
+
+Your custom view may include the following fields if you need them. These fields will behanve exactly as they do in DetailsView.
+
+* **isContentList** (bool)
+    * Default value: true
+    * Specifies whether the ContentNode set to the content interface of the view represents the list or a single item (false). This field, if defined on a custom view, must be specified prior to setting the content field.
+* **currentItem** (node)
+    * Default value: invalid
+    * SGDEX will populate this field with the current content item being processed by the details ContentManager.
+* **wasShown** (boolean)
+    * Default value: false
+    * Will be populated by ComponentController behind the scenes once the view gets added to the stack or appears at the top of the stack when some other view gets closed.
+* **wasClosed** (boolean)
+    * Default value: false
+    * Will be populated by ComponentController behind the scenes once the view gets closed.
+
+#### Example
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="CustomDetails" extends="Group">
+  <script type="text/brightscript" uri="CustomDetails.brs" />
+  <interface>
+      <field id="content" type="node" />
+      <field id="contentManagerType" type="string" value="details"/>
+      <field id="itemFocused" type="integer" value="0"/>
+  </interface>
+  <children>
+      ...
+  </children>
+</component>
+```
+
+### Usage
+
+Once you've built your custom view, using it with SGDEX is exactly the same as using any other view in SGDEX.
+
+#### Example
+
+```
+sub Show(args as Object)
+    customView = CreateObject("roSGNode", "CustomDetails")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        HandlerConfigDetails: {
+                name: "CHList"
+            }
+    }, true)
+    customView.content = content
+    m.top.ComponentController.callFunc("show", {
+        view: customView
+    })
 end sub
 ```
 

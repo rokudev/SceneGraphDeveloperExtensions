@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (c) 2020 Roku, Inc. All rights reserved. -->
+<!-- Copyright (c) 2020-2021 Roku, Inc. All rights reserved. -->
 
 <component name="NarrowCategoryListItemComponent" extends="Group" >
     <interface>
@@ -19,7 +19,7 @@
             uri="pkg:/components/SGDEX/Images/list_focus.9.png"
         />
 
-        <LayoutGroup id="layout" layoutDirection="horiz" vertAlignment="center">
+        <LayoutGroup id="layout" layoutDirection="horiz" vertAlignment="center" itemSpacings="[10]">
             <StyledPoster
                 id="poster"
                 maxWidth="0"

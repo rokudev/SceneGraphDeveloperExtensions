@@ -1,7 +1,21 @@
 # Scene Graph Developer Extensions
 
-> 05.28.21
+> 08.27.21
 
+## v.2.8
+
+### Features
+
+* The DetailsView ContentManager can now be used with custom views
+* Improved GridView layout to use the full width of the metadata area
+* Improved ButtonBar layout by more precisely calculating button widths
+* Improved the stability of logic for caching various item components### Bug Fixes
+
+### Bug Fixes
+
+* Fixed an issue where the currentView field could sometimes have the wrong value inside of wasClosed observers
+* Fixed an issue in custom grid views where components other than the grid could not be focused
+    
 ## v.2.7
 
 ### Features

@@ -1,20 +1,19 @@
-' Copyright (c) 2018 Roku, Inc. All rights reserved.
+' Copyright (c) 2018-2021 Roku, Inc. All rights reserved.
 
 sub Init()
-    m.availableShapes = {
+    m.top.loadDisplayMode="scaleToFit"
+end sub
+
+sub UpdateSize()
+    availableShapes = {
         "portrait" : ""
         "4x3" : ""
         "16x9" : ""
         "square" : ""
     }
-
-    m.top.loadDisplayMode="scaleToFit"
-    m.top.observeField("shape", "UpdateSize")
-end sub
-
-sub UpdateSize()
     shape = m.top.shape
-    if shape.trim().len() = 0 or m.availableShapes[shape] = invalid then return
+
+    if shape.trim().len() = 0 or availableShapes[shape] = invalid then return
     
     width       = invalid
     height      = invalid

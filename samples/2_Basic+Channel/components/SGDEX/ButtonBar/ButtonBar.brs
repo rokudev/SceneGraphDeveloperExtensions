@@ -3,11 +3,6 @@
 sub init()
     m.top.theme = {}
 
-    ' wrap roFontRegistry in Task to prevent creating MAIN|TASK-only component on RENDER thread
-    m.fontResolver = CreateObject("roSGNode", "GetDefaultFontTask")
-    m.fontResolver.ObserveField("oneCharWidth", "OnOneCharWidthSet")
-    m.fontResolver.control = "run"
-
     ' autohide nodes
     m.autoHideHint = m.top.findNode("autoHideHint")
     m.autoHideArrow = m.top.findNode("autoHideArrow")
@@ -201,13 +196,13 @@ end sub
 
 ' define button bar size based on content
 function AdjustButtonBarContent(content as Object)
-    ' wait until task will be finished
-    if m.fontResolver.oneCharWidth = 0 then return invalid
-
     maxButtonWidth = 0
     m.buttonBarWidth = 0
     m.buttonBarHeight = 0
     contentCopy = content.clone(true)
+
+    ' use to calculate actual text width using boundingRect()
+    dummyLabel = CreateObject("roSGNode", "Label")
     for each buttonContent in contentCopy.GetChildren(-1, 0)
         isPoster = isnonemptystr(buttonContent.hdPosterUrl)
         isTitle = isnonemptystr(buttonContent.title)
@@ -230,14 +225,19 @@ function AdjustButtonBarContent(content as Object)
         end if
 
         if buttonContent.HDItemWidth = invalid
-            ' size buttons dynamically based on their title
-            oneCharWidth = m.fontResolver.oneCharWidth
-            w = Cdbl(m.fontResolver.oneCharWidth * buttonContent.title.len())
+            w = 0
 
-            if w < 50 then w = 50.0 ' buttons must be at least 50px wide to avoid visual problems
+            ' calculate text width
+            dummyLabel.text = buttonContent.title
+            boundingRect = dummyLabel.boundingRect()
+            if boundingRect <> invalid and boundingRect.width <> invalid
+                w = boundingRect.width
+            end if
+
+            if isPoster then w += 32.0 ' make sure if we have enough width for poster
 
             buttonContent.Update({
-                HDItemWidth: w + 30 ' to compensate for the padding in the LayoutGroup
+                HDItemWidth: w + 60.0 ' to compensate for the padding in the LayoutGroup
             }, true)
         end if
 
@@ -264,13 +264,6 @@ function AdjustButtonBarContent(content as Object)
 
     return newContent
 end function
-
-sub OnOneCharWidthSet(event as Object)
-    oneCharWidth = event.GetData()
-    if oneCharWidth > 0 and m.top.content <> invalid
-        SetButtonBarContent(m.top.content)
-    end if
-end sub
 
 sub AlignButtonBar()
     buttonBarX = 107

@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2021 Roku, Inc. All rights reserved. -->
+
+<!--
+    @Public
+    EntitlementView provides developers with easier way of handling entitlements in their apps.
+
+    EntitlementView can work in one of the modes defined by EntitlementView.mode:
+    - Roku Pay subscription check/purchase/upgrade/downgrade (mode = "RokuPay_SVOD")
+    - Roku Pay transactional purchase (mode = "RokuPay_TVOD")
+    - username/password authentication handling/check (mode = "UserPass")
+
+    EntitlementView.mode should be specifically set by developer.
+
+    Developer is able to implement their entitlement related business logic in EntitlementHandler.
+    The handler is specified by handlerConfigEntitlement field of the content node assigned to the view.
+
+    "RokuPay_SVOD" mode supports not only regular Roku Pay purchases but also [on-device upgrade/downgrade](https://developer.roku.com/docs/developer-program/roku-pay/implementation/on-device-upgrade-downgrade.md).
+    Please see EntitlementHandler documentation for more details.
+
+    @Sample:
+    ' ====== Use case 1: silent Roku Pay subscription check ======
+
+    ' ... Scene scope:
+
+    ' In order to do silent subscription check, you need to:
+    ' - create the view
+    ' - specify "RokuPay_SVOD" mode
+    ' - observe its isSubscribed interface that will be populated with subscription check result
+    ' - assign content node with the handler config
+    ' - trigger silentCheckEntitlement without showing the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "RokuPay_SVOD"
+    ent.ObserveField("isSubscribed", "OnIsSubscriptionChecked")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "mySubscriptionCheckHandler"
+        }
+    }, true)
+    ent.content = content
+    ent.silentCheckEntitlement = true
+
+    ' ... mySubscriptionCheckHandler scope:
+
+    sub ConfigureEntitlements(config as Object)
+        ' Here you should implement the business logic to check subsciption status.
+        '
+        ' You may use config.purchases and config.catalogProducts that will be
+        ' prepopulated by SGDEX per Roku Channel Store data for your channel.
+        '
+        ' You need to set config.isSubscribed to true or false in order to indicate
+        ' whether user is subscribed or not.
+    end sub
+
+    ' ====== Use case 2: Roku Pay subscription flow ======
+
+    ' ... Scene scope:
+
+    ' In order to initiate Roku Pay subscription flow, you need to:
+    ' - create the view
+    ' - specify "RokuPay_SVOD" mode
+    ' - observe its isSubscribed interface that will be populated with subscription flow result
+    ' - assign content node with the handler config
+    ' - show the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "RokuPay_SVOD"
+    ent.ObserveField("isSubscribed", "OnIsSubscribed")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "mySubscriptionHandler"
+        }
+    }, true)
+    ent.content = content
+    m.top.ComponentController.callFunc("show", {view: ent})
+
+    ' ... mySubscriptionHandler scope:
+
+    sub ConfigureEntitlements(config as Object)
+        ' Here you should implement the business logic to determine which subscription
+        ' products to show to the user.
+
+        ' You may use config.purchases and config.catalogProducts that will be
+        ' prepopulated by SGDEX per Roku Channel Store data for your channel.
+
+        ' You need to populate config.displayProducts with the list of products
+        ' to be displayed to the user and be available for selection.
+
+        ' Each item in config.displayProducts should be an AA containing
+        ' product _code_ per Channel Store data and, optionally, _name_ and _action_,
+        ' for instance:
+
+        config.displayProducts = [
+            ' a subscription purchase product (no action field)
+            {name: "Subscription 1", code: "mytestsub1"},
+
+            ' a subscription upgrade product, it should belong to a product group
+            ' configured in the Roku Developer dashboard
+            {name: "Subscription 2 (upgrade)", code: "mytestsub2", action: "upgrade"},
+
+            ' a subscription downgrade product, it should belong to a product group
+            ' configured in the Roku Developer dashboard
+            {name: "Subscription 3 (downgrade)", code: "mytestsub3", action: "downgrade"}
+        ]
+    end sub
+
+    ' ====== Use case 3: silent authentication check ======
+
+    ' ... Scene scope:
+
+    ' In order to do silent authentication check, you need to:
+    ' - create the view
+    ' - specify "UserPass" mode
+    ' - observe its isAuthenticated interface that will be populated with auth check result
+    ' - assign content node with the handler config
+    ' - trigger silentCheckAuthentication without showing the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "UserPass"
+    ent.ObserveField("isAuthenticated", "OnIsAuthChecked")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "myAuthHandler"
+        }
+    }, true)
+    ent.content = content
+    ent.silentCheckAuthentication = true
+
+    ' ... myAuthHandler scope:
+
+    function CheckAuthentication() as Boolean
+        ' Here you should implement the business logic to validate user auth status
+        ' and return true if user is authenticated, false if not
+    end function
+
+    ' ====== Use case 4: silent de-authentication ======
+
+    ' ... Scene scope:
+
+    ' In order to do silent de-authentication, you need to:
+    ' - create the view
+    ' - specify "UserPass" mode
+    ' - observe its isAuthenticated interface that will be populated with auth status result
+    ' - assign content node with the handler config
+    ' - trigger silentDeAuthenticate without showing the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "UserPass"
+    ent.ObserveField("isAuthenticated", "OnIsAuth")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "myAuthHandler"
+        }
+    }, true)
+    ent.content = content
+    ent.silentDeAuthenticate = true
+
+    ' ... myAuthHandler scope:
+
+    function DeAuthenticate() as Boolean
+        ' Here you should implement the business logic to de-authenticate user
+        ' (API calls etc) and return result of the operation:
+        ' - true if successfully de-authenticated
+        ' - false if not de-authenticated
+        ' EntitlementView.isAuthenticated will be populated with the value opposite to
+        ' this return value
+    end function
+
+    ' ====== Use case 5: user/password authentication flow ======
+
+    ' ... Scene scope:
+
+    ' In order to initiate user/password authentication flow, you need to:
+    ' - create the view
+    ' - specify "UserPass" mode
+    ' - observe its isAuthenticated interface that will be populated with auth flow result
+    ' - assign content node with the handler config
+    ' - show the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "UserPass"
+    ent.ObserveField("isAuthenticated", "OnIsAuth")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "myAuthHandler"
+        }
+    }, true)
+    ent.content = content
+    m.top.ComponentController.callFunc("show", {view: ent})
+
+    ' ... myAuthHandler scope:
+
+    function Authenticate(username as String, password as String) as Boolean
+        ' Here you should implement the business logic for authentication based on username
+        ' and password (API calls etc) and return result of the operation:
+        ' - true if successfully authenticated
+        ' - false if not authenticated
+        ' EntitlementView.isAuthenticated will be populated with this return value
+    end function
+
+    ' ====== Use case 6: Roku Pay transactional purchase (TVOD) flow ======
+
+    ' ... Scene scope:
+
+    ' In order to initiate transactional purchase flow, you need to:
+    ' - create the view
+    ' - specify "RokuPay_TVOD" mode
+    ' - observe its orderResult interface that will be populated with TVOD flow result
+    ' - assign content node with the handler config
+    ' - show the view
+    ent = CreateObject("roSGNode", "EntitlementView")
+    ent.mode = "RokuPay_TVOD"
+    ent.ObserveField("orderResult", "OnOrderResult")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        handlerConfigEntitlement: {
+            name: "myTVODHandler"
+            orderRequest: {  'this is optional, can be done in ConfigureEntitlements() in the handler scope (see below)
+                code: "mytvodproduct1"  'Roku Pay one-time purchase product ID
+                price: "0.99"           'price to be charged, without currency sign
+                priceDisplay: "0.99"    'price to be displayed
+                title: "TVOD product 1" 'title of the product to be shown on user's invoices for the purchased item
+            }
+        }
+    }, true)
+    ent.content = content
+    m.top.ComponentController.callFunc("show", {view: ent})
+
+    ' ... myTVODHandler scope:
+    
+    sub ConfigureEntitlements(config as Object)
+        ' Here you can optionally implement business logic to set config.orderRequest
+        ' if orderRequest wasn't specified on the associated handlerConfigEntitlement
+        ' or redefine it, if needed
+    end function
+
+    function ConfirmOrder(orderInfo as Object) as Boolean
+        ' This is the place to implement business logic to either proceed or not
+        ' with the transaction requested by orderRequest. 
+        
+        ' In order to confirm and proceed with the transaction, true should be returned.
+        
+        ' If return value is false then transaction will not be performed.
+        ' Prior to returning false, you can optionally specify orderInfo.errorCode
+        ' and orderInfo.errorMessage (both values shoudl be strings) to be reflected in
+        ' EntitlementView.orderResult and OnPurchaseFailure() errorInfo
+    end function
+    
+    sub OnPurchaseSuccess(purchaseInfo as Object)
+        ' Here you can optionally implement business logic (API calls etc)
+        ' in response to the successful transaction
+    end sub
+    
+    sub OnPurchaseFailure(errorInfo as Object)
+        ' Here you can optionally implement business logic (API calls etc)
+        ' in response to the failed transaction
+    end sub
+-->
+
+<component name="EntitlementView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+  <interface>
+        <!-- @Public -->
+        <!-- [ObserveOnly] sets to true|false and shows if developer is subscribed after:
+        1) checking via silentCheckEntitlement=true (see below)
+        2) exitting from subscription flow initiated by adding view to View stack -->
+        <field id="isSubscribed" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- initiates silent entitlement checking (no UI) -->
+        <field id="silentCheckEntitlement" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- [ObserveOnly] sets to true|false and shows if developer is authenticated after:
+        1) checking via silentCheckAuthentication=true (see below)
+        2) exitting from authentication flow initiated by adding view to View stack -->
+        <field id="isAuthenticated" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- [ObserveOnly] -->
+        <!-- AA indicating the result of the "RokuPay_TVOD" flow, contains the following fields: 
+        - isSuccess (Boolean) – indicates whether the flow ended with a successful purchase transaction:
+            true – successful purchase.
+            false – an error occurred during the flow.
+        - purchaseID – only if isSuccess=true, contains transaction ID (String); otherwise will be Invalid
+        - contentKey – only if isSuccess=true, can optionally contain contentKey value specified by developer; otherwise invalid
+        - errorCode – only if isSuccess=false, can optionally contain code of the error (String); otherwise Invalid
+        - errorMessage – only if isSuccess=false, can optionally contain error message (String); otherwise Invalid -->
+        <field id="orderResult" type="assocarray" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- a boolean telling SGDEX whether it should prompt the user to share their
+        Roku account email address and use that value to pre-populate the KeyboardView. -->
+        <field id="prepopulateEmail" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- initiates silent authentication checking (no UI) -->
+        <field id="silentCheckAuthentication" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- initiates silent de-authentication (no UI) -->
+        <field id="silentDeAuthenticate" type="bool" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- a string field which contains username. This field used in case of
+        custom UI for collecting the credentials. -->
+        <field id="username" type="string" />
+
+        <!-- @Public -->
+        <!-- a string field which contains user password. This field used in case of
+        custom UI for collecting the credentials. -->
+        <field id="password" type="string" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- a string field to specify the entitlement mode. Supported values are:
+        - "RokuPay_SVOD" - Roku Pay subscription check/purchase/update/downgrade;
+        - "RokuPay_TVOD" - Roku Pay transactional purchase (TVOD);
+        - "UserPass" - user/password based sign-in/sign-out/auth check;
+        - "RokuBilling" (deprecated) - same as "RokuPay_SVOD" -->
+        <field id="mode" type="string" value="" />
+  </interface>
+
+  <script type="text/brightscript" uri="EntitlementView.brs" />
+  <script type="text/brightscript" uri="../../ContentManager/ContentManagerUtils.brs" />
+</component>
+

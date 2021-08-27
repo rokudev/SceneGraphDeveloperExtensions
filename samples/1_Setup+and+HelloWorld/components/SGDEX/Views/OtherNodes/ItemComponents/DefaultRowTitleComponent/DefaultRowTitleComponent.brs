@@ -1,11 +1,7 @@
-' Copyright (c) 2018 Roku, Inc. All rights reserved.
-
-sub Init()
-    m.titleLabel = m.top.findNode("title")
-end sub
+' Copyright (c) 2018-2021 Roku, Inc. All rights reserved.
 
 sub onContentSet()
     if m.top.content <> invalid
-        m.titlelabel.text = m.top.content.title
+       m.top.findNode("title").text = m.top.content.title
     end if
 end sub

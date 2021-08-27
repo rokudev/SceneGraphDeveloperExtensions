@@ -8,7 +8,7 @@ view as well as the Task Nodes, and streamline the multi-threaded nature
 of Roku SceneGraph Nodes.
 
 In order to populate a view, the developer needs to provide the Content
-Manager with config data to drive that view's Content Getter(s).
+Manager with config data to drive that view's Content Handler(s).
 
 # Content Handlers
 
@@ -53,7 +53,7 @@ sub GetContent()
 end sub
 ~~~~
 
-## Content Getter Handler Config
+## Content Handler Config
 
 Each CH is driven by a Content Handler Config (CHConfig). The CHConfig
 is set as the value of a field on the content node that needs to be
@@ -173,4 +173,68 @@ is a details view that displays only one item.
 > 
 > Set view.isContentList = false
 
-###### Copyright (c) 2018 Roku, Inc. All rights reserved.
+## CategoryListView supported Data Models
+
+If the channel does not have content to show on the category list view and
+needs to load it via an API call, set the HandlerConfigCategoryList to a
+content node in the CategoryListView. This CH has a basic structure (See:
+Content Handler Config).
+
+CategoryListView supports the following loading models:
+
+### Single Task
+
+In a single task model, all the data for the category list is populated by a
+single CH. The CHConfig for this CH should be placed
+in the CategoryListView's root ContentNode.
+
+### One Task Per Category
+
+In this model, categories of a CategoryListView are defined by a root CH similar to
+the single task model, but the content for each category is populated by a
+separate CH. To accomplish this, each category that requires loading content
+has its own CHConfig. It can be set either in the root CH or in other
+CH.
+
+### Multiple Tasks Per Category
+
+This model is useful when the developer is working with an API that
+returns the content of a category in pages and each page requires a separate
+API call. There are two variations of this model:
+
+#### Serial
+
+> In the serial variation, the pages of content of a category must be
+> requested in order.
+> 
+> To implement this, the root CH places a CHConfig on each of its child
+> nodes (that represent a category), as in the "One Task Per Category" model.
+> Moreover, this CHConfig have a field _hasMore_ that tells SGDEX that
+> the category has more items to load. This CH is invoked by SGDEX when focus near 
+> the end of category. When a developer loads portion of
+> serial content and is aware of more content that exists, they can set
+> a new CH to m.top.content inside of the `GetContent()` function.
+
+#### Non-Serial
+
+> In the non-serial variation, the pages of content of a category can be
+> requested out of order. The developer must know from the beginning how
+> many items are there in each category altogether. 
+> 
+> The implementation of this model is complex. To implement this model,
+> the root CH does the following:
+>
+>  Places a CHConfig on each of its child nodes (that
+> represent a category), as in the "One Task Per Category" model, with a pageSize field
+> 
+> Populate the category with "n" placeholder content items where n is the
+> final number of items the category contains
+> 
+> SGDEX then calls category's CH multiple times, without
+> deleting the CHConfig. Each time it is called, the CH updates the
+> appropriate placeholder items on the category with the final content. Note
+> that the CH uses the values
+> found in m.top.offset and m.top.pageSize to determine which items
+> it needs to update.
+
+###### Copyright (c) 2021 Roku, Inc. All rights reserved.

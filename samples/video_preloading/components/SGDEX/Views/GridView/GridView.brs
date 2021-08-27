@@ -25,7 +25,7 @@ sub initGridViewNodes()
     m.details = m.top.viewContentGroup.CreateChild("ItemDetailsView")
     m.details.id = "details"
     m.details.translation = [125, 0]
-    m.details.maxWidth = 666
+    m.details.maxWidth = 1024
 
     layoutGroup = m.top.CreateChild("LayoutGroup")
     layoutGroup.translation = [640, 360]
@@ -474,6 +474,20 @@ end function
 sub SGDEX_UpdateViewUI()
     buttonBar = m.top.getScene().buttonBar
     if buttonBar <> invalid and m.gridNode <> invalid
+        ' description maxWidth is not specified by theme, calculate it
+        if (m.top.theme = invalid or m.top.theme.descriptionmaxWidth = invalid) and m.details <> invalid
+            maxWidth = 1024 'default value
+            if buttonBar.alignment = "left"
+                ' make sure that the right edge of the description area is
+                ' aligned with the Options label and grid row counter
+                bbWidth = buttonBar.FindNode("backgroundRectangle").width
+                if buttonBar.visible and not buttonBar.overlay
+                    maxWidth = 1280 - (bbWidth + 125 + m.viewOffsetX)
+                    if maxWidth <= 660 then maxWidth = 660 'min threshold value
+                end if
+            end if
+            m.details.maxWidth = maxWidth
+        end if
         RebuildRowList()
     end if
 end sub

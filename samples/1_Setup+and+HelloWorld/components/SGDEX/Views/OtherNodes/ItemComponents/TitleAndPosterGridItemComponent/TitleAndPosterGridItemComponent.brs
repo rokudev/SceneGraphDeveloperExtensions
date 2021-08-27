@@ -1,32 +1,32 @@
-' Copyright (c) 2018 Roku, Inc. All rights reserved.
-
-sub Init()
-    m.label = m.top.findNode("title")
-    m.poster = m.top.findNode("poster")
-end sub 
+' Copyright (c) 2018-2021 Roku, Inc. All rights reserved.
 
 sub onContentSet()
     content = m.top.itemContent
+    label = m.top.findNode("title")
+    poster = m.top.findNode("poster")
+    
     if content <> invalid
-        m.poster.uri = content.hdPosterUrl
-        m.label.text = content.shortDescriptionLine1
+        poster.uri = content.hdPosterUrl
+        label.text = content.shortDescriptionLine1
     end if
 
     parent = Utils_getParentbyIndex(3, m.top)
     if parent <> invalid AND parent.itemTextColorLine1 <> invalid
-        m.label.color = parent.itemTextColorLine1
+        label.color = parent.itemTextColorLine1
     end if
 end sub
 
 sub onWidthChange()
-    m.poster.width      = m.top.width
-    m.poster.loadWidth  = m.top.width
+    poster = m.top.FindNode("poster")
+    poster.width = m.top.width
+    poster.loadWidth = m.top.width
     setTitleLabelStyle(m.top.width,m.top.height)
 end sub
 
 sub onHeightChange()
-    m.poster.height     = m.top.height
-    m.poster.loadHeight = m.top.height
+    poster = m.top.FindNode("poster")
+    poster.height     = m.top.height
+    poster.loadHeight = m.top.height
     setTitleLabelStyle(m.top.width,m.top.height)
 end sub
 
@@ -38,9 +38,10 @@ sub setTitleLabelStyle(width as Integer, height as Integer)
             padding = 10
             font = "font:MediumSystemFont"
         end if
-        m.label.translation = [padding,padding]
-        m.label.height      = height - padding * 2
-        m.label.width       = width  - padding * 2
-        m.label.font        = font
+        title = m.top.FindNode("title")
+        title.translation = [padding,padding]
+        title.height = height - padding * 2
+        title.width = width  - padding * 2
+        title.font = font
     end if
 end sub

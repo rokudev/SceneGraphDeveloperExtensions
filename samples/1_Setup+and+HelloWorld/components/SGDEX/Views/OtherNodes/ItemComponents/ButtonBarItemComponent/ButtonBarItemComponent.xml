@@ -1,15 +1,24 @@
 <?xml version = "1.0" encoding = "utf-8" ?>
-<!--********** Copyright 2019 Roku Corp.  All Rights Reserved. **********-->
+<!--********** Copyright 2019-2021 Roku Corp.  All Rights Reserved. **********-->
 
 <component name="ButtonBarItemComponent" extends="Group" >
     <interface>
         <field id="itemContent" type="node" onChange="OnContentSet" />
         <field id="width" type="float" onChange="OnWidthChange" />
         <field id="height" type="float" onChange="OnHeightChange" />
-        <field id="focusPercent" type="float" />
-        <field id="rowFocusPercent" type="float" />
-        <field id="rowListHasFocus" type="bool" />
-        <field id="itemHasFocus" type="bool" />
+        <field id="focusPercent" type="float" onChange="HandleFocus" />
+        <field id="rowFocusPercent" type="float" onChange="HandleFocus" />
+        <field id="rowListHasFocus" type="bool" onChange="HandleFocus" />
+        <field id="itemHasFocus" type="bool" onChange="HandleFocus" />
+
+        <field id="isItemSelected" type="bool" value="false" alwaysNotify="true"/>
+        <field id="padding" type="int" value="15" />
+        <field id="buttonColor" type="string" value="0x434247" />
+        <field id="buttonTextColor" type="string" value="0xffffff" />
+        <field id="focusedButtonColor" type="string" value="0xffffff" />
+        <field id="focusedButtonTextColor" type="string" value="0x000000" />
+        <field id="footprintButtonColor" type="string" value="0xffffff73" />
+        <field id="footprintButtonTextColor" type="string" value="0xffffff" />
     </interface>
 
     <script type="text/brightscript" uri="ButtonBarItemComponent.brs" />

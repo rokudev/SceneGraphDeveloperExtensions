@@ -1,46 +1,31 @@
-' Copyright (c) 2019 Roku, Inc. All rights reserved.
+' Copyright (c) 2019-2021 Roku, Inc. All rights reserved.
 
 sub init()
-    m.label = m.top.findNode("title")
-    m.poster = m.top.findNode("poster")
-    m.posterTitleGroup = m.top.findNode("posterTitleGroup")
+    scene = m.top.getScene()
+    buttonBar = scene.buttonBar
 
-    m.roundedRectangle = m.top.findNode("roundedRectangle")
-
-    m.scene = m.top.getScene()
-    m.buttonBar = m.top.GetScene().buttonBar
-    m.enableFootprint = m.buttonBar.enableFootprint
-    m.footprintStyle = m.buttonBar.footprintStyle
-    m.buttonBar.ObserveFieldScoped("theme", "SaveColors")
-    m.scene.ObserveFieldScoped("theme", "SaveColors")
+    buttonBar.ObserveFieldScoped("theme", "SaveColors")
+    scene.ObserveFieldScoped("theme", "SaveColors")
     SaveColors()
-    m.buttonBar.ObserveFieldScoped("footprintStyle", "OnFootprintStyleChange")
-    m.buttonBar.ObserveFieldScoped("enableFootprint", "OnEnableFootprintChange")
-
-    m.top.ObserveFieldScoped("focusPercent", "HandleFocus")
-    m.top.ObserveFieldScoped("itemHasFocus", "HandleFocus")
-    m.top.ObserveFieldScoped("rowFocusPercent", "HandleFocus")
-    m.top.ObserveFieldScoped("rowListHasFocus", "HandleFocus")
-
-    m.isItemSelected = false ' catch press interaction
-    ' Item component constants
-    m.padding = 15 ' for m.posterTitleGroup
 end sub
 
 sub OnContentSet()
     content = m.top.itemContent
+    label = m.top.findNode("title")
+    poster =  m.top.findNode("poster")
+
     if content <> invalid
-        m.isItemSelected = false
-        m.poster.uri = content.hdPosterUrl
-        m.label.text = content.title
-        alignPosterLabelSizes(m.poster.uri, m.label.text)
+        m.top.isItemSelected = false
+        poster.uri = content.hdPosterUrl
+        label.text = content.title
+        alignPosterLabelSizes(poster.uri, label.text)
         HandleItemSelection(content.itemSelected)
     end if
 end sub
 
 sub HandleItemSelection(isItemSelected as Object)
     if isItemSelected <> invalid
-        m.isItemSelected = isItemSelected
+        m.top.isItemSelected = isItemSelected
         if isItemSelected = false
             UnfocusButton(0.0)
         end if
@@ -48,122 +33,116 @@ sub HandleItemSelection(isItemSelected as Object)
 end sub
 
 sub OnWidthChange()
-    m.roundedRectangle.width = m.top.width
+    m.top.findNode("roundedRectangle").width = m.top.width
 end sub
 
 sub OnHeightChange()
-    m.roundedRectangle.height = m.top.height
+    m.top.findNode("roundedRectangle").height = m.top.height
 
-    m.poster.height = m.top.height
-    m.poster.width = m.top.height
-    m.label.height = m.top.height
+    poster = m.top.findNode("poster")
+    poster.height = m.top.height
+    poster.width = m.top.height
+    m.top.findNode("title").height = m.top.height
 
     if m.top.height > 200
-        m.padding = m.padding * 2
-        m.posterTitleGroup.itemSpacings = [m.padding]
+        m.top.padding = m.top.padding * 2
+        m.top.findNode("posterTitleGroup").itemSpacings = [m.top.padding]
     end if
 end sub
 
 sub alignPosterLabelSizes(posterUri as String, labelText as String)
+    poster = m.top.findNode("poster")
     if isnonemptystr(posterUri) and isnonemptystr(labelText)
         ' both poster and label were set
-        setTitleLabelStyle(m.top.width - m.poster.width, m.top.height)
+        setTitleLabelStyle(m.top.width - poster.width, m.top.height)
     else if isnonemptystr(labelText)
         ' only label
-        m.poster.width = 0
+        poster.width = 0
         setTitleLabelStyle(m.top.width, m.top.height)
     end if
 end sub
 
 sub setTitleLabelStyle(width as Integer, height as Integer)
     if height > 0 and width > 0
-        m.label.translation = [m.padding, m.padding]
-        m.label.width = width - m.padding * 2
+        label = m.top.findNode("title")
+        label.translation = [m.top.padding, m.top.padding]
+        label.width = width - m.top.padding * 2
     end if
 end sub
 
 sub SaveColors()
+    scene = m.top.GetScene()
+    buttonBar = scene.buttonBar
     theme = {}
 
-    if m.scene.theme <> invalid
-        if m.scene.theme.global <> invalid then theme.Append(m.scene.theme.global)
-        if m.scene.theme.buttonBar <> invalid then theme.Append(m.scene.theme.buttonBar)
+    if scene.theme <> invalid
+        if scene.theme.global <> invalid then theme.Append(scene.theme.global)
+        if scene.theme.buttonBar <> invalid then theme.Append(scene.theme.buttonBar)
     end if
 
-    theme.Append(m.buttonBar.theme)
+    theme.Append(buttonBar.theme)
 
     if theme.buttonColor <> invalid
-        m.buttonColor = theme.buttonColor
-    else
-        m.buttonColor = "0x434247"
+        m.top.buttonColor = theme.buttonColor
     end if
 
     if theme.buttonTextColor <> invalid
-        m.buttonTextColor = theme.buttonTextColor
+        m.top.buttonTextColor = theme.buttonTextColor
     else if theme.textColor <> invalid
-        m.buttonTextColor = theme.textColor
-    else
-        m.buttonTextColor = "0xffffff"
+        m.top.buttonTextColor = theme.textColor
     end if
 
     if theme.focusedButtonColor <> invalid
-        m.focusedButtonColor = theme.focusedButtonColor
+        m.top.focusedButtonColor = theme.focusedButtonColor
     else if theme.focusRingColor <> invalid
-        m.focusedButtonColor = theme.focusRingColor
-    else
-        m.focusedButtonColor = "0xffffff"
+        m.top.focusedButtonColor = theme.focusRingColor
     end if
 
     if theme.focusedButtonTextColor <> invalid
-        m.focusedButtonTextColor = theme.focusedButtonTextColor
+        m.top.focusedButtonTextColor = theme.focusedButtonTextColor
     else if theme.textColor <> invalid
-        m.focusedButtonTextColor = theme.textColor
-    else
-        m.focusedButtonTextColor = "0x000000"
+        m.top.focusedButtonTextColor = theme.textColor
     end if
 
     if theme.footprintButtonColor <> invalid
-        m.footprintButtonColor = theme.footprintButtonColor
-    else
-        m.footprintButtonColor = "0xffffff73"
+        m.top.footprintButtonColor = theme.footprintButtonColor
     end if
 
     if theme.footprintButtonTextColor <> invalid
-        m.footprintButtonTextColor = theme.footprintButtonTextColor
+        m.top.footprintButtonTextColor = theme.footprintButtonTextColor
     else if theme.textColor <> invalid
-        m.footprintButtonTextColor = theme.textColor
-    else
-        m.footprintButtonTextColor = "0xffffff"
+        m.top.footprintButtonTextColor = theme.textColor
     end if
     ResetColors()
 end sub
 
 sub ResetColors()
-    m.roundedRectangle.backgroundColor = m.buttonColor
-    m.roundedRectangle.backgroundFocusedColor = m.focusedButtonColor
-    m.label.color = m.buttonTextColor
-    if m.top.focusPercent > 0.9 and m.enableFootprint
-        m.roundedRectangle.backgroundFocusedColor = m.footprintButtonColor
-        m.roundedRectangle.backgroundColor = m.footprintButtonColor
-        m.label.color = m.footprintButtonTextColor
-        m.roundedRectangle.showFootprint = true
+    roundedRectangle = m.top.findNode("roundedRectangle")
+    label = m.top.findNode("title")
+    enableFootprint = m.top.GetScene().buttonBar.enableFootprint
+
+    roundedRectangle.backgroundColor = m.top.buttonColor
+    roundedRectangle.backgroundFocusedColor = m.top.focusedButtonColor
+    label.color = m.top.buttonTextColor
+    if m.top.focusPercent > 0.9 and enableFootprint
+        roundedRectangle.backgroundFocusedColor = m.top.footprintButtonColor
+        roundedRectangle.backgroundColor = m.top.footprintButtonColor
+        label.color = m.top.footprintButtonTextColor
+        roundedRectangle.showFootprint = true
     end if
-end sub
-
-sub OnEnableFootprintChange(event as Object)
-    m.enableFootprint = event.GetData()
-    HandleFocus()
-end sub
-
-sub OnFootprintStyleChange(event as Object)
-    m.footprintStyle = event.GetData()
-    HandleFocus()
 end sub
 
 sub HandleFocus()
     rowListHasFocus = m.top.rowListHasFocus
     focusPercent = m.top.focusPercent
-    if m.buttonBar.alignment = "left"
+    
+    buttonBar = m.top.GetScene().buttonBar
+    if buttonBar = invalid then return
+
+    enableFootprint = buttonBar.enableFootprint
+    footprintStyle = buttonBar.footprintStyle
+
+    if buttonBar.alignment = "left"
         focusPercent = m.top.rowFocusPercent
     end if
     if rowListHasFocus ' when navigating withing button bar
@@ -172,15 +151,15 @@ sub HandleFocus()
         if itemFocused
             FocusButton(focusPercent)
         else
-            if m.footprintStyle = "selection" and m.isItemSelected
+            if footprintStyle = "selection" and m.top.isItemSelected
                 ShowFootprint()
             else
                 UnfocusButton(focusPercent)
             end if
         end if
     else ' when navigating between BB and view
-        if m.enableFootprint
-            if m.footprintStyle = "selection" and m.isItemSelected
+        if enableFootprint
+            if footprintStyle = "selection" and m.top.isItemSelected
                 ShowFootprint()
             else if focusPercent > 0.9
                 ShowFootprint()
@@ -197,22 +176,28 @@ end sub
 ' is called multiple times with changing of component focusPercent
 ' this allows to perform smooth animation when navigating within BB
 sub FocusButton(focusPercent as Float)
-    m.roundedRectangle.focusPercent = focusPercent
-    m.roundedRectangle.backgroundFocusedColor = m.focusedButtonColor
-    m.roundedRectangle.backgroundColor = m.focusedButtonColor
-    m.label.color = m.focusedButtonTextColor
+    roundedRectangle = m.top.findNode("roundedRectangle")
+    label = m.top.findNode("title")
+    roundedRectangle.focusPercent = focusPercent
+    roundedRectangle.backgroundFocusedColor = m.top.focusedButtonColor
+    roundedRectangle.backgroundColor = m.top.focusedButtonColor
+    label.color = m.top.focusedButtonTextColor
 end sub
 
 sub UnfocusButton(focusPercent as Float)
-    m.roundedRectangle.focusPercent = focusPercent
-    m.roundedRectangle.backgroundFocusedColor = m.buttonColor
-    m.roundedRectangle.backgroundColor = m.buttonColor
-    m.label.color = m.buttonTextColor
+    roundedRectangle = m.top.findNode("roundedRectangle")
+    label = m.top.findNode("title")
+    roundedRectangle.focusPercent = focusPercent
+    roundedRectangle.backgroundFocusedColor = m.top.buttonColor
+    roundedRectangle.backgroundColor = m.top.buttonColor
+    label.color = m.top.buttonTextColor
 end sub
 
 sub ShowFootprint()
-    m.roundedRectangle.backgroundFocusedColor = m.footprintButtonColor
-    m.roundedRectangle.backgroundColor = m.footprintButtonColor
-    m.label.color = m.footprintButtonTextColor
-    m.roundedRectangle.showFootprint = true
+    roundedRectangle = m.top.findNode("roundedRectangle")
+    label = m.top.findNode("title")
+    roundedRectangle.backgroundFocusedColor = m.top.footprintButtonColor
+    roundedRectangle.backgroundColor = m.top.footprintButtonColor
+    label.color = m.top.footprintButtonTextColor
+    roundedRectangle.showFootprint = true
 end sub

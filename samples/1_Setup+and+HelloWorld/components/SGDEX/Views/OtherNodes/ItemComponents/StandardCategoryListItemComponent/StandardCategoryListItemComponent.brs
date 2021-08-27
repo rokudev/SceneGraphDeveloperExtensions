@@ -1,12 +1,8 @@
-' Copyright (c) 2018 Roku, Inc. All rights reserved.
+' Copyright (c) 2018-2021 Roku, Inc. All rights reserved.
 
 sub Init()
-    m.poster = m.top.FindNode("poster")
-    m.title = m.top.FindNode("title")
-    m.description = m.top.FindNode("description")
-
-    m.title.font.size = 20
-    m.description.font.size = 16
+    m.top.FindNode("title").font.size = 20
+    m.top.FindNode("description").font.size = 16
 
     parent = Utils_getParentbyIndex(1, m.top)
     parent.ObserveField("itemSize", "OnParentItemSizeChanged")
@@ -15,26 +11,31 @@ end sub
 sub itemContentChanged()
     itemContent = m.top.itemContent
     parent = Utils_getParentbyIndex(1, m.top)
+    
+    poster = m.top.FindNode("poster")
+    title = m.top.FindNode("title")
+    description = m.top.FindNode("description")
+
     if itemContent <> invalid
-        m.poster.uri = itemContent.hdPosterUrl
-        m.title.text = itemContent.title
-        m.description.text = itemContent.description
+        poster.uri = itemContent.hdPosterUrl
+        title.text = itemContent.title
+        description.text = itemContent.description
     end if
 
     if parent <> invalid
         if parent.itemTitleColor <> invalid
-            m.title.color = parent.itemTitleColor
+            title.color = parent.itemTitleColor
         end if
         if parent.itemDescriptionColor <> invalid
-            m.description.color = parent.itemDescriptionColor
+            description.color = parent.itemDescriptionColor
         end if
         if parent.posterShape <> invalid
-            m.poster.shape = parent.posterShape
+            poster.shape = parent.posterShape
         end if
         'adjust description and title width according to posterShape
-        width = parent.itemSize[0] - m.poster.width - 10
-        m.title.width = width
-        m.description.width = width
+        width = parent.itemSize[0] - poster.width - 10
+        title.width = width
+        description.width = width
     end if
 end sub
 
@@ -43,8 +44,12 @@ function OnParentItemSizeChanged(event as Object)
     ' labels accordingly
     itemSize = event.GetData()
     if itemSize <> invalid
-        width = itemSize[0] - m.poster.width - 10
-        m.title.width = width
-        m.description.width = width
+        poster = m.top.FindNode("poster")
+        title = m.top.FindNode("title")
+        description = m.top.FindNode("description")
+ 
+        width = itemSize[0] - poster.width - 10
+        title.width = width
+        description.width = width
     end if
 end function

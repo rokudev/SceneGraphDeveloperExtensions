@@ -722,10 +722,6 @@ sub OnMediaWasClosed(event as Object)
     ClearStateMachineNode()
     if m.topView.RafTask <> Invalid
         m.topView.RafTask.control = "stop"
-        if isCSASEnabled() and (m.topView.RafTask.renderNode <> invalid and m.topView.RafTask.renderNode.GetChild(0) <> invalid and m.topView.RafTask.renderNode.GetChild(0).id = "contentVideo") then
-            m.topView.RafTask.renderNode.getchild(0).content = invalid ' Force stopping RafContentRenderer's videoNode
-        end if
-
         m.topView.RafTask = invalid
     end if
     m.buttonBar.visible = m.isButtonBarVisible

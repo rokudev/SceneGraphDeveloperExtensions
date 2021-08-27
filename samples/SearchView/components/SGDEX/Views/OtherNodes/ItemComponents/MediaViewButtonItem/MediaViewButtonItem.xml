@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (c) 2020 Roku, Inc. All rights reserved. -->
+<!-- Copyright (c) 2020-2021 Roku, Inc. All rights reserved. -->
 
 <component name="MediaViewButtonItem" extends="Group" >
     <interface>
-        <field id="width" type="float" />
-        <field id="height" type="float"  />
-        <field id="rowFocusPercent" type="float"/>
+        <field id="width" type="float" onChange="OnWidthChanged" />
+        <field id="height" type="float" onChange="OnHeightChaged" />
+        <field id="rowFocusPercent" type="float" onChange="OnRowFocusPercentChanged" />
         <field id="itemContent" type="node" onChange="itemContentChanged" />
+
+        <field id="focusedItemTextColor" type="string" value="0x000000ff"/>
+        <field id="unfocusedItemTextColor" type="string" value="0xffffffff"/>
+        <field id="focusedItemFrameColor" type="string" value="0xa0a0a0ff"/>
     </interface>
 
     <script type="text/brightscript" uri="MediaViewButtonItem.brs" />

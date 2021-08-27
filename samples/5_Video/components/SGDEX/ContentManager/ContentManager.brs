@@ -96,10 +96,18 @@ function GetCustomViewContentGrid() as Object
 end function
 
 sub OnViewFocuseChanged(event as Object)
-    ' handle passing focus to contentGrid for custom/non-native grid view
-    contentGrid = GetCustomViewContentGrid()
-    if contentGrid <> invalid and m.view.IsInFocusChain() and not contentGrid.HasFocus()
-        contentGrid.SetFocus(true)
+    focusedChild = event.GetData()
+
+    ' In order to allow handle focus in custom/non-native grid view
+    ' and don't reset a focus to contentGrid component each time
+    ' check if the event is equal to view if so this focus received from ComponentController
+    ' and no focus has been set from custom view as this callback triggered after custom view focusedChild callback
+    ' otherwise, set focus to contentGrid
+    if focusedChild <> invalid and focusedChild.IsSameNode(m.view)
+        contentGrid = GetCustomViewContentGrid()
+        if contentGrid <> invalid and not contentGrid.HasFocus()
+            contentGrid.SetFocus(true)
+        end if
     end if
 end sub
 

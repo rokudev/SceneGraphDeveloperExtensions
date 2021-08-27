@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="CHSlide" extends="ContentHandler" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <script type="text/brightscript" uri="CHSlide.brs" />
+</component>

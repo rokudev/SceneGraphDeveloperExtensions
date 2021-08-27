@@ -1,56 +1,48 @@
-' Copyright (c) 2019 Roku, Inc. All rights reserved.
-
-sub init()
-    m.posterLeft = m.top.findNode("posterLeft")
-    m.posterRight = m.top.findNode("posterRight")
-    m.focusedPosterLeft = m.top.findNode("focusedPosterLeft")
-    m.focusedPosterRight = m.top.findNode("focusedPosterRight")
-
-    m.background = m.top.findNode("background")
-    m.backgroundFocused = m.top.findNode("backgroundFocused")
-    m.backgroundGroup = m.top.findNode("backgroundGroup")
-
-    m.top.ObserveFieldScoped("width", "OnWidthChange")
-    m.top.ObserveFieldScoped("height", "OnHeightChange")
-    m.top.ObserveFieldScoped("focusPercent", "OnFocusPercentChange")
-    m.top.ObserveFieldScoped("showFootprint", "showFootprint")
-end sub
+' Copyright (c) 2019-2021 Roku, Inc. All rights reserved.
 
 sub OnWidthChange()
     posterWidth = 8.0
-    m.posterLeft.width = posterWidth
-    m.posterRight.width = posterWidth
-    m.focusedPosterLeft.width = posterWidth
-    m.focusedPosterRight.width = posterWidth
+    posterLeft = m.top.findNode("posterLeft")
+    posterRight = m.top.findNode("posterRight")
+    focusedPosterLeft = m.top.findNode("focusedPosterLeft")
+    focusedPosterRight = m.top.findNode("focusedPosterRight")
+    background = m.top.findNode("background")
+    backgroundFocused = m.top.findNode("backgroundFocused")
+    backgroundGroup = m.top.findNode("backgroundGroup")
 
-    backgroundWidth = Cdbl(m.top.width) - Cdbl(m.posterLeft.width) * 2.0
-    m.background.width = backgroundWidth
-    m.backgroundFocused.width = backgroundWidth
+    posterLeft.width = posterWidth
+    posterRight.width = posterWidth
+    focusedPosterLeft.width = posterWidth
+    focusedPosterRight.width = posterWidth
 
-    m.backgroundGroup.translation = [m.posterLeft.width, 0]
+    backgroundWidth = Cdbl(m.top.width) - Cdbl(posterLeft.width) * 2.0
+    background.width = backgroundWidth
+    backgroundFocused.width = backgroundWidth
 
-    posterRightTransl = m.background.width + m.posterLeft.width
-    m.posterRight.translation = [posterRightTransl, 0]
-    m.focusedPosterRight.translation = [posterRightTransl, 0]
+    backgroundGroup.translation = [posterLeft.width, 0]
+
+    posterRightTransl = background.width + posterLeft.width
+    posterRight.translation = [posterRightTransl, 0]
+    focusedPosterRight.translation = [posterRightTransl, 0]
 end sub
 
 sub OnHeightChange()
     posterHeight = m.top.height + 0.5
-    m.posterLeft.height = posterHeight
-    m.posterRight.height = posterHeight
-    m.focusedPosterLeft.height = posterHeight
-    m.focusedPosterRight.height = posterHeight
+    m.top.findNode("posterLeft").height = posterHeight
+    m.top.findNode("posterRight").height = posterHeight
+    m.top.findNode("focusedPosterLeft").height = posterHeight
+    m.top.findNode("focusedPosterRight").height = posterHeight
 
-    m.background.height = posterHeight
-    m.backgroundFocused.height = posterHeight
+    m.top.findNode("background").height = posterHeight
+    m.top.findNode("backgroundFocused").height = posterHeight
 end sub
 
 sub OnFocusPercentChange(event as Object)
     focusPercent = event.GetData()
 
-    m.backgroundFocused.opacity = focusPercent
-    m.focusedPosterLeft.opacity = focusPercent
-    m.focusedPosterRight.opacity = focusPercent
+    m.top.findNode("backgroundFocused").opacity = focusPercent
+    m.top.findNode("focusedPosterLeft").opacity = focusPercent
+    m.top.findNode("focusedPosterRight").opacity = focusPercent
 end sub
 
 sub showFootprint(event as Object)
@@ -60,7 +52,7 @@ sub showFootprint(event as Object)
         focusPercent = 0.3
     end if
 
-    m.backgroundFocused.opacity = focusPercent
-    m.focusedPosterLeft.opacity = focusPercent
-    m.focusedPosterRight.opacity = focusPercent
+    m.top.findNode("backgroundFocused").opacity = focusPercent
+    m.top.findNode("focusedPosterLeft").opacity = focusPercent
+    m.top.findNode("focusedPosterRight").opacity = focusPercent
 end sub

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="CustomSlide" extends="Group">
+  <script type="text/brightscript" uri="CustomSlide.brs" />
+  <interface>
+      <field id="content" type="node" />
+      <field id="contentManagerType" type="string" value="details"/>
+      <field id="itemFocused" type="integer" value="0" alwaysNotify="true"/>
+      <field id="currentItem" type="node" />
+
+      <field id="slideDuration" type="integer" value="5" />
+      <field id="control" type="string" />
+  </interface>
+  <children>
+        <Rectangle
+            id="background"
+            color="0x000000"
+            width="1280"
+            height="720"
+            translation="[0,0]"
+        />
+
+        <Poster
+            id="mainImage"
+            loadWidth="1280"
+            loadHeight="720"
+            width="1280"
+            height="720"
+            loadDisplayMode="scaleToFit"
+        />
+
+        <LayoutGroup
+            id="infoLayout"
+            translation="[640,600]"
+            horizAlignment="center"
+            vertAlignment="center">
+            <Label
+                id="title"
+                color="#ff0000"
+            />
+            <Label
+                id="description"
+                color="#ff0000"
+            />
+        </LayoutGroup>
+
+        <Label
+            id="controlLabel"
+            color="#ff0000"
+            translation="[128,128]"/>
+
+        <Timer id="slideTimer" repeat="true" />
+
+        <LayoutGroup
+            id="spinnerLayout"
+            translation="[640,360]"
+            horizAlignment="center"
+            vertAlignment="center">
+            <BusySpinner
+                id="customSpinner"
+                uri="pkg:/images/spinner.png"/>
+        </LayoutGroup>
+  </children>
+</component>

@@ -21,6 +21,13 @@ sub OnStateChanged(event as Object)
                 ' node appended by RAF behind the scenes gets disposed
                 scene.RemoveChild(rafGroup)
             end if
+            
+            ' in case of CSAS mode, stop/invalidate the CSAS stream renderer
+            ' cached to m.top prior to CSAS playback start
+            if m.top.useCSAS = true and m.top.renderNode <> invalid
+                m.top.renderNode.control = "stop"
+                m.top.renderNode = invalid
+            end if
         end if
     end if
 end sub
@@ -159,9 +166,14 @@ sub PlayContentWithFullRAFIntegration()
         if adIface.sgdex_flag_ClientStitchedAds_was_enabled <> Invalid and adIface.sgdex_flag_ClientStitchedAds_was_enabled = true and videoView.currentItem <>invalid
             content = videoView.currentItem
             ' TODO: log for invalid content/adPods
-            csasStream = adIface.constructStitchedStream(content,adPods) ' contructing stream with ads to work with
-            ThemeRAFRenderer(csasStream,videoView) ' sharing themes between MediaView and RAFContentRenderer
-            isCSASPlayedToCompletion = adIface.renderStitchedStream(csasStream, videoView) ' Start RAFContentRenderer playback
+            
+            ' contruct the CSAS stream with ads to work with
+            csasStream = adIface.constructStitchedStream(content, adPods)
+            ' cache the CSAS stream renderer instance to m.top.renderNode
+            ' to give MediaView possibility to apply theme attributes to it
+            m.top.renderNode = csasStream
+            ' start CSAS playback
+            isCSASPlayedToCompletion = adIface.renderStitchedStream(csasStream, videoView)
             ' CSAS playback finished
             ' close media view if the user exited playback before the stream completed
             if not isCSASPlayedToCompletion
@@ -265,12 +277,6 @@ sub PlayContentWithFullRAFIntegration()
     videoNode.UnobserveFieldScoped("state")
     videoNode.UnobserveFieldScoped("control")
     videoNode = Invalid
-end sub
-
-' Sharing MV theme with RAFContentRenderer node
-sub ThemeRAFRenderer(renderer as Object, view as Object)
-    ' Setting render node to work with it in MV scope
-    m.top.renderNode = renderer
 end sub
 
 ' Proxy tracking callback to provide info about position, state to MediaView and allow developer to track them independently

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2019 Roku, Inc. All rights reserved. -->
+
+<component name="ParagraphView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <interface>
+        <!-- @Public -->
+        <!-- Content node for buttons node. Has childrens with id and title that will be shown on View. -->
+        <field id="buttons" type="node" onChange="OnButtonsChanged" />
+
+        <!-- @Public -->
+        <!-- @ReadOnly -->
+        <!-- Tells what button is focused -->
+        <field id="buttonFocused" type="integer" alias="buttons.itemFocused" />
+
+        <!-- @Public -->
+        <!-- @ReadOnly -->
+        <!-- Is set when button is selected by user. Should be observed in channel.
+        Can be used for showing next View or start playback or so. -->
+        <field id="buttonSelected" type="integer" alias="buttons.itemSelected" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!-- Interface for setting focused button -->
+        <field id="jumpToButton" type="integer" alwaysNotify="true" onChange="OnJumpToButton" />
+
+        <!--
+            @Public
+            @Override
+            <field id="theme" type="assocarray" />
+
+            Controls the color of visual elements
+
+            @PossibleValue textColor - sets the color of all text elements in the view
+            @PossibleValue paragraphColor - specify the color of text with type paragraph
+            @PossibleValue headerColor - specify the color of text with type header
+            @PossibleValue linkingCodeColor - specify the color of text with type linkingCode
+
+            @PossibleValue buttonsFocusedColor - set the color of focused buttons
+            @PossibleValue buttonsUnFocusedColor - set the color of unfucused buttons
+            @PossibleValue buttonsFocusRingColor - set the color of button focuse ring
+        -->
+        <!--
+            @Public
+            @Override
+            <field id="updateTheme" type="assocarray" />
+
+            updateTheme is used to update view specific theme fields
+
+            Usage is same as [theme](#sgdexcomponent) field but here you should only set field that you want to update
+            If you want global updates use [BaseScene updateTheme](#basescene)
+        -->
+        <!--
+            @Public
+            @Override <field id="content" type="node" />
+
+            Contains content to display on the ParagraphView or HandlerConfigParagraph
+        -->
+    </interface>
+
+    <script type="text/brightscript" uri="ParagraphView.brs" />
+    <script type="text/brightscript" uri="../../ContentManager/ContentManagerUtils.brs" />
+    <script type="text/brightscript" uri="../utils/Utils.brs" />
+
+    <children>
+        <LayoutGroup
+            id="visibleLabels"
+            horizAlignment="custom"
+            />
+
+        <LabelList
+            id="buttons"
+            numRows="3"
+            itemSpacing="[0, 10]"
+            textHorizAlign="right"
+            wrapDividerHeight="0"
+            />
+
+        <LayoutGroup
+            id="spinnerGroup"
+            translation="[640, 360]"
+            horizAlignment="center"
+            vertAlignment="center"
+            >
+            <BusySpinner
+                id="spinner"
+                visible="false"
+            />
+        </LayoutGroup>
+    </children>
+</component>

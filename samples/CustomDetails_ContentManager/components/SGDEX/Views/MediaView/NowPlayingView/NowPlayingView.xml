@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component
+    name="NowPlayingView"
+    extends="SGDEXComponent"
+    xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <interface>
+        <field id="buttonContent" type="node" />
+        <field id="jumpToItem" type="int" alias="buttons.jumpToItem" />
+
+        <field id="position" type="int" value="0" alias="playBar.position" />
+        <field id="duration" type="int" value="0" alias="playBar.duration" />
+        <field id="playBarVisible" type="bool" />
+    </interface>
+
+    <script type="text/brightscript" uri="NowPlayingView.brs" />
+    <script type="text/brightscript" uri="../../utils/utils.brs" />
+
+    <children>
+        <LayoutGroup
+            id="nowPlayingUI"
+            layoutDirection="vert"
+            vertAlignment="top"
+            horizAlignment="center"
+            translation="[652,130]"
+            itemSpacings = "[5]">
+
+            <Poster
+                id="poster"
+                width="300"
+                height="300"
+                loadWidth="300"
+                loadHeight="300"
+                loadDisplayMode="limitSize"
+                uri=""
+            />
+
+            <TrickPlayBar
+                id="playBar"
+                visible="false"
+                translation="[300,300]"
+            />
+
+            <ScrollingLabel
+                id="albumInfo"
+                color="0xefefefef"
+                maxWidth="1024"
+                horizAlign="center" />
+            <ScrollingLabel
+                id="titleInfo"
+                color="0xefefefef"
+                vertAlign="center"
+                horizAlign="center"
+				maxWidth="1024"
+                font="font:LargeBoldSystemFont" />
+            <ScrollingLabel
+                id="artistInfo"
+                color="0xefefefef"
+                maxWidth="1024"
+                horizAlign="center" />
+            <ScrollingLabel
+                id="releaseInfo"
+                color="0xefefefef"
+                horizAlign="center"
+                maxWidth="1024"
+                font="font:SmallestSystemFont" />
+        </LayoutGroup>
+
+        <RowList
+            id="buttons"
+            itemComponentName="MediaViewButtonItem"
+            numRows="5"
+            numColumns="1"
+            translation="[832, 130]"
+            itemSize="[340, 48]"
+            rowItemSize="[[340, 48]]"
+            itemSpacing="[0, 4]"
+            vertFocusAnimationStyle="fixedFocusWrap"
+            drawFocusFeedback="false"
+        />
+    </children>
+</component>

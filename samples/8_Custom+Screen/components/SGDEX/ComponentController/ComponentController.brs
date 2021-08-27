@@ -94,7 +94,8 @@ function InitContentManagerHelper(config) as Object
         GridView: "ContentManager",
         SearchView: "ContentManager",
         TimeGridView: "ContentManagerTimeGrid",
-        MediaView: "ContentManagerMedia"
+        MediaView: "ContentManagerMedia",
+        DetailsView: "ContentManagerDetails"
     }
 
     cmTypesSupported = {
@@ -109,6 +110,10 @@ function InitContentManagerHelper(config) as Object
         media: {
             nodeType: "ContentManagerMedia"
             configName: "HandlerConfigMedia"
+        }
+        details: {
+            nodeType: "ContentManagerDetails"
+            configName: "HandlerConfigDetails"
         }
     }
 

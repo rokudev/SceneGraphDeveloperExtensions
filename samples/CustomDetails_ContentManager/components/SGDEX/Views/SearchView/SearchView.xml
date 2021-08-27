@@ -1,0 +1,250 @@
+<component name="SearchView" extends="SGDEXComponent" initialFocus="keyboard">
+<!-- Copyright (c) 2019 Roku, Inc. All rights reserved. -->
+
+<!--
+    @Public
+    SearchView requires firmware v9.1 or newer
+
+    @Sample
+    Content metadata field that can be used:
+    root = {
+        children:[{
+            title: "Row title"
+            children: [{
+                title: "title that will be shown on upper details section"
+                description: "Description that will be shown on upper details section"
+                hdPosterUrl: "Poster URL that should be shown on grid item"
+
+                releaseDate: "Release date string"
+                StarRating: "star rating integer between 0 and 100"
+
+                gridItemMetaData: "fields that are used on grid"
+
+                shortDescriptionLine1: "first row that will be displayed on grid"
+                shortDescriptionLine2: "second row that will be displayed on grid"
+
+                _forShowing_bookmarks_on_grid: "Add these fields to show bookmarks on grid item"
+                length: "length of video"
+                bookmarkposition: "actual bookmark position"
+
+                _note: "tels if this bar should be hidden, default = true"
+                hideItemDurationBar: false
+            }]
+        }]
+    }
+
+    ' If you have to make API call to get search result you should observe query field and
+    ' perform loading content like this:
+
+    searchView = CreateObject("roSGNode", "SearchView")
+    searchView.ObserveFieldScoped("query", "OnSearchQuery")
+
+    sub OnSearchQuery(event as Object)
+        query = event.GetData()
+        content = CreateObject("roSGNode", "ContentNode")
+        if query.Len() > 2 ' only search if user has typed at least three characters
+            content.AddFields({
+                HandlerConfigSearch: {
+                    name: "CHRoot"
+                    query: query
+                }
+            })
+        end if
+        ' setting the content with handlerConfigSearch will trigger creation
+        ' of grid view and its content manager
+        ' setting an empty content node clears the grid
+        event.GetRoSGNode().content = content
+    end sub
+
+    ' Where CHRoot is a ContentHandler that is responsible for getting search results for grid
+-->
+
+    <interface>
+        <!-- @Public -->
+        <!--
+            Read only
+            Updated when grid focused item changes
+            Value is an array containing the index of the row and item that were focused
+        -->
+        <field id="rowItemFocused" type="vector2d" value="[-1,-1]" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!--
+            Read only
+            Updated when an item on the grid with result is selected
+            Value is an array containing the index of the row and item that were selected
+        -->
+        <field id="rowItemSelected" type="vector2d" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!--
+            If set to true and there is no search results then label with text
+            specified in noResultsLabelText field will be shown instead of the grid
+        -->
+        <field id="showNoResultsLabel" type="boolean" value="true" />
+
+        <!-- @Public -->
+        <!--
+            Specifies the text which will be shown in case if there is
+            no search results and showNoResultsLabel is true
+        -->
+        <field id="noResultsLabelText" type="string" value="No results" onChange="OnNoResultsTextChanged" />
+
+        <!-- @Public -->
+        <!--
+            Specifies a string to be displayed if the length of the input text is zero
+            The typical usage of this field is to prompt the user about what to enter
+        -->
+        <field id="hintText" type="string" onChange="OnHintTextSet" />
+
+        <!-- @Public -->
+        <!--
+            Read only
+            The text entered by the user
+        -->
+        <field id="query" type="string" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!--
+            Interface to support different poster shapes for grid rows.
+            Value is an array of strings, which set row poster shapes.
+            If the array contains fewer elements than the number of rows, then the shape of rest rows will be set to posterShape field 	    or to the last value in the array.
+        -->
+        <field id="rowPosterShapes" type="stringarray" alwaysNotify="true" onChange="RebuildGridNode" />
+
+        <!-- @Private -->
+        <!--
+            Used by content manager to notify the view whether content is loading
+            This field is not intended to be used from the channel scope
+        -->
+        <field id="showSpinner" type="boolean" alwaysNotify="true" onChange="OnShowSpinnerChange" />
+
+        <!--
+            @Public
+            @Override
+            <field id="theme" type="assocarray" />
+
+            Controls the color of visual elements
+
+            @PossibleValue textColor - sets the color of all text elements in the view
+            @PossibleValue focusRingColor - sets the color of focus ring
+
+            @PossibleValue keyboardKeyColor - sets the color of the key labels and icons when the Keyboard node does not have the focus
+            @PossibleValue keyboardFocusedKeyColor - sets the color of the key labels and icons when the Keyboard node has the focus
+            @PossibleValue textBoxTextColor - sets the color of the text string displayed in the TextBox
+            @PossibleValue textBoxHintColor - sets the color of the hint text string
+
+            @PossibleValue noResultsLabelColor - sets the color of the label which is shown when there is no results
+            @PossibleValue rowLabelColor - sets the color for row titles
+            @PossibleValue focusFootprintColor - sets color for focus ring when unfocused
+            @PossibleValue itemTextColorLine1 - sets color for first row in short description
+            @PossibleValue itemTextColorLine2 - sets color for second row in short description
+            @PossibleValue itemTextBackgroundColor - set a background color for the short description
+            @PossibleValue itemBackgroundColor - set color for background rectangle under the poster
+            @PossibleValue shortDescriptionLine1Align - set horizontal alignment for short description line 1
+            @PossibleValue shortDescriptionLine2Align - set horizontal alignment for short description line 2
+        -->
+
+        <!--
+            @Public
+            @Override
+            <field id="updateTheme" type="assocarray" />
+
+            updateTheme is used to update view specific theme fields
+
+            Usage is same as [theme](#sgdexcomponent) field but here you should only set field that you want to update
+            If you want global updates use [BaseScene updateTheme](#basescene)
+        -->
+
+        <!--
+            @Public
+            @Override
+            <field id="posterShape" type="string"/>
+
+            Controls the aspect ratio of the posters on the result grid
+
+            @PossibleValue 16x9
+            @PossibleValue portrait
+            @PossibleValue 4x3
+            @PossibleValue square
+        -->
+
+        <!--
+            @Public
+            @Override <field id="content" type="node" />
+
+            Controls how SGDEX will load the content for search result
+    -->
+    </interface>
+
+    <script type="text/brightscript" uri="SearchView.brs" />
+
+    <children>
+        <!-- Limit the region where keyboard and grid can render -->
+        <Group
+            id="visibleArea"
+            >
+            <LayoutGroup
+                id="layout"
+                itemSpacings="[20]"
+                horizAlignment="custom"
+                >
+                <!-- Align keyboard to the center -->
+                <LayoutGroup
+                    id="layoutKeyboard"
+                    translation="[640,0]"
+                    horizAlignment="center"
+                    >
+                    <Keyboard
+                        id="keyboard"
+                    />
+                </LayoutGroup>
+            </LayoutGroup>
+            <Group
+                id="spinnerGroup"
+                translation="[640,430]"
+                >
+                <LayoutGroup
+                    horizAlignment="center"
+                    vertAlignment="center"
+                    >
+                    <BusySpinner
+                        id="spinner"
+                        visible="false"
+                        control="stop"
+                    />
+                </LayoutGroup>
+            </Group>
+
+            <Group
+                id="noResultsLabelGroup"
+                translation="[640,430]"
+                >
+                <LayoutGroup
+                    horizAlignment="center"
+                    vertAlignment="center"
+                    >
+                    <Label
+                        id="noResultsLabel"
+                        font="font:LargeSystemFont"
+                        visible="false"
+                    />
+                </LayoutGroup>
+            </Group>
+        </Group>
+
+        <Animation
+            id="slidingAnimation"
+            duration="0.4"
+            repeat="false"
+            easeFunction="inOutCubic"
+            optional="true"
+            >
+            <Vector2DFieldInterpolator
+                id="slidingInterpolator"
+                key="[0.0,1.0]"
+                fieldToInterp="layout.translation"
+            />
+        </Animation>
+    </children>
+</component>

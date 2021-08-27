@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2019 Roku, Inc. All rights reserved. -->
+
+<!--
+    @Public
+    TimeGridView represents SGDEX view that is responsible for:
+        - Rendering TimeGrid node
+        - content loading with different content models
+        - loading channels content when user is navigating
+        - lazy loading of channels in IDLE
+
+    @Sample
+    timeGrid = CreateObject("roSGNode", "TimeGridView")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.addfields({
+        HandlerConfigTimeGrid: {
+            name: "HCTimeGrid"
+        }
+    })
+    timeGrid.content = content
+    timeGrid.observeField("rowItemSelected", "OnTimeGridRowItemSelected")
+
+    m.top.ComponentController.callFunc("show", {
+        view: timeGrid
+    })
+-->
+
+<component
+    name="TimeGridView"
+    extends="SGDEXComponent"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd"
+>
+
+    <interface>
+    	<!-- @Private -->
+    	<!-- MAX_SIMULTANEOUS_LOADINGS is used to limit number of task for loading rows -->
+        <field id="MAX_SIMULTANEOUS_LOADINGS" type="integer" value="3" />
+
+        <!-- @Public -->
+        <!--
+            Alias to the TimeGrid contentStartTime field
+            The earliest time that the TimeGrid can be moved to
+        -->
+        <field id="contentStartTime" type="integer" alias="contentTimeGrid.contentStartTime" />
+
+        <!-- @Public -->
+        <!--
+            Alias to the TimeGrid maxDays field
+            Specifies the total width of the TimeGrid in days
+        -->
+        <field id="maxDays" type="integer" alias="contentTimeGrid.maxDays" />
+
+        <!-- @Public -->
+        <!--
+            Updated when user selects a program from the TimeGrid
+            Value is an array of indexes represents [channelIndex, programIndex]
+            updated simultaneously with channelSelected and programSelected
+        -->
+        <field id="rowItemSelected" type="array" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!--
+            Set grid focus to specified row
+            Value is an integer index of the row that should be focused
+            This field must be set after setting the content field.
+        -->
+        <field id="jumpToRow" type="integer" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly -->
+        <!--
+            Set grid focus to specified item in a row
+            Value is an array containing the index of the row and item that should be focused
+            This field must be set after setting the content field.
+        -->
+        <field id="jumpToRowItem" type="vector2d" alwaysNotify="true" />
+    </interface>
+
+    <script type="text/brightscript" uri="TimeGridView.brs" />
+
+    <children>
+        <Rectangle
+            id="blending"
+            opacity="0.5"
+            color="0x000000EE"
+            width="1280"
+            height="720"
+        />
+        <CustomTimeGrid
+            id="contentTimeGrid"
+            translation="[0.0, 220.0]"
+            />
+        <LayoutGroup
+            translation="[640,360]"
+            horizAlignment="center"
+            vertAlignment="center"
+            >
+            <BusySpinner
+                id="spinner"
+                visible="false"
+                />
+        </LayoutGroup>
+    </children>
+</component>

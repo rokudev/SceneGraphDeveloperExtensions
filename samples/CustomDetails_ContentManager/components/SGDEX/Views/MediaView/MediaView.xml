@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2019 Roku, Inc. All rights reserved. -->
+
+<!--
+    @Public
+    Media View is a component that provide pre-defined approach to play video or audio
+    It incapsulates different features:
+        - Playback of video or audio
+        - Playback of playlist or one item;
+        - Two different UI modes for audio and video items;
+        - Ability to set mixed content (both video and audio);
+        - Loading of content via HandlerConfigMedia before playback;
+        - Showing Endcards View after playback ends;
+        - Loading of endcard content via HandlerConfigEndcard some time before playback ends to provide smooth user experience;
+        - Handling of RAF - handlerConfigRAF should be set in content node;
+        - State field is aliased to make tracking of states easier;
+        - Themes support
+
+    ### Limitations
+    - When using MediaView in audio mode with a list of content, you must populate the *url* field
+      of **all** items in the playlist before starting playback.
+-->
+<component name="MediaView" extends="SGDEXComponent" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
+    <customization suspend="customSuspend" />
+    <customization resume="customResume" />
+
+    <interface>
+        <!-- @Public -->
+        <!-- Defines view mode to properly display media content on the view  -->
+        <field id="mode" type="string" alwaysNotify="true" value="video" />
+
+        <!-- @Public -->
+        <!-- Endcard countdown time. How much endcard is shown until next video start  -->
+        <field id="endcardCountdownTime" type="integer" value="10" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Time to end when endcard content start load  -->
+        <field id="endcardLoadTime" type="integer" value="10" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Config to know should Media View show endcards with default next item and Repeat button
+        even if there is no content getter specified by developer  -->
+        <field id="alwaysShowEndcards" type="bool" value="false" />
+
+        <!-- @Public -->
+        <!-- Sets the operating mode of the view.
+             When true, the playlist of content is represented by the children of the root ContentNode.
+             When false, the root ContentNode itself is treated as a single piece of content.
+             This field must be set before setting the content field.
+        -->
+        <field id="isContentList" type="bool" value="true" />
+
+        <!-- @Public -->
+        <!--
+          Jumps to item in playlist
+          This field must be set after setting the content field.
+        -->
+        <field id="jumpToItem" type="integer" value="0" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Control "play" and "prebuffer" makes library start to load content from Content Getter
+        if any other control - set it directly to video node  -->
+        <field id="control" type="string" value="none" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Trigger to notify that next item in playlist should be preloaded while Endcard view is shown  -->
+        <field id="preloadContent" type="boolean" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Trigger to notify channel that endcard loading is started  -->
+        <field id="endcardTrigger" type="boolean" value="false" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Field to know what is index of current item - index of child in content Content Node  -->
+        <field id="currentIndex" type="integer" value="-1" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Media Node state  -->
+        <field id="state" type="string"/>
+
+        <!-- @Public -->
+        <!-- Playback position in seconds  -->
+        <field id="position" type="int" value="0" />
+
+        <!-- @Public -->
+        <!-- Playback duration in seconds  -->
+        <field id="duration" type="int" value="0" />
+
+        <!-- @Public -->
+        <!-- @WriteOnly Sets the current position in the video. -->
+        <!-- The value is the number seconds from the beginning of the stream  -->
+        <field id="seek" type="int" value="-1" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- @ReadOnly Content node of item that is currently played. -->
+        <!-- If change this field manually, unexpected behaviour can occur.  -->
+        <field id="currentItem" type="node" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Enables/Disables trick play -->
+        <field id="enableTrickPlay" type="boolean" value = "true" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Content node of endcard item what was selected  -->
+        <field id="endcardItemSelected" type="node" alwaysNotify="true" />
+
+        <!-- @Public -->
+        <!-- Repeat only one track -->
+        <!-- Working only for audio mode -->
+        <field id="repeatOne" type="bool" value="false" />
+
+        <!-- @Public -->
+        <!-- Repeat all content in playlist  -->
+        <!-- Working only in playlist mode -->
+        <field id="repeatAll" type="bool" value="false" />
+
+        <!-- @Public -->
+        <!-- If set to true shuffling ready content -->
+        <!-- Else content has been shuffled ,unshuffle content to previous state -->
+        <!-- Working only for audio mode in playlist mode -->
+        <field id="shuffle" type="bool" value="false" alwaysNotify="true" />
+
+        <!--
+          @Public
+          This is an alias of the video node's field of the same name
+          https://sdkdocs.roku.com/display/sdkdoc/Video#Video-MiscellaneousFields
+        -->
+        <field id="disableScreenSaver" type="boolean" value="false" />
+
+        <!-- @Public -->
+        <!--
+          Only appies to audio mode.
+          Content node for buttons node. Has childrens with id and title that will be shown on View.
+        -->
+        <field id="buttons" type="node" />
+
+        <!-- @Public -->
+        <!-- @ReadOnly  -->
+        <!-- Is set when button is selected by user. Should be observed in channel. -->
+        <field id="buttonSelected" type="int" alwaysNotify="true" value="-1"/>
+
+        <!--
+            @Override <field id="theme" type="assocarray" />
+            @Public
+            Theme is used to change color of grid view elements
+            <b>Note.</b> you can set TextColor and focusRingColor to have generic theme and only change attributes that shouldn't use it.
+            <b>Possible fields:</b>
+                <b>General fields</b>
+
+                @PossibleValue TextColor - set text color for all texts on video and endcard views
+                @PossibleValue progressBarColor - set color for progress bar
+                @PossibleValue focusRingColor - set color for focus ring on endcard view
+
+                @PossibleValue backgroundColor - set background color for endcards view
+                @PossibleValue backgroundImageURI - set background image url for endcards view
+                @PossibleValue endcardGridBackgroundColor -set background color for grid for endcard items
+
+                <b>Video player fields:</b>
+                @PossibleValue trickPlayBarTextColor - Sets the color of the text next to the trickPlayBar node indicating the time elapsed/remaining.
+                @PossibleValue trickPlayBarTrackImageUri - A 9-patch or ordinary PNG of the track of the progress bar, which surrounds the filled and empty bars. This will be blended with the color specified by the trackBlendColor field, if set to a non-default value.
+                @PossibleValue trickPlayBarTrackBlendColor - This color is blended with the graphical image specified by trackImageUri field. The blending is performed by multiplying this value with each pixel in the image. If not changed from the default value, no blending will take place.
+                @PossibleValue trickPlayBarThumbBlendColor - Sets the blend color of the square image in the trickPlayBar node that shows the current position, with the current direction arrows or pause icon on top. The blending is performed by multiplying this value with each pixel in the image. If not changed from the default value, no blending will take place.
+                @PossibleValue trickPlayBarFilledBarImageUri - A 9-patch or ordinary PNG of the bar that represents the completed portion of the work represented by this ProgressBar node. This is typically displayed on the left side of the track. This will be blended with the color specified by the filledBarBlendColor field, if set to a non-default value.
+                @PossibleValue trickPlayBarFilledBarBlendColor - This color will be blended with the graphical image specified in the filledBarImageUri field. The blending is performed by multiplying this value with each pixel in the image. If not changed from the default value, no blending will take place.
+                @PossibleValue trickPlayBarCurrentTimeMarkerBlendColor - This is blended with the marker for the current playback position. This is typically a small vertical bar displayed in the TrickPlayBar node when the developer is fast-forwarding or rewinding through the video.
+
+                <b>Buffering Bar customization</b>
+                @PossibleValue bufferingTextColor - The color of the text displayed near the buffering bar defined by the bufferingBar field, when the buffering bar is visible. If this is 0, the system default color is used. To set a custom color, set this field to a value other than 0x0.
+                @PossibleValue bufferingBarEmptyBarImageUri - A 9-patch or ordinary PNG of the bar presenting the remaining work to be done. This is typically displayed on the right side of the track, and is blended with the color specified in the emptyBarBlendColor field, if set to a non-default value.
+                @PossibleValue bufferingBarFilledBarImageUri - A 9-patch or ordinary PNG of the bar that represents the completed portion of the work represented by this ProgressBar node. This is typically displayed on the left side of the track. This will be blended with the color specified by the filledBarBlendColor field, if set to a non-default value.
+                @PossibleValue bufferingBarTrackImageUri - A 9-patch or ordinary PNG of the track of the progress bar, which surrounds the filled and empty bars. This will be blended with the color specified by the trackBlendColor field, if set to a non-default value.
+
+                @PossibleValue bufferingBarTrackBlendColor - This color is blended with the graphical image specified by trackImageUri field. The blending is performed by multiplying this value with each pixel in the image. If not changed from the default value, no blending will take place.
+                @PossibleValue bufferingBarEmptyBarBlendColor - A color to be blended with the graphical image specified in the emptyBarImageUri field. The blending is performed by multiplying this value with each pixel in the image. If not changed from the default value, no blending will take place.
+                @PossibleValue bufferingBarFilledBarBlendColor - This color will be blended with the graphical image specified in the filledBarImageUri field. The blending is performed by multiplying this value with each pixel in the image. If not changed from the default value, no blending will take place.
+
+                <b>Retrieving Bar customization</b>
+                @PossibleValue retrievingTextColor - Same as bufferingTextColor but for retrieving bar
+                @PossibleValue retrievingBarEmptyBarImageUri - Same as bufferingBarEmptyBarImageUri but for retrieving bar
+                @PossibleValue retrievingBarFilledBarImageUri - Same as bufferingBarFilledBarImageUri but for retrieving bar
+                @PossibleValue retrievingBarTrackImageUri - Same as bufferingBarTrackImageUri but for retrieving bar
+
+                @PossibleValue retrievingBarTrackBlendColor - Same as bufferingBarTrackBlendColor but for retrieving bar
+                @PossibleValue retrievingBarEmptyBarBlendColor - Same as bufferingBarEmptyBarBlendColor but for retrieving bar
+                @PossibleValue retrievingBarFilledBarBlendColor - Same as bufferingBarFilledBarBlendColor but for retrieving bar
+
+                <b>BIF customization</b>
+                @PossibleValue focusRingColor - a color to be blended with the image displayed behind individual BIF images displayed on the screen
+
+                <b>Endcard & Nowplaying view theme attributes</b>
+                @PossibleValue buttonsFocusedColor - button focused text color
+                @PossibleValue buttonsUnFocusedColor - button unfocused text color
+                @PossibleValue buttonsfocusRingColor - button background color
+
+                <b>grid attributes</b>
+                @PossibleValue rowLabelColor - grid row title color
+                @PossibleValue focusRingColor - grid focus ring color
+                @PossibleValue focusFootprintBlendColor - grid unfocused focus ring color
+                @PossibleValue itemTextColorLine1 - text color for 1st row on endcard item
+                @PossibleValue itemTextColorLine2 - text color for 2nd row on endcard item
+                @PossibleValue timerLabelColor - Color of remaining timer
+
+                <b> Audio mode text attributes</b>
+                @PossibleValue albumColor - set color for albom name
+                @PossibleValue titleColor - set color for title
+                @PossibleValue artistColor - set color for artist
+                @PossibleValue releaseDateColor - set color for release date
+        -->
+
+
+        <!--
+            Private fields by design. Reference to nodes are used for theming logic.
+        -->
+        <field id="npn" type="node" />
+        <field id="RafTask" type="node" />
+        <field id="endcardView" type="node" />
+        <field id="media" type="node" />
+        <field id="currentRAFHandler" type="assocarray" />
+        <field id="handlerConfigRAF" type="assocarray" />
+    </interface>
+
+    <script type="text/brightscript" uri="MediaView.brs" />
+    <script type="text/brightscript" uri="../../ContentManager/ContentManagerUtils.brs" />
+    <script type="text/brightscript" uri="../utils/utils.brs" />
+
+    <children>
+        <Rectangle
+            id="background"
+            width="1280"
+            height="720"
+            translation="[0,0]"
+            color="0x000000FF"
+        />
+
+        <LayoutGroup
+            id="spinnerGroup"
+            translation="[640,360]"
+            horizAlignment="center"
+            vertAlignment="center"
+            visible="false"
+        >
+                <BusySpinner
+                    id="spinner"
+                    uri="pkg:/components/SGDEX/Images/loader.png"
+                    visible="true"
+                />
+        </LayoutGroup>
+    </children>
+</component>

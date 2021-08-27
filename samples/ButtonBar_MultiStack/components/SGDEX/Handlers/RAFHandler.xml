@@ -37,7 +37,7 @@
         <!-- This is public field to allow developer set Client-stitched ads mode -->
         <field id="useCSAS" type="bool" value="false"/>
 
-        <!-- This is internal field for MV to theme RAFContentRender -->
+        <!-- This is internal field used for RAFContentRenderer theming -->
         <field id="renderNode" type="node"/>
 
         <!-- This is a copy of the config that was used to invoke the ContentHandler. -->

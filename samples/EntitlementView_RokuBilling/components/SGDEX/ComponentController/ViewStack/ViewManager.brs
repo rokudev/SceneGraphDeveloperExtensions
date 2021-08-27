@@ -22,16 +22,22 @@ sub init()
 end sub
 
 sub syncOutProperties()
+    syncOutCurrentView()
+    if m.top.currentView <> invalid 
+        if m.top.currentView.hasField("wasShown")
+            m.top.currentView.wasShown = true
+        end if
+    end if
+end sub
+
+sub syncOutCurrentView()
+    m.top.ViewCount = m.ssA.Count()
     if m.ssUI <> invalid
         currentView = m.ssUI.getChild(0)
         m.top.currentView = currentView
-        if currentView <> invalid and currentView.hasField("wasShown")
-            currentView.wasShown = true
-        end if
     else
         m.top.currentView = invalid
     end if
-    m.top.ViewCount = m.ssA.Count()
 end sub
 
 ' >>>   procedureObject  part -----------------------------------------------------------------------------------------------------------
@@ -215,12 +221,6 @@ sub closeView(sid = invalid, closeData = invalid)
                 end if
             end if
         end if
-        closedViewUI = m.ui_object[closedViewVO.sid]
-        'tell the View that it was closed
-        ?"SGDEX: fire close for this View"
-        if closedViewUI.hasField("wasClosed") then
-            closedViewUI.wasClosed = true
-        end if
 
         'Re-add previous View
         if m.ssA.Count() > 0 then
@@ -248,6 +248,14 @@ sub closeView(sid = invalid, closeData = invalid)
         closedViewUI = m.ui_object[closedViewVO.sid]
         closedViewUI.visible = false
         m.ssUI.removeChild(closedViewUI)
+
+        syncOutCurrentView()
+        'tell the View that it was closed
+        ?"SGDEX: fire close for this View"
+        if closedViewUI.hasField("wasClosed") then
+            closedViewUI.wasClosed = true
+        end if
+
         m.ui_object.delete(closedViewVO.sid)
         m.vo_object.delete(closedViewVO.sid)
     end if
