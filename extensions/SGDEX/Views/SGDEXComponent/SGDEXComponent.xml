@@ -96,14 +96,10 @@
     <children>
         <Rectangle
             id="backgroundRectangle"
-            width="1280"
-            height="720"
             color="0xFFFFFF00"
         />
         <FadingBackground
             id="backgroundImage"
-            width="1280"
-            height="720"
             animationDuration ="0.5"
             shadeOpacity="0.5"
         />

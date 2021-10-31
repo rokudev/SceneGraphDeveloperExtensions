@@ -25,9 +25,15 @@ sub Init()
 
     m.top.ObserveField("wasShown", "OnViewWasShown")
 
-    m.backgroundRectangle = m.top.FindNode("backgroundRectangle")
-    m.backgroundImage = m.top.FindNode("backgroundImage")
+    uiResolution = CreateObject("roDeviceinfo").GetUIResolution()
 
+    m.backgroundRectangle = m.top.FindNode("backgroundRectangle")
+    m.backgroundRectangle.width = uiResolution.width
+    m.backgroundRectangle.height = uiResolution.height
+
+    m.backgroundImage = m.top.FindNode("backgroundImage")
+    m.backgroundImage.width = uiResolution.width
+    m.backgroundImage.height = uiResolution.height
 
     SGDEX_InternalBuildAndSetTheme(m.top.theme, m.top.getScene().actualThemeParameters)
 end sub
