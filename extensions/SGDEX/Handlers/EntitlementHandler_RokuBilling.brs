@@ -311,6 +311,9 @@ sub RokuBilling__ActionSubscribe()
                 exit while
             end if     
         end while
+    else if numAllowedProducts = 1
+        m.productToPurchase = allowedProducts[0]
+        RokuBilling__StartPurchase()
     else
         buttons = []
         for each product in allowedProducts
@@ -370,6 +373,9 @@ sub RokuBilling__FallbackSubscribe()
                     exit while
                 end if     
             end while
+        else if numAllowedProducts = 1
+            m.productToPurchase = allowedProducts[0]
+            RokuBilling__StartPurchase()
         else
             buttons = []
             for each product in allowedProducts
