@@ -1,7 +1,21 @@
 # Scene Graph Developer Extensions
 
-> 08.27.21
+> 12.10.21
 
+## v.2.9
+
+### Features
+
+* Support for custom button bars. Developers can now build their own button bars and populate them with the SGDEX ContentManager
+* MediaView now supports the posterShape field in audio mode
+
+### Bug Fixes
+
+* Fixed a crash that could happen when using TimeGridView with a very wide, left aligned button bar
+* Fixed an issue where the handlerConfigDetails field might not be properly removed when using DetailsView in content list mode
+* Fixed an issue where GridView did not always render the releaseDate field correctly
+* Fixed an issue where MediaView could display multiple spinners unexpectedly when using a RAFHandler with RokuOS v10.5
+    
 ## v.2.8
 
 ### Features

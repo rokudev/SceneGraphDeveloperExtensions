@@ -174,7 +174,7 @@ function GetGridConfiguration() as Object
 
     if buttonBar <> invalid and buttonBar.visible = true and buttonBar.overlay = false and buttonBar.alignment = "left"
         if rowListRowWidth >= 1000
-            rowListRowWidth = 1280 - (buttonBar.findNode("backgroundRectangle").width + 125 + m.viewOffsetX)
+            rowListRowWidth = 1280 - (GetButtonBarWidth() + 125 + m.viewOffsetX)
         end if
     end if
 
@@ -397,9 +397,10 @@ sub SGDEX_UpdateViewUI()
 
     buttonBar = m.top.GetScene().buttonBar
     if buttonBar <> invalid
-        bbBackgroundRectangle = buttonBar.findNode("backgroundRectangle")
-        buttonBarHeight = bbBackgroundRectangle.height
-        buttonBarWidth = bbBackgroundRectangle.width
+        buttonBarBounds = GetButtonBarBounds()
+
+        buttonBarHeight = buttonBarBounds.height
+        buttonBarWidth = buttonBarBounds.width
 
         overhangHeight = m.top.overhang.height
         m.layoutTopY = (m.layoutBaseY - (buttonBarHeight + buttonBarHeight))

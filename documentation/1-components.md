@@ -1605,6 +1605,10 @@ addStack:string, removeStack:string, selectStack:string, activeStack:string
 ### <a id="componentcontroller#interface"></a>Interface
 #### <a id="componentcontroller#fields"></a>Fields
   
+* <a id="componentcontroller#fields#buttonbar"></a>**buttonBar** (node)
+    * Default value: invalid
+    * A reference to the button bar node (default ButtonBar is created by the SGDEX)  
+  
 * <a id="componentcontroller#fields#currentview"></a>**currentView** (node)
     * holds the reference to view that is currently shown.  
 Can be used for checking in onkeyEvent  
@@ -1662,8 +1666,8 @@ Function show(args) should be overrided in channel.
     * Reference to ComponentController node that is created and used inside library  
     * Read Only  
 * <a id="basescene#fields#buttonbar"></a>**buttonBar** (node)
-    * Reference to ButtonBar node that is created and used inside the library  
-    * Read Only  
+    * Reference to the button bar node (default ButtonBar is created by the SGDEX)  
+  
 * <a id="basescene#fields#exitchannel"></a>**exitChannel** (bool)
     * Exits channel if set to true  
     * Write Only  

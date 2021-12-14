@@ -243,7 +243,7 @@ function GetConfigurationForStyle(style as String) as Object
     ' for moving row counter to the right place
     if buttonBar <> invalid
         if buttonBar.visible = true and buttonBar.overlay = false and buttonBar.alignment = "left" and rowListRowWidth = 1280
-            rowListRowWidth = 1280 - (buttonBar.findNode("backgroundRectangle").width + 125 + m.viewOffsetX)
+            rowListRowWidth = 1280 - (GetButtonBarWidth() + 125 + m.viewOffsetX)
         end if
     end if
 
@@ -480,7 +480,7 @@ sub SGDEX_UpdateViewUI()
             if buttonBar.alignment = "left"
                 ' make sure that the right edge of the description area is
                 ' aligned with the Options label and grid row counter
-                bbWidth = buttonBar.FindNode("backgroundRectangle").width
+                bbWidth = GetButtonBarWidth()
                 if buttonBar.visible and not buttonBar.overlay
                     maxWidth = 1280 - (bbWidth + 125 + m.viewOffsetX)
                     if maxWidth <= 660 then maxWidth = 660 'min threshold value

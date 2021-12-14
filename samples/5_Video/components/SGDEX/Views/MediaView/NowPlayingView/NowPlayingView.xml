@@ -25,13 +25,11 @@
             translation="[652,130]"
             itemSpacings = "[5]">
 
-            <Poster
+            <StyledPoster
                 id="poster"
-                width="300"
-                height="300"
-                loadWidth="300"
-                loadHeight="300"
-                loadDisplayMode="limitSize"
+                maxWidth="0"
+                maxHeight="300"
+                shape="square"
                 uri=""
             />
 

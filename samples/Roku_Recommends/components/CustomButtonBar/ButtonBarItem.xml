@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copyright (c) 2021 Roku, Inc. All rights reserved. -->
+<component name="ButtonBarItem" extends="Group">
+    <interface>
+        <field id="width" type="float" onChange="OnWidthChanged"/>
+        <field id="height" type="float" onChange="OnHeightChanged"/>
+        <field id="itemContent" type="node" onChange="OnItemContentChanged" />
+        <field id="gridHasFocus" type="boolean" alwaysNotify="true" onChange="OnGridFocusChanged" />
+        <field id="focusPercent" type="float" alwaysNotify="true" onChange="OnFocusPercentChanged" />
+    </interface>
+
+    <script type="text/brightscript" uri="ButtonBarItem.brs" />
+
+    <children>
+        <Rectangle
+            id="focusedItemHint"
+            opacity="0.0"
+            width="28"/>
+        <Rectangle
+            id="focusedBackground"
+            color="0xe3e3e380"
+            opacity="0.0"/>
+        <Label
+            id="titleLabel"
+            font = "font:SmallSystemFont"
+            translation="[108, 14]"
+            horizAlign = "left"
+            vertAlign = "top" />
+        
+        <Poster
+            id="icon"
+            width="24"
+            height="24"
+            loadWidth="24"
+            loadHeight="24"
+            translation="[66, 14]"/>
+
+    </children>
+
+</component>

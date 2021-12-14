@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2021 Roku, Inc. All rights reserved. -->
+<component name="CustomButtonBar" extends="Group">
+    <script type="text/brightscript" uri="CustomButtonBar.brs" />
+
+    <interface>
+        <field id="content" type="node" />
+        <field id="itemFocused" type="integer" alias="contentButtonBar.itemFocused" />
+        <field id="itemSelected" type="integer" alias="contentButtonBar.itemSelected" />
+        <field id="alignment" type="string" />
+        <field id="overlay" type="bool" />
+        <field id="renderOverContent" type="bool" value="true" />
+    </interface>
+
+    <children>
+        <Rectangle
+            id="background"
+            height="720"
+            color="0x575757"
+            width="0">
+
+            <MarkupGrid
+                id="contentButtonBar"
+                drawFocusFeedback="false"
+                itemComponentName="ButtonBarItem"
+                vertFocusAnimationStyle="floatingFocus"
+                numRows= "6"
+                numColumns= "1"
+                itemSize= "[108, 52]"
+                itemSpacing= "[0, 8]"
+                rowSpacings= "[0, 0, 0, 0, 100]"
+                translation= "[0, 200]" />
+        </Rectangle>
+
+        <Animation id="animation" easeFunction="linear" optional="true" duration="0.2">
+            <FloatFieldInterpolator
+                id="backgroundWidthInterpolator"
+                key="[0.0, 0.2]"
+                fieldToInterp="background.width"
+            />
+
+            <Vector2DFieldInterpolator
+                id="buttonBarWidthInterpolator"
+                key="[0.0, 0.2]"
+                fieldToInterp="contentButtonBar.itemSize"
+            />
+        </Animation>
+    </children>
+</component>

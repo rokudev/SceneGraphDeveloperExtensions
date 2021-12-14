@@ -226,11 +226,10 @@ sub SGDEX_UpdateViewUI()
             m.grid.translation = [m.grid.translation[0], m.grid.translation[1] + moveContentOnY]
         end if
     else if isButtonBarVisible and not isButtonBarOverlay and buttonBaralignment = "left"
-        newX = (buttonBar.findNode("backgroundRectangle").width - GetViewXPadding()) + m.viewOffsetX
+        newX = (GetButtonBarWidth() - GetViewXPadding()) + m.viewOffsetX
         if m.bottomRectangle <> invalid and m.timerLabel <> invalid and m.grid <> invalid
-            m.bottomRectangle.translation = [m.bottomRectangle.translation[0] + newX, m.bottomRectangle.translation[1]]
-            m.timerLabel.translation = [100 + newX, m.timerLabel.translation[1]]    
-            m.grid.translation = [100 + newX, m.grid.translation[1]]
+            m.timerLabel.translation = [m.top.viewContentGroup.translation[0], m.timerLabel.translation[1]]    
+            m.grid.translation = [m.top.viewContentGroup.translation[0], m.grid.translation[1]]
         end if
     end if
 end sub

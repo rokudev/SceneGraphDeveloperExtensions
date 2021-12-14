@@ -1,4 +1,4 @@
-# Using ContentManager with Custom Views
+# Using ContentManager with Custom Components
 
 ## Grid Views
 
@@ -555,6 +555,288 @@ sub Show(args as Object)
         view: customView
     })
 end sub
+```
+## Button Bar
+Starting with SGDEX 2.9 you can leverage the ContentManager used by the SGDEX ButtonBar to populate your own custom button bar.
+
+### Requirements
+In order to use button bar ContentManager, you must do all of the following in your custom button bar component:
+* Extend from an RSG renderable node (we recommend using the Group)
+* Include `content` field
+
+Optionally, you can specify a renderable node to be automatically used by SGDEX for the button bar content rendering and focus handling. This is a recommended approach. In order to do this, you need to
+* include a child node of one of the types to your custom button bar: MarkupGrid, PosterGrid, MarkupList, LabelList
+* this child node ID *must* be "contentButtonBar" in order to be used by SGDEX
+
+### Building button bar component
+#### Required Fields
+Your custom button bar component must include the following fields to be used by the ContentManager to optimize the performance of the data loading logic and give the user the most responsive experience possible.
+* **content** (ContentNode)
+    * Default value: invalid
+    * If this ContentNode includes *handlerConfigButtonBar*, the associated ContentHandler will be used to update the content and drive the ContentManager, just like with default ButtonBar
+    * If custom button bar contains "contentButtonBar" child, this ContentNode value will be automatically applied to it by SGDEX for rendering
+
+#### Optional Fields 
+Your custom view may include the following fields if you need them.
+* **alignment** (string)
+    * Default value: "top" 
+    * This field tells SGDEX where to position button bar on the screen
+* **overlay** (boolean)
+    * Default value: false
+    * This field tells SGDEX whether button bar should be rendered in front of the views and their content
+    * Used by SGDEX views to adjust their layout. Custom views are responsible for if/how they react to this field
+* **renderOverContent** (boolean)
+    * Default value: false
+    * This field tells SGDEX whether button bar should be rendered in from of the playing content in MediaView and SlideShowView
+    *  Used by SGDEX views to adjust their layout. Custom views are responsible for if/how they react to this field
+* **itemFocused** (integer)
+    * Default value: -1
+    * This field is useful in case you have list component, the one with ID "contentButtonBar"
+    * This field should be an alias to the itemSelected field of the
+list component
+    * This field tells what item is currently focused
+* **itemSelected** (integer)
+    * Default value: -1 
+    * This field is useful in case you have list component, the one with ID "contentButtonBar"
+    * This field should be an alias to the itemSelected field of the
+list component
+    * This field tells what item is currently selected
+#### Example
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="CustomButtonBar" extends="Group">
+    <script type="text/brightscript" uri="CustomButtonBar.brs" />
+    <interface>
+        <!-- Required field -->
+        <field id="content" type="node" />
+        <!-- Optional fields -->
+        <field id="alignment" type="string" value="top" />
+        <field id="overlay" type="bool" value="false" />
+        <field id="renderOverContent" type="bool" value="true" />
+        <field id="itemFocused" type="integer" alias="contentButtonBar.itemFocused" />
+        <field id="itemSelected" type="integer" alias="contentButtonBar.itemSelected" />
+    </interface>
+    <children>
+        <MarkupGrid
+            id="contentButtonBar"
+            itemComponentName="ButtonBarItem" />
+    </children>
+</component>
+```
+### Usage
+In order to use your custom button bar instead of the default ButtonBar, you need to:
+* Create you custom button bar instance
+* Assign it to the scene *buttonBar* field
+* Populate the button bar with the ContentNode
+    * ContentNode could either be already populated with the data, or include *handlerConfigButtonBar* field with the config for associated ContentHandler
+* Show the button bar by setting its *visible* field to *true*
+#### Example
+```
+' create custom button bar component
+buttonBar = CreateObject("roSGNode", "CustomButtonBar")
+ 
+' set it to the scene "buttonBar" field (m.top is a scene as we are in the scene scope here)
+m.top.buttonBar = buttonBar
+ 
+' create empty content node with the CH config
+content = CreateObject("roSGNode", "ContentNode")
+content.AddFields({
+    HandlerConfigButtonBar: {
+        name: "CHCustomButtonBar"
+    }
+})
+ 
+' set this to the button bar "content" field to populate the custom button bar
+m.top.buttonBar.content = content
+
+' show the button bar
+m.top.buttonBar.visible = true
+```
+
+## Details Views
+
+Starting with SGDEX v2.8 you can leverage the ContentManager used by the SGDEX 
+DetailsView to populate your own custom detail style views. You can use all the same 
+data loading models supported by DetailsView to populate your custom view in the
+most efficient way possible.
+
+### Requirements
+
+In order to use the details ContentManager, you must do all of the following in your custom view:
+
+- Extend from an RSG component. We recommend using the Group component
+- Include the following fields: `content`, `contentManagerType`, `itemFocused`
+
+### Building the View
+
+#### Required Fields
+Your custom view must include the following fields. These are used by the ContentManager
+to optimize the performance of the data loading logic and give the user the most
+responsive experience possible.
+
+* **content** (ContentNode)
+    * Default value: invalid  
+    * Specifies the content of the details view as a ContentNode. Depending on isContentList interface value, can represent a single item (isContentList="false", the items is content itself) or a list (isContentList="true", the list items are child ContentNodes).
+* **contentManagerType** (string)
+    * Default value: "details"
+    * For Details views, you must set this field to "details"
+    * This field tells the ContentManager which mode to operate in for this view. 
+* **itemFocused** (integer)
+    * Default value: 0
+    * This field tells what item is currently focused.
+    * This field can be safely removed only if your view includes an isContentList field whose value is false.
+
+#### Optional Fields
+
+Your custom view may include the following fields if you need them. These fields will behanve exactly as they do in DetailsView.
+
+* **isContentList** (bool)
+    * Default value: true
+    * Specifies whether the ContentNode set to the content interface of the view represents the list or a single item (false). This field, if defined on a custom view, must be specified prior to setting the content field.
+* **currentItem** (node)
+    * Default value: invalid
+    * SGDEX will populate this field with the current content item being processed by the details ContentManager.
+* **wasShown** (boolean)
+    * Default value: false
+    * Will be populated by ComponentController behind the scenes once the view gets added to the stack or appears at the top of the stack when some other view gets closed.
+* **wasClosed** (boolean)
+    * Default value: false
+    * Will be populated by ComponentController behind the scenes once the view gets closed.
+
+#### Example
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="CustomDetails" extends="Group">
+  <script type="text/brightscript" uri="CustomDetails.brs" />
+  <interface>
+      <field id="content" type="node" />
+      <field id="contentManagerType" type="string" value="details"/>
+      <field id="itemFocused" type="integer" value="0"/>
+  </interface>
+  <children>
+      ...
+  </children>
+</component>
+```
+
+### Usage
+
+Once you've built your custom view, using it with SGDEX is exactly the same as using any other view in SGDEX.
+
+#### Example
+
+```
+sub Show(args as Object)
+    customView = CreateObject("roSGNode", "CustomDetails")
+    content = CreateObject("roSGNode", "ContentNode")
+    content.Update({
+        HandlerConfigDetails: {
+                name: "CHList"
+            }
+    }, true)
+    customView.content = content
+    m.top.ComponentController.callFunc("show", {
+        view: customView
+    })
+end sub
+```
+
+## Button Bar
+Starting with SGDEX 2.9 you can leverage the ContentManager used by the SGDEX ButtonBar to populate your own custom button bar.
+
+### Requirements
+In order to use button bar ContentManager, you must do all of the following in your custom button bar component:
+* Extend from an RSG renderable node (we recommend using the Group)
+* Include `content` field
+
+Optionally, you can specify a renderable node to be automatically used by SGDEX for the button bar content rendering and focus handling. This is a recommended approach. In order to do this, you need to
+* include a child node of one of the types to your custom button bar: MarkupGrid, PosterGrid, MarkupList, LabelList
+* this child node ID *must* be "contentButtonBar" in order to be used by SGDEX
+
+### Building button bar component
+#### Required Fields
+Your custom button bar component must include the following fields to be used by the ContentManager to optimize the performance of the data loading logic and give the user the most responsive experience possible.
+* **content** (ContentNode)
+    * Default value: invalid
+    * If this ContentNode includes *handlerConfigButtonBar*, the associated ContentHandler will be used to update the content and drive the ContentManager, just like with default ButtonBar
+    * If custom button bar contains "contentButtonBar" child, this ContentNode value will be automatically applied to it by SGDEX for rendering
+
+#### Optional Fields 
+Your custom view may include the following fields if you need them.
+* **alignment** (string)
+    * Default value: "top" 
+    * This field tells SGDEX where to position button bar on the screen
+* **overlay** (boolean)
+    * Default value: false
+    * This field tells SGDEX whether button bar should be rendered in front of the views and their content
+    * Used by SGDEX views to adjust their layout. Custom views are responsible for if/how they react to this field
+* **renderOverContent** (boolean)
+    * Default value: false
+    * This field tells SGDEX whether button bar should be rendered in from of the playing content in MediaView and SlideShowView
+    *  Used by SGDEX views to adjust their layout. Custom views are responsible for if/how they react to this field
+* **itemFocused** (integer)
+    * Default value: -1
+    * This field is useful in case you have list component, the one with ID "contentButtonBar"
+    * This field should be an alias to the itemSelected field of the
+list component
+    * This field tells what item is currently focused
+* **itemSelected** (integer)
+    * Default value: -1 
+    * This field is useful in case you have list component, the one with ID "contentButtonBar"
+    * This field should be an alias to the itemSelected field of the
+list component
+    * This field tells what item is currently selected
+#### Example
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="CustomButtonBar" extends="Group">
+    <script type="text/brightscript" uri="CustomButtonBar.brs" />
+    <interface>
+        <!-- Required field -->
+        <field id="content" type="node" />
+        <!-- Optional fields -->
+        <field id="alignment" type="string" value="top" />
+        <field id="overlay" type="bool" value="false" />
+        <field id="renderOverContent" type="bool" value="true" />
+        <field id="itemFocused" type="integer" alias="contentButtonBar.itemFocused" />
+        <field id="itemSelected" type="integer" alias="contentButtonBar.itemSelected" />
+    </interface>
+    <children>
+        <MarkupGrid
+            id="contentButtonBar"
+            itemComponentName="ButtonBarItem" />
+    </children>
+</component>
+```
+### Usage
+In order to use your custom button bar instead of the default ButtonBar, you need to:
+* Create you custom button bar instance
+* Assign it to the scene *buttonBar* field
+* Populate the button bar with the ContentNode
+    * ContentNode could either be already populated with the data, or include *handlerConfigButtonBar* field with the config for associated ContentHandler
+* Show the button bar by setting its *visible* field to *true*
+#### Example
+```
+' create custom button bar component
+buttonBar = CreateObject("roSGNode", "CustomButtonBar")
+ 
+' set it to the scene "buttonBar" field (m.top is a scene as we are in the scene scope here)
+m.top.buttonBar = buttonBar
+ 
+' create empty content node with the CH config
+content = CreateObject("roSGNode", "ContentNode")
+content.AddFields({
+    HandlerConfigButtonBar: {
+        name: "CHCustomButtonBar"
+    }
+})
+ 
+' set this to the button bar "content" field to populate the custom button bar
+m.top.buttonBar.content = content
+
+' show the button bar
+m.top.buttonBar.visible = true
 ```
 
 ###### Copyright (c) 2021 Roku, Inc. All rights reserved.

@@ -128,7 +128,6 @@
     </interface>
 
     <script type="text/brightscript" uri="ButtonBar.brs" />
-    <script type="text/brightscript" uri="../ContentManager/ContentManagerUtils.brs" />
     <script type="text/brightscript" uri="../Views/utils/Utils.brs" />
 
     <children>

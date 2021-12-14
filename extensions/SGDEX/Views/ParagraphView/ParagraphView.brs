@@ -337,7 +337,7 @@ sub SGDEX_UpdateViewUI()
                     m.visibleWidth = 1280 - (m.layoutX * 2)
                     m.buttons.numRows = 2
                 else if buttonBar.alignment = "left"
-                    m.visibleWidth = ( 1280 - buttonBar.findNode("backgroundRectangle").width - GetViewXPadding() )
+                    m.visibleWidth = ( 1280 - GetButtonBarWidth() - GetViewXPadding() )
                     m.layoutX = 0
                 end if
             else

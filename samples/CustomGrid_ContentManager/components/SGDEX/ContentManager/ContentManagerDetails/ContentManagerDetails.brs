@@ -17,6 +17,10 @@ end sub
 sub setView(view as Object)
     m.topView = view
     if m.topView <> invalid
+        ' try to locate child UI node having id=contentRendererId to use one
+        ' for the content rendering behind the scenes
+        m.contentRenderer = m.topView.FindNode(m.top.contentRendererId)
+        
         SetOptionalFields()
         CreateSpinner()
 
@@ -39,7 +43,7 @@ end sub
 sub SetOptionalFields()
     fieldsMap = {
         isContentList: {default: true, type: "boolean" }
-        itenFocused: {default: 0, type: "integer" }
+        itemFocused: {default: 0, type: "integer" }
         currentItem: {default: invalid, type: "node" }
         wasShown: {default: false, type: "boolean" }
         wasClosed: {default: false, type: "boolean" }
@@ -76,6 +80,11 @@ sub OnContentSet()
         ' replace with new ContentNode by saving reference to m.currentContentNode
         if (m.currentContentNode = invalid or not m.currentContentNode.isSameNode(m.topView.content))
             if m.topView.isContentList
+                ' apply view content to m.contentRenderer, if any, for rendering
+                if m.contentRenderer <> invalid
+                    m.contentRenderer.content = m.topView.content
+                end if
+                
                 ' check if we have empty root content with proper HandlerConfig
                 if m.topView.content[m.Handler_ConfigField] <> invalid and m.topView.content.GetChildCount() = 0
                     ' Show loading indicator
@@ -87,6 +96,10 @@ sub OnContentSet()
                         onReceive: sub(data)
                             gthis = GetGlobalAA()
                             if data <> invalid and data.GetChildCount() > 0
+                                ' invalidate CH config field on the view content
+                                if gthis.topView.content <> invalid
+                                    gthis.topView.content[gthis.Handler_ConfigField] = invalid
+                                end if
                                 ' replace data if needed
                                 if not data.IsSameNode(gthis.topView.content) then gthis.topView.content = data
                                 ' fire focus change that will redraw UI and tell developer which item is focused
@@ -186,6 +199,7 @@ sub LoadMoreContent(content, HandlerConfig)
                 gthis.topView.currentItem = content
                 ' disable spinner as the content has been fully loaded
                 ShowBusySpinner(false)
+                m.content[gThis.Handler_ConfigField] = invalid
             end if
         end sub
     }

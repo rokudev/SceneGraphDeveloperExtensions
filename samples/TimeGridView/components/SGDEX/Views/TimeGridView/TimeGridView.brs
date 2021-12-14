@@ -286,9 +286,9 @@ sub SGDEX_UpdateViewUI()
     isButtonBarVisible = buttonBar.visible
     descriptionLabelWidth = 666
 
-    if buttonBar <> invalid
+    if buttonBar <> invalid and m.details <> invalid
         if buttonBar.alignment = "left"
-            offset = buttonBar.FindNode("backgroundRectangle").width
+            offset = GetButtonBarWidth()
             if isButtonBarVisible
                 ' Resize description if layout shifted
                 if descriptionLabelWidth/2 >= offset - GetViewXPadding()
@@ -298,6 +298,6 @@ sub SGDEX_UpdateViewUI()
                 end if
             end if
         end if
-        if m.details <> invalid then m.details.maxWidth = descriptionLabelWidth
+        m.details.maxWidth = descriptionLabelWidth
     end if
 end sub

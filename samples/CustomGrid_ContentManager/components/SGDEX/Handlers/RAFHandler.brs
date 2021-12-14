@@ -95,9 +95,6 @@ sub PlayContentWithFullRAFIntegration()
     view.id = "rafGroup"
     scene = invalid
 
-    ' Add loading facade for case if GetAds would be loaded for some time
-    facade = videoView.createChild("LoadingFacade")
-
     ' adPods is array of ads - used for preroll playback
     adPods = Invalid
 
@@ -119,9 +116,6 @@ sub PlayContentWithFullRAFIntegration()
     else if adIface.sgdex_flag_importAds_was_called = true
         adPods = adIface.sgdex_importedAds
     end if
-
-    ' close loading facade, because all ads already loaded
-    videoView.removeChild(facade)
 
     ' If there are some ads to play and it is not stitched ads, try to play preroll
     playContent = true

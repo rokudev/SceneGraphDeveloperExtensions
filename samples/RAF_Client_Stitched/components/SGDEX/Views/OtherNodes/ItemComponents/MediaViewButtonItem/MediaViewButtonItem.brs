@@ -28,7 +28,7 @@ sub OnWidthChanged(event as Object)
     width = event.getData()
     if width <> invalid and width > 0
         m.top.FindNode("poster").width = width
-        m.top.FindNode("title").width = width
+        m.top.FindNode("title").width = (width - 40)
     end if
 end sub
 

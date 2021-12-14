@@ -21,6 +21,7 @@
             where content handler config should be situated.
         -->
         <field id="configFieldName" type="string" onChange="OnConfigFieldNameChanged" />
+        <field id="contentRendererId" type="string" value="contentDetails" />
         
         <function name="setView" />
     </interface>

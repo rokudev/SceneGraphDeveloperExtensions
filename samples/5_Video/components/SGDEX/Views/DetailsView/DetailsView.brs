@@ -382,7 +382,7 @@ sub SGDEX_UpdateViewUI()
 
         if buttonBar <> invalid and m.detailsGroup <> invalid
             if buttonBar.alignment = "left"
-                offset = buttonBar.FindNode("backgroundRectangle").width
+                offset = GetButtonBarWidth()
                 if not buttonBar.IsInFocusChain() and (isAutoHide and isButtonBarVisible)
                     m.top.viewContentGroup.translation = [0,contentGroupY]
                 else if isButtonBarVisible and not isButtonBarOverlay

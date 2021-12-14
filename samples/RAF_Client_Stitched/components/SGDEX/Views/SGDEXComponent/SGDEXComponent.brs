@@ -13,13 +13,16 @@ sub Init()
     ' Minimum Y offset from top edge of the screen to content
     m.buttonBarSafeZoneYPosition = 36 ' 720 * 0.05
     m.contentAreaSafeZoneYPosition = 72 ' 720 * 0.10
+    m.contentAreaSafeZoneXPosition = 128 ' 1280 * 0.10
 
     m.top.overhang = m.top.FindNode("overhang")
     m.top.overhang.ObserveField("height", "SGDEX_OnOverhangHeightChange")
     m.top.getScene().ObserveField("theme", "SGDEX_GlobalThemeObserver")
     m.top.getScene().ObserveField("updateTheme", "SGDEX_GlobalUpdateThemeObserver")
-    m.top.getScene().buttonBar.ObserveField("visible", "SGDEX_OnButtonBarVisibleChange")
-    m.top.getScene().buttonBar.ObserveField("overlay", "SGDEX_OnButtonBarVisibleChange")
+
+    m.bbContainer = m.top.getScene().FindNode("buttonBarContainer")
+    m.bbContainer.ObserveFieldScoped("change", "SGDEX_OnButtonBarChanged")
+    SGDEX_SetButtonBarObservers()
 
     m.top.viewContentGroup = m.top.FindNode("viewContentGroup")
 
@@ -32,82 +35,44 @@ sub Init()
     SGDEX_InternalBuildAndSetTheme(m.top.theme, m.top.getScene().actualThemeParameters)
 end sub
 
+sub SGDEX_OnButtonBarChanged(event as Object)
+    change = event.GetData()
+    if change <> invalid and change.operation = "add"
+        SGDEX_UpdateBaseViewUI()
+        SGDEX_SetButtonBarObservers()
+    end if
+end sub
+
+sub SGDEX_SetButtonBarObservers()
+    fields = ["content", "visible", "overlay", "alignment", "autoHide", "renderOverContent"]
+    for each field in fields
+        m.top.getScene().buttonBar.UnobserveFieldScoped(field)
+        m.top.getScene().buttonBar.ObserveFieldScoped(field, "SGDEX_OnButtonBarInterfaceChange")
+    end for 
+end sub
+
 sub OnViewWasShown()
-    SGDEX_OnButtonBarVisibleChange()
+    buttonBar = m.top.getScene().buttonBar
+    if buttonBar <> invalid and m.top.visible then
+        SGDEX_UpdateBaseViewUI()
+    end if
 end sub
 
 sub SGDEX_OnOverhangHeightChange()
-    fullSizeViews = {
-        "MediaView": "",
-        "SlideShowView": "",
-        "EndcardView": ""
-    }
-    buttonBar = m.top.getScene().buttonBar
-    overhang = m.top.findNode("overhang")
-    autoHideHint = buttonBar.findNode("autohidehint")
-    buttonBarRectangle = buttonBar.findNode("backgroundRectangle")
-    buttonBarList = buttonBar.findNode("buttonBarLayout")
-    buttonsRowList = buttonBar.findNode("buttonsRowList")
+    overhangHeight = m.top.overhang.height
+    buttonBar = m.top.GetScene().buttonBar
 
-    buttonBarYSpacing = buttonBarList.itemSpacings[0] * 2 + buttonsRowList.itemSpacing[1] - 2
-
-    buttonBarListX = buttonBarList.translation[0]
-
-    if buttonBar.alignment = "left" and buttonBar.visible = true
-        ' Calculating visible buttons on buttonBar to switch animation
-        ' The vertical BB uses floating focus when there are not enough buttons to wrap
-        ' and uses fixed focus once the set of buttons gets big enough to wrap.
-        if buttonsRowList.content <> invalid
-            buttonsCount = buttonsRowList.content.getChildCount()
-            itemHeight = buttonsRowList.itemSize[1]
-            if overhang.height = 0
-                safeZone = (720 - m.contentAreaSafeZoneYPosition*2)
-            else
-                safeZone = (720 - overhang.height - m.contentAreaSafeZoneYPosition)
-            end if
-            if buttonsCount > 0 and safeZone > 0
-                visibleNumRows = CInt(safeZone / (itemHeight + 10))
-                if buttonsCount >= visibleNumRows
-                    buttonsRowList.vertFocusAnimationStyle="fixedFocusWrap"
-                else
-                    buttonsRowList.vertFocusAnimationStyle="floatingFocus"
-                end if
-                buttonsRowList.numRows = visibleNumRows
-            end if
-        end if
-        ' Resize ButtonBar to fill gap appeared because of disabled overhang
-        ' ButtonBar will be resized if overhang height is default or equal to 0 OR if overlay mode is enabled
-        if fullSizeViews[m.top.subtype()] = "" and (overhang.height = m.contentAreaSafeZoneYPosition or overhang.height = 0) and buttonBar.translation[1] <> 0
-            if m.top.hasField("mode") and m.top.mode = "audio"
-                buttonBar.translation = [0, m.defaultOverhangHeight]
-                buttonBarList.translation = [buttonBarListX, 0]
-                height = (buttonBarRectangle.height/2) - m.defaultOverhangHeight
-                autoHideHint.translation = [autoHideHint.translation[0],height]
-            else
-                buttonBar.translation = [0,0]
-                buttonBarList.translation = [buttonBarListX,m.defaultOverhangHeight]
-                autoHideHint.translation = [autoHideHint.translation[0],buttonBarRectangle.height/2]
-            end if
-        else if buttonBar.overlay
-            buttonBar.translation = [0,0]
-            ' aligning buttonsRowList to 72px
-            buttonBarList.translation = [buttonBarListX, m.contentAreaSafeZoneYPosition - buttonBarYSpacing]
-            autoHideHint.translation = [autoHideHint.translation[0], buttonBarRectangle.height/2]
-        else
-            ' restoring translation
-            buttonBarList.translation = [buttonBarListX,0]
-            ' moving autoHideHint down if overhang height overlap it
-            if overhang.height > (autohideHint.boundingRect()["y"] + (autohideHint.boundingRect()["height"]))
-                autohideHint.translation = [autohideHint.translation[0], autohideHint.boundingRect()["height"]/2]
-            else
-                height = (buttonBarRectangle.height/2) - overhang.height
-                autoHideHint.translation = [autohideHint.translation[0], height]
+    if buttonBar.visible = true
+        buttonBar.translation = [0, overhangHeight]
+        if buttonBar.alignment = "left" 
+            if buttonBar.overlay or IsFullSizeView(m.top)
+                buttonBar.translation = [0, 0]
             end if
         end if
     end if
 end sub
 
-sub SGDEX_OnButtonBarVisibleChange()
+sub SGDEX_OnButtonBarInterfaceChange()
     buttonBar = m.top.getScene().buttonBar
     if buttonBar <> invalid and m.top.visible then
         SGDEX_UpdateBaseViewUI()
@@ -121,6 +86,7 @@ end sub
 ' it may implemented in SGDEX_UpdateViewUI
 sub SGDEX_UpdateBaseViewUI()
     buttonBar = m.top.getScene().buttonBar
+
     isButtonBarVisible = buttonBar.visible
     isButtonBarOverlay = buttonBar.overlay
     overhang = m.top.findNode("overhang")
@@ -136,9 +102,13 @@ sub SGDEX_UpdateBaseViewUI()
         buttonBar.translation = [0, overhangHeight]
         if not isButtonBarOverlay
             if buttonBar.alignment = "top"
-                viewContentOffsetY += buttonBar.findNode("backgroundRectangle").height
+                viewContentOffsetY += GetButtonBarHeight()
             else if buttonBar.alignment = "left"
-                viewContentOffsetX += buttonBar.findNode("backgroundRectangle").width + m.viewOffsetX
+                viewContentOffsetX += GetButtonBarWidth()
+                if viewContentOffsetX < m.contentAreaSafeZoneXPosition
+                    viewContentOffsetX = m.contentAreaSafeZoneXPosition
+                end if
+                viewContentOffsetX += m.viewOffsetX
             end if
         end if
         SGDEX_OnOverhangHeightChange()
@@ -441,4 +411,36 @@ end sub
 
 function GetViewXPadding()
     return 126
+end function
+
+' Returns width of the buttonBar. Returns backgroundRectangle width, 
+' if such child exists, otherwise returns width of the BoundingRect()
+function GetButtonBarWidth() 
+    return GetButtonBarBounds().width
+end function
+
+' Returns height of the buttonBar. Returns backgroundRectangle height, 
+' if such child exists, otherwise returns height of the BoundingRect()
+function GetButtonBarHeight() 
+    return GetButtonBarBounds().height
+end function
+
+' Returns width and height of the buttonBar. Returns backgroundRectangle dimensions, 
+' if such child exists, otherwise returns width and height of the BoundingRect()
+function GetButtonBarBounds() 
+    buttonBar = m.top.getScene().buttonBar
+    backgroundRectangle = buttonBar.FindNode("backgroundRectangle")
+    bounds = {
+        width: 0
+        height: 0
+    }
+    if backgroundRectangle <> invalid
+        bounds.width = backgroundRectangle.width
+        bounds.height = backgroundRectangle.height
+    else
+        boundingRect = buttonBar.BoundingRect()
+        bounds.width = boundingRect.width
+        bounds.height = boundingRect.height
+    end if
+    return bounds
 end function

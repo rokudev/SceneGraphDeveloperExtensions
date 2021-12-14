@@ -25,6 +25,7 @@ sub Init()
     m.top.ObserveField("media", "OnMediaChanged")
     m.top.ObserveField("RafTask", "OnRafTaskChanged")
     m.top.ObserveField("endcardView", "OnEndcardViewChanged")
+    m.top.ObserveField("posterShape", "OnResetPosterShape")
 end sub
 
 sub OnEndcardViewChanged()
@@ -83,6 +84,13 @@ function isCSASEnabled() as Boolean
     return (m.top.currentRAFHandler <> invalid and m.top.currentRAFHandler.useCSAS = true)
 end function
 
+sub OnResetPosterShape(event as Object)
+    if m.top.npn <> invalid
+        poster = m.top.npn.findNode("poster")
+        poster.shape = event.getData()
+        SGDEX_UpdateViewUI()
+    end if
+end sub
 
 ' ************* Theme functions *************
 
@@ -265,13 +273,31 @@ sub SGDEX_UpdateViewUI()
         m.titleInfo = nowPlayingUIGroup.findNode("titleInfo")
         m.artistInfo = nowPlayingUIGroup.findNode("artistInfo")
         m.releaseInfo = nowPlayingUIGroup.findNode("releaseInfo")
+
+        defaultWidth = 1024
+        defaultButtonLength = 340
+        buttonLength = defaultButtonLength
+        posterWidth = poster.width
+        if posterWidth > 300
+            buttonLength = defaultWidth/2 - posterWidth/2 - 30
+        else
+            posterWidth = 300
+        end if
+        defaultButtonSize = [buttonLength, 48]
+
+        buttonsTranslationX = nowPlayingUIGroup.boundingRect().x + nowPlayingUIGroup.boundingRect().width / 2 + posterWidth / 2 + 30
+        buttons.itemSize = defaultButtonSize
+        buttons.rowItemSize = [defaultButtonSize]
+        buttons.translation = [buttonsTranslationX, buttons.translation[1]]
+
         if m.top.overhang <> invalid and m.top.overhang.visible
             overhangHeight = m.top.overhang.height
         else
             overhangHeight = 0
         end if
+
         if m.buttonBar.visible and m.buttonBar.overlay = false and m.buttonBar.alignment = "top"
-            buttonBarHeight = m.buttonBar.findNode("backgroundRectangle").height
+            buttonBarHeight = GetButtonBarHeight()
         else
             buttonBarHeight = 0
         end if
@@ -291,12 +317,10 @@ sub SGDEX_UpdateViewUI()
             vertDiff = 720 - nowPlayingUIGroupYPosition - m.contentAreaSafeZoneYPosition - nowPlayingUIGroupHeight - yOffset
             if vertDiff < 0
                 if vertDiff >= -150
-                    poster.width = 300 + vertDiff
-                    poster.height = 300 + vertDiff
+                    poster.maxHeight = 300 + vertDiff
                     buttons.numRows = poster.height / buttons.itemSize[1] - 1
                 else
-                    poster.width = 150
-                    poster.height = 150
+                    poster.maxHeight = 150
                     buttons.numRows = 2
                end if
             end if
@@ -308,18 +332,15 @@ sub SGDEX_UpdateViewUI()
              nowPlayingUIGroup.translation = [nowPlayingUIGroup.translation[0], YValue]
              buttons.translation = [buttons.translation[0], YValue]
         end if
- 
+
         if m.buttonBar.alignment = "left" and (m.buttonBar.visible = true and m.buttonBar.overlay = false)
-            buttonBarWidth = m.buttonBar.findNode("backgroundRectangle").width
-            defaultWidth = 1024
-            defaultButtonSize = [340, 48]
+            buttonBarWidth = GetButtonBarWidth()
             minWidth = 2*(poster.width/2 + 30 + defaultButtonSize[0]/2)
             defaultTranslation = [652, 140]
             buttonsTranslation = [832, 140]
-            XtranslationDiff = buttonsTranslation[0] - defaultTranslation[0] - (300 - poster.width)/2
+            XtranslationDiff = buttonsTranslation[0] - defaultTranslation[0] + defaultButtonLength - buttonLength
             ' adjust labels width and buttons size to avoid situation when npm UI gets out of the safe zone
             if not m.buttonBar.isInFocusChain() and m.buttonBar.autoHide
-                XtranslationDiff = buttonsTranslation[0] - defaultTranslation[0]
                 m.top.viewContentGroup.translation = [0,m.top.viewContentGroup.translation[1]]
                 m.titleInfo.maxWidth = defaultWidth
                 m.artistInfo.maxWidth = defaultWidth
@@ -332,22 +353,21 @@ sub SGDEX_UpdateViewUI()
             else
                 tranX = m.top.viewContentGroup.translation[0]
                 m.top.viewContentGroup.translation = [0,m.top.viewContentGroup.translation[1]]
-                XtranslationDiff = buttonsTranslation[0] - defaultTranslation[0] - (300 - poster.width)/2
                 xValue = nowPlayingUIGroup.boundingRect()["x"]
                 xOffset = (buttonBarWidth + 10) - xValue
+                widthDiff = defaultWidth - buttonBarWidth  + GetViewXPadding()
+                newLength = widthDiff
+                if minWidth > newLength
+                    newLength = minWidth
+                end if
+                buttonLength = newLength/2 - posterWidth/2 - 30
+                buttons.itemSize = [buttonLength, buttons.itemSize[1]]
+                buttons.rowItemSize = [[buttonLength, buttons.itemSize[1]]]
                 if xOffset > 0
-                    widthDiff = defaultWidth - buttonBarWidth  + GetViewXPadding()
-                    newLength = widthDiff
-                    if minWidth > newLength
-                         newLength = minWidth
-                    end if
                     m.titleInfo.maxWidth = newLength
                     m.artistInfo.maxWidth = newLength
                     m.albumInfo.maxWidth = newLength
                     m.releaseInfo.maxWidth = newLength
-                    buttonLength = newLength/2 - poster.width/2 - 30
-                    buttons.itemSize = [buttonLength, buttons.itemSize[1]]
-                    buttons.rowItemSize = [[buttonLength, buttons.itemSize[1]]]
                     nowPlayingUIGroup.translation = [newLength/2 + tranX, nowPlayingUIGroup.translation[1]]
                     buttons.translation = [newLength/2 + tranX + XtranslationDiff, buttons.translation[1]]
                 end if

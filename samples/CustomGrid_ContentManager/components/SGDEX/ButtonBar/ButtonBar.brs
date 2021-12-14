@@ -16,6 +16,9 @@ sub init()
     m.clippingGroup = m.top.findNode("clippingGroup")
     m.buttonBarArrow = m.top.findNode("buttonBarArrow")
 
+    m.top.ObserveField("translation", "OnTranslationChanged")
+    m.top.ObserveField("visible", "OnVisibleChanged")
+    m.top.ObserveField("overlay", "OnVisibleChanged")
     m.top.ObserveField("updateTheme", "OnUpdateThemeChanged")
     m.top.ObserveField("content", "OnContentSet")
     m.top.ObserveField("focusedChild", "OnFocusChange")
@@ -32,8 +35,68 @@ sub init()
     m.backgroundRectangle.height = m.buttonHeight + m.backgroundMargin * 2
 
     ' button bar internal fields
-    m.Handler_ConfigField = "handlerConfigButtonBar"
     m.debug = false
+end sub
+
+sub OnVisibleChanged()
+    if m.top.visible
+        OnTranslationChanged()
+    end if
+end sub
+
+sub OnTranslationChanged()
+    currentView = m.top.GetScene().componentController.currentView
+    if currentView = invalid or currentView.overhang = invalid then return
+    overhang = currentView.overhang
+    
+    buttonBarYSpacing = m.buttonBarLayout.itemSpacings[0] * 2 + m.buttonsRowList.itemSpacing[1] - 2
+    buttonBarListX = m.buttonBarLayout.translation[0]
+    contentAreaSafeZoneYPosition = 72 ' 720 * 0.10
+
+    if m.top.alignment = "left" and m.top.visible = true
+        ' Calculating visible buttons on buttonBar to switch animation
+        ' The vertical BB uses floating focus when there are not enough buttons to wrap
+        ' and uses fixed focus once the set of buttons gets big enough to wrap.
+        if m.buttonsRowList.content <> invalid
+            buttonsCount = m.buttonsRowList.content.getChildCount()
+            itemHeight = m.buttonsRowList.itemSize[1]
+            if overhang.height = 0
+                safeZone = (720 - contentAreaSafeZoneYPosition*2)
+            else
+                safeZone = (720 - overhang.height - contentAreaSafeZoneYPosition)
+            end if
+            if buttonsCount > 0 and safeZone > 0
+                visibleNumRows = CInt(safeZone / (itemHeight + 10))
+                if buttonsCount >= visibleNumRows
+                    m.buttonsRowList.vertFocusAnimationStyle="fixedFocusWrap"
+                else
+                    m.buttonsRowList.vertFocusAnimationStyle="floatingFocus"
+                end if
+                m.buttonsRowList.numRows = visibleNumRows
+            end if
+        end if
+        
+        if IsFullSizeView(currentView) 
+            if not m.top.overlay 
+                m.buttonBarLayout.translation = [buttonBarListX, m.defaultOverhangHeight]
+            end if
+            m.autoHideHint.translation = [m.autoHideHint.translation[0], m.backgroundRectangle.height/2]
+        else if m.top.overlay
+            ' aligning buttonsRowList to 72px
+            m.buttonBarLayout.translation = [buttonBarListX, contentAreaSafeZoneYPosition - buttonBarYSpacing]
+            m.autoHideHint.translation = [m.autoHideHint.translation[0], m.backgroundRectangle.height/2]
+        else
+            ' restoring translation
+            m.buttonBarLayout.translation = [buttonBarListX,0]
+            ' moving autoHideHint down if overhang height overlap it
+            if overhang.height > (m.autoHideHint.boundingRect()["y"] + (m.autoHideHint.boundingRect()["height"]))
+                m.autoHideHint.translation = [m.autoHideHint.translation[0], m.autoHideHint.boundingRect()["height"]/2]
+            else
+                height = (m.backgroundRectangle.height/2) - overhang.height
+                m.autoHideHint.translation = [m.autoHideHint.translation[0], height]
+            end if
+        end if
+    end if
 end sub
 
 sub OnContentSet()
@@ -43,39 +106,22 @@ sub OnContentSet()
         if isNewContent
             if content = invalid
                 m.buttonsRowList.content = invalid
-            else if content[m.Handler_ConfigField] <> invalid
-                RetrieveContentFromCH(content)
-            else
+            else if content.GetChildCount() > 0
                 SetButtonBarContent(content)
+            else
+                ' observe for additional content children changes
+                ' in order to re-align button bar layout
+                content.ObserveFieldScoped("change", "OnContentChange")
             end if
         end if
     end if
 end sub
 
-sub RetrieveContentFromCH(content as Object)
-    config = content[m.Handler_ConfigField]
-    callback = {
-        config: config
-        needToRetry: true
-
-        onReceive: sub(data)
-            if data <> invalid and data.GetChildCount() > 0
-                SetButtonBarContent(data)
-            else
-                m.onError(data)
-            end if
-        end sub
-
-        onError: sub(data)
-            if m.needToRetry
-                ' retry only once
-                m.needToRetry = false
-                GetContentData(m, m.config, GetGlobalAA().top.content)
-            end if
-        end sub
-    }
-    GetContentData(callback, config, m.top.content)
-    content[m.Handler_ConfigField] = invalid
+sub OnContentChange(event as Object)
+    content = event.GetRoSGNode()
+    if content.GetChildCount() > 0
+        SetButtonBarContent(content)
+    end if
 end sub
 
 sub SetButtonBarContent(content as Object)

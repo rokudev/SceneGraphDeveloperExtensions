@@ -32,9 +32,8 @@
         <field id="ComponentController" type="node" />
 
         <!-- @Public -->
-        <!-- @ReadOnly -->
-        <!-- Reference to ButtonBar node that is created and used inside the library -->
-        <field id="buttonBar" type="node" />
+        <!-- Reference to the button bar node (default ButtonBar is created by the SGDEX) -->
+        <field id="buttonBar" type="node" alias="ComponentController.buttonBar" />
 
         <!-- @Public -->
         <!-- @WriteOnly -->

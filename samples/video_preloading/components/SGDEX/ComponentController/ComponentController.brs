@@ -5,6 +5,10 @@ sub Init()
     viewManager = CreateObject("roSGNode", "ViewManager")
     m.top.InsertChild(viewManager, 0)
 
+    ' initialize button bar container
+    m.bbContainer = m.top.FindNode("buttonBarContainer")
+    m.bbRendererId = "contentButtonBar"
+
     m.top.observeField("addStack", "OnAddStackChanged")
     m.top.observeField("removeStack", "OnRemoveStackChanged")
     m.top.observeField("selectStack", "OnSelectStackChanged")
@@ -14,6 +18,65 @@ sub Init()
     m.top.allowCloseChannelOnLastView = true
 
     m.preloadMediaView = invalid
+end sub
+
+' A callback for handing button bar change
+sub OnButtonBarChanged(event as Object)
+    newButtonBar = event.GetData()
+    if newButtonBar = invalid
+        ' don't allow to invalidate m.top.buttonBar, fall back to the existing
+        ' button bar cached to m.buttonBar
+        m.top.buttonBar = m.buttonBar
+    else if m.buttonBar = invalid or not newButtonBar.IsSameNode(m.buttonBar)
+        ' got a new button bar, need to replace the value cached in m.buttonBar
+        m.buttonBar = newButtonBar
+        SetButtonBarOptionalFields(newButtonBar)
+        
+        ' put it to the bbContainer
+        m.bbContainer.RemoveChildIndex(0)
+        m.bbContainer.AppendChild(newButtonBar)
+        
+        ' assign content manager and initiate content loading
+        m.bbContentManager = CreateObject("roSGNode", "ContentManagerDetails")
+        m.bbContentManager.configFieldName = "handlerConfigButtonBar"
+        m.bbContentManager.contentRendererId = m.bbRendererId
+        m.bbContentManager.CallFunc("setView", newButtonBar)
+        m.top.buttonBar.wasShown = true
+    end if
+end sub
+
+' A helper function to initialize button bar optional fields
+sub SetButtonBarOptionalFields(buttonBar as Object)
+    fieldsMap = {
+        alignment: {default: "top", type: "string" }
+        overlay: {default: false, type: "boolean" }
+        renderOverContent: {default: false, type: "boolean" }
+        autoHide: {default: false, type: "boolean" }
+    }
+
+    for each item in fieldsMap.Items()
+        key = item.key
+        value = item.value.default
+        fieldType = item.value.type
+        if buttonBar.HasField(key) = false
+            buttonBar.AddField(key, fieldType, true)
+            buttonBar[key] = value
+        end if
+    end for
+end sub
+
+' A helper function to handle setting focus to the button bar properly
+sub FocusButtonBar()
+    if m.top.buttonBar <> invalid and m.bbRendererId <> invalid
+        bbRenderer = m.top.buttonBar.FindNode(m.bbRendererId)
+        if bbRenderer <> invalid
+            ' button bar has renderer node? -> set focus to it
+            bbRenderer.SetFocus(true)
+        else
+            ' otherwise set focus to the button bar itself
+            m.top.buttonBar.SetFocus(true)
+        end if
+    end if
 end sub
 
 function Setup(config as Object)
@@ -75,9 +138,9 @@ function Show(config as Object)
         fp: [View, data]
     })
 
-    buttonBar = m.top.GetScene().buttonBar
+    buttonBar = m.buttonBar
     if data.setFocus = false and buttonBar.visible and not buttonBar.IsInFocusChain()
-        buttonBar.SetFocus(true)
+        FocusButtonBar()
     end if
     if contentManager <> invalid then
         contentManager.control = "start"
@@ -158,7 +221,7 @@ end sub
 function onkeyEvent(key as String, press as Boolean) as Boolean
     handled = false
     if press
-        buttonBar = m.top.findNode("buttonBar")
+        buttonBar = m.buttonBar
         if buttonBar.visible
             handled = handleButtonBarKeyEvents(buttonBar, key)
         else if key = "back"
@@ -179,12 +242,12 @@ function handleButtonBarKeyEvents(buttonBar as Object, key as String) as Boolean
             if buttonBar.isInFocusChain()
                 return closeView()
             else if currentView.isInFocusChain()
-                buttonBar.SetFocus(true)
+                FocusButtonBar()
                 return true
             end if
         else if buttonBar.alignment = "top"
             if key = "up" and currentView.isInFocusChain()
-                buttonBar.SetFocus(true)
+                FocusButtonBar()
                 return true
             else if key = "down" and buttonBar.isInFocusChain()
                 currentView.SetFocus(true)
@@ -193,7 +256,7 @@ function handleButtonBarKeyEvents(buttonBar as Object, key as String) as Boolean
         else if buttonBar.alignment = "left"
             if key = "left" and currentView.isInFocusChain()
                 if currentView.Subtype() <> "MediaView" and currentView.isContentList <> true
-                    buttonBar.SetFocus(true)
+                    FocusButtonBar()
                     return true
                 end if
             else if key = "right" and buttonBar.isInFocusChain()
@@ -208,7 +271,7 @@ end function
 function handleMediaViewBBKeyEvents(mediaView as Object, buttonBar as Object, key as String) as Boolean
     isAbleToFocusBB = mediaView.state = "paused" or mediaView.state = "buffering" or buttonBar.renderOverContent
     if buttonBar.visible and mediaView.isInFocusChain() and isAbleToFocusBB then
-        buttonBar.SetFocus(true)
+        FocusButtonBar()
         return true
     else if key <> "up"
         return closeView()
@@ -311,8 +374,8 @@ sub ReplaceCurrentViewManager(viewManager as Object)
             m.top.ReplaceChild(viewManager, 0)
         end if
 
-        buttonBar = m.top.findNode("buttonBar")
-        isButtonBarFocused = buttonBar.visible and buttonBar.isInFocusChain()
+        buttonBar = m.buttonBar
+        isButtonBarFocused = buttonBar <> invalid and buttonBar.visible and buttonBar.isInFocusChain()
         ' if buttonBar is focused and active stack is changed
         ' keep focus on BB
         if not isButtonBarFocused

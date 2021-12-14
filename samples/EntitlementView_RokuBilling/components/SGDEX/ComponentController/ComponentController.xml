@@ -19,6 +19,10 @@
 <component name="ComponentController" extends="Group" xsi:noNamespaceSchemaLocation="https://devtools.web.roku.com/schema/RokuSceneGraph.xsd">
     <interface>
         <!-- @Public -->
+        <!-- A reference to the button bar node (default ButtonBar is created by the SGDEX) -->
+        <field id="buttonBar" type="node" value="invalid" onChange="OnButtonBarChanged" alwaysNotify="true" />
+        
+        <!-- @Public -->
         <!--  
             holds the reference to view that is currently shown.
             Can be used for checking in onkeyEvent
@@ -70,9 +74,8 @@
         <field id="ViewManager" type="node" />
     </interface>
     <script type="text/brightscript" uri="ComponentController.brs" />
-    
+
     <children>
-        <ButtonBar
-            id="buttonBar" />
+        <Group id="buttonBarContainer" />
     </children>
 </component>

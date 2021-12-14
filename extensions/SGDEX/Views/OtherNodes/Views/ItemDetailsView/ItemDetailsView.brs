@@ -14,7 +14,7 @@ sub onContentSet()
     content = m.top.content
     if content <> invalid
         titleLabelText = content.title
-        if content.releaseDate <> invalid and val(content.releaseDate) > 0
+        if content.releaseDate <> invalid and Len(content.releaseDate) > 0
             titleLabelText += " | " + content.releaseDate
         end if
         if content.StarRating <> invalid and content.StarRating > 0

@@ -335,3 +335,16 @@ function NormalizeURL(url)
   
   return result
 end function
+
+' Helper function to determine whether view is full sized (doesn't have overhang)
+function IsFullSizeView(view as Object)
+    viewSubtype = view.Subtype()
+    isFullSizeMediaView = (viewSubtype = "MediaView") and not IsAudioMediaView(view)  
+    return isFullSizeMediaView or viewSubtype = "SlideShowView" or viewSubtype = "EndcardView"
+end function
+
+' Helper function to determine whether view is MediaView with audio mode
+function IsAudioMediaView(view as Object)
+    viewSubtype = view.Subtype()
+    return viewSubtype = "MediaView" and view.hasField("mode") and view.mode = "audio"
+end function

@@ -635,7 +635,7 @@ sub SGDEX_UpdateViewUI()
 
     if buttonBar.alignment = "left" and not isButtonBarOverlay
         ' delta BB width is BB width minus free space between BB and CL
-        deltaBBWidth = (buttonBar.findNode("backgroundRectangle").width - bb2ViewHorizSpacing) / 2
+        deltaBBWidth = (GetButtonBarWidth() - bb2ViewHorizSpacing) / 2
         if not isButtonBarInFocusChain and isAutoHide
             m.top.viewContentGroup.translation = [0, m.top.viewContentGroup.translation[1]]
         else if isButtonBarVisible and (not isAutoHide or isButtonBarInFocusChain)

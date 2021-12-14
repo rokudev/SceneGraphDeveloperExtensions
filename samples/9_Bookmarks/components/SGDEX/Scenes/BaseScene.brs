@@ -9,7 +9,9 @@ sub Init()
     'm.top.backgroundURI = "pkg:/images/splash_hd.png"
 
     m.top.ComponentController = m.top.findNode("ComponentController")
-    m.top.buttonBar = m.top.ComponentController.findNode("buttonBar")
+    
+    ' initialize default button bar
+    m.top.buttonBar = CreateObject("roSGNode", "ButtonBar")
     m.top.buttonBar.visible = false
 
     m.top.ObserveField("theme", "SceneSetTheme")
