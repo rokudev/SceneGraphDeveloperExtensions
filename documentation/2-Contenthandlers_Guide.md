@@ -66,7 +66,7 @@ myContentNode.AddFields({
   HandlerConfigDetails: {
     name: "SimpleContentGetter"
   }
-}
+})
 ~~~~
 
 ## Grid View Supported Data Models
