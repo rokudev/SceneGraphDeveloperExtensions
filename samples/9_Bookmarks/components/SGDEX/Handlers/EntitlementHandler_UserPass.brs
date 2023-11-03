@@ -11,7 +11,8 @@ function UserPass__ShowUsernameDialog(username = "" as String) as String
 
     port = CreateObject("roMessagePort")
 
-    dialog = CreateObject("roSGNode", "KeyboardDialog")
+    dialog = CreateObject("roSGNode", "StandardKeyboardDialog")
+    dialog.keyboardDomain = "email"
     dialog.title = tr("Please enter your username")
     dialog.text = username
     dialog.buttons = [
@@ -33,7 +34,7 @@ function UserPass__ShowUsernameDialog(username = "" as String) as String
                 if result.Len() > 0
                     exit while
                 else
-                    dialog.keyboard.textEditBox.hintText = "Please enter non-empty value"
+                    dialog.textEditBox.hintText = "Please enter non-empty value"
                 end if
             else
                 dialog.close = true
@@ -54,9 +55,10 @@ function UserPass__ShowPasswordDialog()
 
     port = CreateObject("roMessagePort")
 
-    dialog = CreateObject("roSGNode", "KeyboardDialog")
+    dialog = CreateObject("roSGNode", "StandardKeyboardDialog")
     dialog.title = tr("Please enter your password")
-    dialog.keyboard.textEditBox.secureMode = true
+    dialog.keyboardDomain = "password"
+    dialog.textEditBox.secureMode = true
     dialog.buttons = [
         tr("Next")
         tr("Show password")
@@ -78,12 +80,12 @@ function UserPass__ShowPasswordDialog()
                 if result.Len() > 0
                     dialog.close = true
                 else
-                    dialog.keyboard.textEditBox.hintText = "Please enter non-empty value"
+                    dialog.textEditBox.hintText = "Please enter non-empty value"
                 end if
             else if buttonIndex = 1
-                dialog.keyboard.textEditBox.secureMode = false
+                dialog.textEditBox.secureMode = false
             else if buttonIndex = 2
-                dialog.keyboard.textEditBox.secureMode = true
+                dialog.textEditBox.secureMode = true
             else
                 exit while
             end if
