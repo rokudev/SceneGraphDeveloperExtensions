@@ -6,7 +6,7 @@ sub Init()
 
     busySpinner = m.top.CreateChild("BusySpinner")
     busySpinner.poster.uri = "pkg:/components/SGDEX/Images/loader.png"
-    busySpinner.translation = [587, 308]
+    busySpinner.translation = [565, 285]
 
     m.top.busySpinner = busySpinner
 end sub
